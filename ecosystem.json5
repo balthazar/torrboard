@@ -18,7 +18,7 @@
       "ref"        : "origin/master",
       "repo"       : "git@github.com:balthazar/torrboard.git",
       "path"       : "/var/www/torrboard",
-      "post-deploy": "yarn && npm run build && pm2 startOrRestart ecosystem.json --env production"
+      "post-deploy": "yarn && npm run build && pm2 startOrRestart ecosystem.json5 --env production"
     }
   }
 }
