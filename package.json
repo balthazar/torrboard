@@ -4,7 +4,8 @@
   "scripts": {
     "start": "parcel src/index.html",
     "api": "node -r dotenv/config src/server",
-    "build": "parcel build src/index.html"
+    "build": "parcel build src/index.html",
+    "deploy": "pm2 deploy ecosystem.json5 production"
   },
   "dependencies": {
     "@reach/router": "^1.2.1",
