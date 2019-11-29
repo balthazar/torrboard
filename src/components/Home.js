@@ -3,11 +3,12 @@ import styled from 'styled-components'
 import gql from 'graphql-tag'
 import { useQuery } from '@apollo/react-hooks'
 import get from 'lodash/get'
-import ptn from 'parse-torrent-name'
 
 import Placeloader from './Placeloader'
 import SearchInput from './SearchInput'
 import Modal from './Modal'
+import MediaCard, { CARD_HEIGHT, CARD_WIDTH } from './MediaCard'
+import MediaModal from './MediaModal'
 
 const GET_MEDIAS = gql`
   {
@@ -60,69 +61,8 @@ const FilterValue = styled.span`
   font-size: 13px;
 `
 
-const CARD_HEIGHT = 300
-const CARD_WIDTH = 200
-
-const Card = styled.div`
-  background: ${p => (p.bg ? `url(${p.bg})` : p.theme.bg)};
-  background-size: cover;
-  width: ${CARD_WIDTH}px;
-  height: ${CARD_HEIGHT}px;
-  margin: 5px;
-  word-break: break-all;
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  ${p =>
-    p.interactive
-      ? `
-  cursor: pointer;
-  border: 2px solid ${p.theme.black};
-  &:hover {
-    border-color: ${p.theme.blue};
-  }
-`
-      : ''};
-`
-
 const CardFallback = styled.div`
   padding: 10px;
-`
-
-const ModalContent = styled.div`
-  display: flex;
-  word-break: break-all;
-
-  h3 {
-    font-size: 25px;
-  }
-
-  > div {
-    > * + * {
-      margin-top: 20px;
-    }
-  }
-
-  > * + * {
-    margin-left: 20px;
-  }
-`
-
-const Files = styled.div`
-  height: 200px;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-`
-
-const File = styled.div`
-  font-size: 13px;
-  background-color: ${p => p.theme.bg};
-  padding: 2px 4px;
-  margin: 5px;
 `
 
 export default () => {
@@ -163,9 +103,9 @@ export default () => {
       return acc
     }, {})
 
-  const list = Object.keys(reduced).map(k => reduced[k])
-
-  console.log(list)
+  const list = Object.keys(reduced)
+    .map(k => reduced[k])
+    .filter(item => item.videos.length || item.rar)
 
   return (
     <div>
@@ -196,16 +136,16 @@ export default () => {
       <Grid>
         {loading &&
           [...Array(20).keys()].map(id => (
-            <Card key={id}>
+            <MediaCard key={id}>
               <Placeloader
                 time={Math.max(1000, Math.floor(Math.random() * 3000))}
                 style={{ height: CARD_HEIGHT, width: CARD_WIDTH }}
               />
-            </Card>
+            </MediaCard>
           ))}
 
         {list.map((item, i) => (
-          <Card
+          <MediaCard
             onClick={() => selectItem(item)}
             bg={get(item, 'mediaInfo.image')}
             key={`${item.id}-${i}`}
@@ -214,41 +154,12 @@ export default () => {
             {!get(item, 'mediaInfo.image') && (
               <CardFallback>{get(item, 'mediaInfo.title') || item.name}</CardFallback>
             )}
-          </Card>
+          </MediaCard>
         ))}
       </Grid>
 
       <Modal isOpened={!!item} onClose={() => selectItem(null)}>
-        {item && (
-          <ModalContent>
-            <Card bg={get(item, 'mediaInfo.image')} />
-            <div>
-              <h3>{get(item, 'mediaInfo.title', item.name)}</h3>
-              <div>{get(item, 'mediaInfo.plot')}</div>
-
-              <Files>
-                {item.videos.map(v => {
-                  const splits = v.split('/')
-                  const meta = ptn(splits[splits.length - 1])
-
-                  return (
-                    <File key={v}>
-                      <span>
-                        {!meta.episode || !meta.season
-                          ? meta.title
-                          : `Season ${meta.season} Episode ${meta.episode}`}
-                        {` (${meta.resolution})`}
-                      </span>
-                      <a href={`mpv://${v.replace('/home/media', 'media.balthazargronon.com')}`}>
-                        mpv
-                      </a>
-                    </File>
-                  )
-                })}
-              </Files>
-            </div>
-          </ModalContent>
-        )}
+        {item && <MediaModal item={item} />}
       </Modal>
     </div>
   )

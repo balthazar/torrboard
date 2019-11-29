@@ -22,9 +22,11 @@
     "parse-torrent-name": "^0.5.4",
     "reach-router": "^0.0.0",
     "react": "^16.12.0",
+    "react-copy-to-clipboard": "^5.0.2",
     "react-dom": "^16.12.0",
     "react-icons": "^3.8.0",
     "react-mortal": "^3.3.0",
+    "react-tippy": "^1.3.1",
     "rss-parser": "^3.7.3",
     "styled-components": "^4.4.1"
   },

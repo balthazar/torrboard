@@ -1,9 +1,10 @@
 const { buildSchema } = require('graphql')
 
-const MediaInfo = require('../models/MediaInfo')
-const Config = require('../models/Config')
+const MediaInfo = require('./models/MediaInfo')
+const Config = require('./models/Config')
 
-const deluge = require('../fn/getDeluge')
+const deluge = require('./fn/getDeluge')
+const rss = require('./fn/getRSS')
 
 const schema = buildSchema(`
   type MediaInfo {
@@ -18,6 +19,7 @@ const schema = buildSchema(`
 
   type Config {
     autoGrabs: [String]
+    watched: [String]
   }
 
   type DelugeStats {
@@ -49,23 +51,46 @@ const schema = buildSchema(`
     torrents: [DelugeTorrent]
   }
 
+  type TorrentMeta {
+    title: String
+    year: String
+    episode: Int
+    season: Int
+  }
+
+  type Rss {
+    title: String
+    category: String
+    link: String
+    date: String
+
+    leechers: Int
+    seeders: Int
+    isSerie: Boolean
+    meta: TorrentMeta
+  }
+
   type Mutation {
     setAutoGrabs(autoGrabs: [String]): [String]
+    setWatched(torrentId: String, value: Boolean): Boolean
   }
 
   type Query {
     mediaInfos(title: String): [MediaInfo]
     config: Config
     deluge: Deluge
+    rss: Rss
   }
 `)
 
 const rootValue = {
   deluge,
+  rss,
+
   mediaInfos: () => MediaInfo.find(),
   config: async () => {
     const config = await Config.findOne({})
-    return config || { autoGrabs: [] }
+    return config || { autoGrabs: [], watched: [], fetchedMedias: {} }
   },
 
   setAutoGrabs: async ({ autoGrabs = [] }) => {
@@ -78,6 +103,21 @@ const rootValue = {
     )
 
     return autoGrabs
+  },
+  setWatched: async ({ torrentId, value }) => {
+    const config = await Config.findOne({})
+
+    const watched = value
+      ? config.watched.filter(w => w !== torrentId)
+      : [...config.watched, torrentId]
+
+    await Config.updateOne(
+      {},
+      {
+        watched,
+      },
+      { upsert: true },
+    )
   },
 }
 

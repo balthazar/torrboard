@@ -49,23 +49,21 @@ module.exports = () =>
       return acc
     }, {})
 
-    const torrents = Object.keys(data.torrents)
-      .map(id => {
-        const related = files.filter(f =>
-          f.toLowerCase().includes(data.torrents[id].name.toLowerCase()),
-        )
-        const videos = related.filter(f => ['.mkv', '.avi', '.mp4'].some(ext => f.endsWith(ext)))
-        const rar = related.find(f => f.endsWith('.rar'))
+    const torrents = Object.keys(data.torrents).map(id => {
+      const related = files.filter(f =>
+        f.toLowerCase().includes(data.torrents[id].name.toLowerCase()),
+      )
+      const videos = related.filter(f => ['.mkv', '.avi', '.mp4'].some(ext => f.endsWith(ext)))
+      const rar = related.find(f => f.endsWith('.rar'))
 
-        return {
-          id,
-          ...data.torrents[id],
-          rar,
-          videos,
-          mediaInfo: byTorrentId[id],
-        }
-      })
-      .filter(t => t.videos.length || t.rar)
+      return {
+        id,
+        ...data.torrents[id],
+        rar,
+        videos,
+        mediaInfo: byTorrentId[id],
+      }
+    })
 
     return {
       stats: {
