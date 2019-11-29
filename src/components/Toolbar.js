@@ -1,7 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 import { Link } from '@reach/router'
-
+import { GoRss } from 'react-icons/go'
 import { MdHome, MdList, MdSettings } from 'react-icons/md'
 
 export const TOOLBAR_WIDTH = 100
@@ -72,6 +72,12 @@ export default () => {
         <LinkContainer>
           <Link to="/torrents">
             <MdList />
+          </Link>
+        </LinkContainer>
+
+        <LinkContainer>
+          <Link to="/rss">
+            <GoRss />
           </Link>
         </LinkContainer>
 
