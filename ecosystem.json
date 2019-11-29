@@ -1,0 +1,24 @@
+{
+  "apps": [{
+
+    "name"  : "torrboard",
+    "script": "yarn",
+    "args": "api",
+
+    "env_production": {
+      NODE_ENV: "production"
+    }
+
+  }],
+
+  "deploy": {
+    "production": {
+      "user"       : "me",
+      "host"       : "198.27.65.108",
+      "ref"        : "origin/master",
+      "repo"       : "git@github.com:balthazar/torrboard.git",
+      "path"       : "/var/www/torrboard",
+      "post-deploy": "yarn && npm run build && pm2 startOrRestart ecosystem.json --env production"
+    }
+  }
+}

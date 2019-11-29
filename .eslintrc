@@ -1,0 +1,12 @@
+{
+  "extends": ["zavatta", "zavatta-react", "prettier", "prettier/react"],
+  "globals": {
+    "__ENV__": false,
+    "__DEV__": false,
+    "__PROD__": false,
+    "__APIURL__": false,
+  },
+  "parser": "babel-eslint",
+  "rules": {
+  }
+}
