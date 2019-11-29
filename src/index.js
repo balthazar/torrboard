@@ -8,6 +8,7 @@ import styled, { ThemeProvider } from 'styled-components'
 import Toolbar, { TOOLBAR_WIDTH } from './components/Toolbar'
 import Home from './components/Home'
 import Torrents from './components/Torrents'
+import Rss from './components/Rss'
 import Settings from './components/Settings'
 
 import { __APIURL__ } from './config'
@@ -44,6 +45,7 @@ const App = () => {
           <Router>
             <Home path="/" />
             <Torrents path="/torrents" />
+            <Rss path="/rss" />
             <Settings path="/settings" />
           </Router>
         </Container>

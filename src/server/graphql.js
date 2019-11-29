@@ -56,6 +56,7 @@ const schema = buildSchema(`
     year: String
     episode: Int
     season: Int
+    resolution: String
   }
 
   type RssItem {

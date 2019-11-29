@@ -17,6 +17,7 @@
     "graphql": "^14.5.8",
     "graphql-tag": "^2.10.1",
     "lodash": "^4.17.15",
+    "memory-cache": "^0.2.0",
     "mongoose": "^5.7.12",
     "node-schedule": "^1.3.2",
     "parse-torrent-name": "^0.5.4",
