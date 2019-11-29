@@ -11,16 +11,18 @@ module.exports = async () => {
       .match(/^.* - Seeders: ([0-9]+) - Leechers: ([0-9]+)$/)
       .slice(1)
 
-    const [cat] = item.categories
-    const isSerie = cat.includes('Episodes')
+    const [category] = item.categories
+    const isSerie = category.includes('Episodes')
 
     const meta = ptn(item.title)
 
+    const { title, link, isoDate: date } = item
+
     return {
-      title: item.title,
-      link: item.link,
-      date: item.isoDate,
-      category: cat,
+      title,
+      link,
+      date,
+      category,
       seeders,
       leechers,
       meta,

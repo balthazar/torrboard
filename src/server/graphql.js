@@ -58,7 +58,7 @@ const schema = buildSchema(`
     season: Int
   }
 
-  type Rss {
+  type RssItem {
     title: String
     category: String
     link: String
@@ -79,7 +79,7 @@ const schema = buildSchema(`
     mediaInfos(title: String): [MediaInfo]
     config: Config
     deluge: Deluge
-    rss: Rss
+    rss: [RssItem]
   }
 `)
 
