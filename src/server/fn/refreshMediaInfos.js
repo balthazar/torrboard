@@ -5,7 +5,7 @@ const getDeluge = require('./getDeluge')
 const Config = require('../models/Config')
 const MediaInfo = require('../models/MediaInfo')
 
-const getMediaInfo = async (title, { torrents, year }) => {
+const getMediaInfo = async (id, { title, year }) => {
   try {
     const res = await got(
       `http://www.omdbapi.com/?t=${title}${year ? `&y=${year}` : ''}&apiKey=${process.env.OMDB}`,
@@ -20,9 +20,6 @@ const getMediaInfo = async (title, { torrents, year }) => {
 
     const { Title, Genre, Type, Plot, Poster, imdbRating, imdbID } = res.body
 
-    const old = await MediaInfo.findOne({ imdbID })
-    const associatedTorrents = old ? old.torrents : []
-
     await MediaInfo.updateOne(
       { imdbID },
       {
@@ -32,10 +29,8 @@ const getMediaInfo = async (title, { torrents, year }) => {
         type: Type,
         image: Poster === 'N/A' ? null : Poster,
         rating: !isNaN(imdbRating) ? imdbRating : null,
-        torrents: associatedTorrents
-          .concat(torrents)
-          .filter((value, index, self) => value && self.indexOf(value) === index),
         imdbID,
+        $addToSet: { torrents: id },
       },
       { upsert: true },
     )
@@ -59,21 +54,18 @@ module.exports = async () => {
       .replace(/\./g, '-')
       .trim()
 
-    if (!title || fetchedMedias[title]) {
+    if (!title || fetchedMedias[torrent.id]) {
       return acc
     }
 
-    if (!acc[title]) {
-      acc[title] = { torrents: [torrent.id], year: meta.year }
-    } else {
-      acc[title].torrents.push(torrent.id)
+    if (!acc[torrent.id]) {
+      acc[torrent.id] = { title, year: meta.year }
     }
+
     return acc
   }, {})
 
-  await Promise.all(
-    Object.keys(mediasToFetch).map(title => getMediaInfo(title, mediasToFetch[title])),
-  )
+  await Promise.all(Object.keys(mediasToFetch).map(id => getMediaInfo(id, mediasToFetch[id])))
 
   await Config.updateOne(
     {},
