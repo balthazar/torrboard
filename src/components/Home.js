@@ -13,6 +13,9 @@ import { Filters, FilterValue } from './Filters'
 
 const GET_MEDIAS = gql`
   {
+    config {
+      watched
+    }
     deluge {
       torrents {
         name
@@ -58,6 +61,12 @@ export default () => {
   const { loading, data } = useQuery(GET_MEDIAS, {
     pollInterval: 10e3,
   })
+
+  const watched = get(data, 'config.watched', []).reduce(
+    (acc, path) => ((acc[path] = true), acc),
+    {},
+  )
+  console.log(watched)
 
   const reduced = get(data, 'deluge.torrents', [])
     .sort((a, b) =>
@@ -146,7 +155,7 @@ export default () => {
       </Grid>
 
       <Modal isOpened={!!item} onClose={() => selectItem(null)}>
-        {item && <MediaModal item={item} />}
+        {item && <MediaModal item={item} watched={watched} />}
       </Modal>
     </div>
   )

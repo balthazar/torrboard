@@ -8,5 +8,6 @@
   },
   "parser": "babel-eslint",
   "rules": {
+    "react/no-array-index-key": 0
   }
 }
