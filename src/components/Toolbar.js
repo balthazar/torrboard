@@ -1,10 +1,28 @@
 import React from 'react'
 import styled from 'styled-components'
+import { useQuery } from '@apollo/react-hooks'
+import gql from 'graphql-tag'
 import { Link } from '@reach/router'
 import { GoRss } from 'react-icons/go'
 import { MdHome, MdList, MdSettings } from 'react-icons/md'
+import { IoIosArrowRoundDown, IoIosArrowRoundUp } from 'react-icons/io'
+import { AiFillDatabase } from 'react-icons/ai'
+
+import convertBytes from '../fn/convertBytes'
 
 export const TOOLBAR_WIDTH = 100
+
+const GET_STATS = gql`
+  {
+    deluge {
+      stats {
+        upSpeed
+        dlSpeed
+        freeSpace
+      }
+    }
+  }
+`
 
 const Container = styled.div`
   position: fixed;
@@ -58,10 +76,35 @@ const LinkContainer = styled.div`
   }
 `
 
+const Stats = styled.div`
+  width: ${TOOLBAR_WIDTH}px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+
+  > * {
+    display: flex;
+    align-items: center;
+    > * + * {
+      margin-left: 5px;
+    }
+  }
+
+  > * + * {
+    margin-top: 10px;
+  }
+`
+
 export default () => {
+  const { loading, data } = useQuery(GET_STATS, {
+    pollInterval: 1e3,
+  })
+
   return (
     <Container>
       <Logo>TB</Logo>
+
       <Menu>
         <LinkContainer>
           <Link to="/">
@@ -87,6 +130,23 @@ export default () => {
           </Link>
         </LinkContainer>
       </Menu>
+
+      {!loading && (
+        <Stats>
+          <span>
+            <IoIosArrowRoundUp />
+            <span>{convertBytes(data.deluge.stats.upSpeed)}</span>
+          </span>
+          <span>
+            <IoIosArrowRoundDown />
+            <span>{convertBytes(data.deluge.stats.dlSpeed)}</span>
+          </span>
+          <span>
+            <AiFillDatabase />
+            <span>{convertBytes(data.deluge.stats.freeSpace)}</span>
+          </span>
+        </Stats>
+      )}
     </Container>
   )
 }

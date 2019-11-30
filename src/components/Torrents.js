@@ -3,7 +3,9 @@ import styled from 'styled-components'
 import gql from 'graphql-tag'
 import get from 'lodash/get'
 import { useQuery, useMutation } from '@apollo/react-hooks'
-import { IoIosArrowRoundDown, IoIosArrowRoundUp } from 'react-icons/io'
+import { IoIosArrowRoundDown, IoIosArrowRoundUp, IoMdPlay, IoMdPause } from 'react-icons/io'
+import { FiDelete, FiTrash2 } from 'react-icons/fi'
+import { Tooltip } from 'react-tippy'
 
 import Placeloader from './Placeloader'
 import convertBytes from '../fn/convertBytes'
@@ -141,6 +143,23 @@ const State = styled.span`
     p.value === 'Seeding' ? p.theme.blue : p.value === 'Paused' ? 'lightgrey' : p.theme.green};
 `
 
+const Actions = styled.span`
+  > * {
+    cursor: pointer;
+  }
+
+  > * + * {
+    margin-left: 10px;
+  }
+`
+
+const actions = [
+  { name: 'resume', icon: <IoMdPlay /> },
+  { name: 'pause', icon: <IoMdPause /> },
+  { name: 'remove', icon: <FiDelete /> },
+  { name: 'remove', icon: <FiTrash2 />, extra: { removeFiles: true } },
+]
+
 export default () => {
   const { loading, data } = useQuery(GET_TORRENTS, {
     pollInterval: 1e3,
@@ -178,24 +197,26 @@ export default () => {
               )
             }
 
+            const torrentId = torrent.id
+
             if (name === 'actions') {
               return (
-                <span key={name}>
-                  <span
-                    onClick={() =>
-                      torrentAction({ variables: { name: 'resume', torrentId: torrent.id } })
-                    }
-                  >
-                    resume
-                  </span>
-                  <span
-                    onClick={() =>
-                      torrentAction({ variables: { name: 'pause', torrentId: torrent.id } })
-                    }
-                  >
-                    pause
-                  </span>
-                </span>
+                <Actions key={name}>
+                  {actions.map(({ name, extra, icon }) => (
+                    <Tooltip
+                      title={
+                        name === 'remove' && extra && extra.removeFiles ? `delete & clear` : name
+                      }
+                      key={`${name}-${!!extra}`}
+                    >
+                      <span
+                        onClick={() => torrentAction({ variables: { name, torrentId, ...extra } })}
+                      >
+                        {icon}
+                      </span>
+                    </Tooltip>
+                  ))}
+                </Actions>
               )
             }
 

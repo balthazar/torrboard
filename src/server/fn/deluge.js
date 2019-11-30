@@ -85,8 +85,8 @@ module.exports = {
 
       return {
         stats: {
-          upSpeed: data.stats.upload_protocol_rate,
-          dlSpeed: data.stats.download_protocol_rate,
+          upSpeed: data.stats.upload_rate,
+          dlSpeed: data.stats.download_rate,
           freeSpace: data.stats.free_space,
         },
         torrents,
