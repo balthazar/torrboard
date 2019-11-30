@@ -3,7 +3,7 @@ const { buildSchema } = require('graphql')
 const MediaInfo = require('./models/MediaInfo')
 const Config = require('./models/Config')
 
-const { download, getDeluge } = require('./fn/getDeluge')
+const { download, getDeluge } = require('./fn/deluge')
 const rss = require('./fn/getRSS')
 
 const schema = buildSchema(`
