@@ -7,6 +7,7 @@ import get from 'lodash/get'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { Tooltip } from 'react-tippy'
 import ptn from 'parse-torrent-name'
+import uniq from 'lodash/uniq'
 
 import MediaCard from './MediaCard'
 
@@ -80,7 +81,8 @@ const Unrar = styled.a`
 `
 
 export default ({ item }) => {
-  const videos = item.videos
+  console.log(item.videos)
+  const videos = uniq(item.videos)
     .map(v => {
       const splits = v.split('/')
       const name = splits[splits.length - 1]
