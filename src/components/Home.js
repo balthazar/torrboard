@@ -9,6 +9,7 @@ import SearchInput from './SearchInput'
 import Modal from './Modal'
 import MediaCard, { CARD_HEIGHT, CARD_WIDTH } from './MediaCard'
 import MediaModal from './MediaModal'
+import { Filters, FilterValue } from './Filters'
 
 const GET_MEDIAS = gql`
   {
@@ -39,28 +40,6 @@ const Grid = styled.div`
   justify-content: center;
 `
 
-const Filters = styled.div`
-  margin: 20px 0;
-  display: flex;
-
-  > * {
-    display: flex;
-    overflow: hidden;
-    border-radius: 3px;
-  }
-
-  > * + * {
-    margin-left: 20px;
-  }
-`
-
-const FilterValue = styled.span`
-  background-color: ${p => (p.active ? p.theme.blue : p.theme.bg)};
-  padding: 4px 8px;
-  cursor: pointer;
-  font-size: 13px;
-`
-
 const CardFallback = styled.div`
   padding: 10px;
 `
@@ -70,7 +49,7 @@ export default () => {
   const [sortBy, setSort] = useState('time')
   const [item, selectItem] = useState(null)
   const [category, setCategory] = useState(null)
-  const { loading, error, data } = useQuery(GET_MEDIAS)
+  const { loading, data } = useQuery(GET_MEDIAS)
 
   const reduced = get(data, 'deluge.torrents', [])
     .sort((a, b) =>

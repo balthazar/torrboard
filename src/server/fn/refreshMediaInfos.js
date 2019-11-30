@@ -1,7 +1,7 @@
 const got = require('got')
 const ptn = require('parse-torrent-name')
 
-const getDeluge = require('./getDeluge')
+const { getDeluge } = require('./deluge')
 const Config = require('../models/Config')
 const MediaInfo = require('../models/MediaInfo')
 
