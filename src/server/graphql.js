@@ -30,17 +30,20 @@ const schema = buildSchema(`
 
   type DelugeTorrent {
     id: String
+    name: String,
     total_done: Float
     ratio: Float
-    name: String,
-    upload_payload_rate: Float,
+    num_seeds: Int
+    num_peers: Int
     total_size: Float,
     state: String,
     eta: Float,
     progress: Float,
+    upload_payload_rate: Float,
     download_payload_rate: Float,
     time_added: Float,
     total_uploaded: Float
+
     videos: [String]
     rar: String
     mediaInfo: MediaInfo

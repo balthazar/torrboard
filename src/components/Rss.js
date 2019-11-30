@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import gql from 'graphql-tag'
 import get from 'lodash/get'
 import { useQuery, useMutation } from '@apollo/react-hooks'
-import { MdArrowUpward, MdArrowDownward } from 'react-icons/md'
+import { MdArrowUpward, MdArrowDownward, MdCheck } from 'react-icons/md'
 import { FiDownloadCloud } from 'react-icons/fi'
 import differenceInMinutes from 'date-fns/differenceInMinutes'
 import differenceInHours from 'date-fns/differenceInHours'
@@ -14,6 +14,12 @@ import theme from '../theme'
 
 const GET_RSS = gql`
   {
+    deluge {
+      torrents {
+        name
+      }
+    }
+
     rss {
       title
       date
@@ -69,13 +75,18 @@ const DownloadButton = styled.div`
   align-items: center;
   justify-content: center;
 
+  ${p =>
+    !p.disabled
+      ? `
   cursor: pointer;
-  background-color: ${p => p.theme.opacityDark(0.2)};
+  background-color: ${p.theme.opacityDark(0.2)};
   transition: background-color 250ms ease-in;
 
   &:hover {
-    background-color: ${p => p.theme.opacityDark(0.4)};
+    background-color: ${p.theme.opacityDark(0.4)};
   }
+`
+      : ''}
 `
 
 const Tags = styled.div`
@@ -102,6 +113,11 @@ export default () => {
   if (loading) {
     return <Placeloader style={{ height: '100%', width: '100%' }} />
   }
+
+  const activeTorrents = get(data, 'deluge.torrents', []).reduce(
+    (acc, cur) => ((acc[cur.name] = 1), acc),
+    {},
+  )
 
   const list = get(data, 'rss', [])
     .filter(i => (resolution ? get(i, 'meta.resolution') === resolution : true))
@@ -142,6 +158,7 @@ export default () => {
           diffMin > 60 ? `${differenceInHours(new Date(), new Date(item.date))}h` : `${diffMin}min`
 
         const { link } = item
+        const already = activeTorrents[item.title.replace(/ /g, '.')]
 
         return (
           <Item key={item.link}>
@@ -168,8 +185,11 @@ export default () => {
               </span>
             </SeedInfo>
 
-            <DownloadButton onClick={() => download({ variables: { link } })}>
-              <FiDownloadCloud />
+            <DownloadButton
+              disabled={already}
+              onClick={() => !already && download({ variables: { link } })}
+            >
+              {already ? <MdCheck /> : <FiDownloadCloud />}
             </DownloadButton>
           </Item>
         )
