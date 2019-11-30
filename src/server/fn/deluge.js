@@ -16,6 +16,8 @@ const fields = [
     'time_added',
     'total_done',
     'total_uploaded',
+    'num_seeds',
+    'num_peers',
   ],
   [],
 ]
