@@ -4,7 +4,7 @@ const { buildSchema } = require('graphql')
 const MediaInfo = require('./models/MediaInfo')
 const Config = require('./models/Config')
 
-const { download, getDeluge } = require('./fn/deluge')
+const { download, torrentAction, getDeluge } = require('./fn/deluge')
 const rss = require('./fn/getRSS')
 
 const schema = buildSchema(`
@@ -91,11 +91,13 @@ const schema = buildSchema(`
     setAutoGrabs(autoGrabs: [String]): [String]
     setWatched(torrentId: String, value: Boolean): Boolean
     download(link: String!): Boolean
+    torrentAction(name: String!, torrentId: String!, removeFiles: Boolean): Boolean
   }
 
   type Query {
     getYtID(query: String!): String
     mediaInfos(title: String): [MediaInfo]
+
     config: Config
     deluge: Deluge
     rss: [RssItem]
@@ -104,6 +106,8 @@ const schema = buildSchema(`
 
 const rootValue = {
   deluge: getDeluge,
+  torrentAction,
+  download,
   rss,
 
   getYtID: async ({ query }) => {
@@ -145,10 +149,6 @@ const rootValue = {
       },
       { upsert: true },
     )
-  },
-  download: async ({ link }) => {
-    console.log('downloading,', link)
-    await download(link)
   },
 }
 

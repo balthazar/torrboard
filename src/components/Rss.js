@@ -53,8 +53,8 @@ const DOWNLOAD = gql`
 `
 
 const Item = styled.div`
+  ${p => (p.loading ? '' : `padding: 10px;`)};
   background-color: ${p => p.theme.bg};
-  padding: 10px;
   margin: 5px;
 
   > div:first-child {
@@ -151,7 +151,10 @@ export default () => {
   const [resolution, setResolution] = useState('1080p')
   const [sortBy, setSort] = useState('seeders')
   const [selected, selectItem] = useState(null)
-  const { loading, data } = useQuery(GET_RSS)
+  const { loading, data } = useQuery(GET_RSS, {
+    pollInterval: 20e3,
+  })
+
   const [download] = useMutation(DOWNLOAD)
 
   const activeTorrents = get(data, 'deluge.torrents', []).reduce(
@@ -191,8 +194,8 @@ export default () => {
 
       {loading &&
         [...Array(20).keys()].map(i => (
-          <Item key={i}>
-            <Placeloader style={{ width: '100%', height: 58 }} key={i} />
+          <Item loading="true" key={i}>
+            <Placeloader style={{ width: '100%', height: 78 }} key={i} />
           </Item>
         ))}
 
