@@ -3,7 +3,7 @@ const { buildSchema } = require('graphql')
 const MediaInfo = require('./models/MediaInfo')
 const Config = require('./models/Config')
 
-const deluge = require('./fn/getDeluge')
+const { download, getDeluge } = require('./fn/getDeluge')
 const rss = require('./fn/getRSS')
 
 const schema = buildSchema(`
@@ -74,6 +74,7 @@ const schema = buildSchema(`
   type Mutation {
     setAutoGrabs(autoGrabs: [String]): [String]
     setWatched(torrentId: String, value: Boolean): Boolean
+    download(link: String!): Boolean
   }
 
   type Query {
@@ -85,7 +86,7 @@ const schema = buildSchema(`
 `)
 
 const rootValue = {
-  deluge,
+  deluge: getDeluge,
   rss,
 
   mediaInfos: () => MediaInfo.find(),
@@ -119,6 +120,10 @@ const rootValue = {
       },
       { upsert: true },
     )
+  },
+  download: async ({ link }) => {
+    console.log('downloading,', link)
+    await download(link)
   },
 }
 
