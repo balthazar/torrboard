@@ -195,7 +195,11 @@ export default () => {
       {loading &&
         [...Array(20).keys()].map(i => (
           <Item loading="true" key={i}>
-            <Placeloader style={{ width: '100%', height: 78 }} key={i} />
+            <Placeloader
+              time={Math.max(1000, Math.floor(Math.random() * 3000))}
+              style={{ width: '100%', height: 78 }}
+              key={i}
+            />
           </Item>
         ))}
 
