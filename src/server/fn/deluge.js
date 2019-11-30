@@ -75,7 +75,7 @@ module.exports = {
           .replace(/ /g, '.')
           .replace(/.s[0-9]+.*/, '')
 
-        const related = files.filter(f => f.toLowerCase().includes(key))
+        const related = files.filter(f => f.toLowerCase() || f.toLowerCase().includes(key))
         const videos = uniq(
           related.filter(f => ['.mkv', '.avi', '.mp4'].some(ext => f.endsWith(ext))),
         )
