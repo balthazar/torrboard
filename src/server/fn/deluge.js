@@ -47,8 +47,13 @@ module.exports = {
     const path = await query('web.download_torrent_from_url', [link])
     return query('web.add_torrents', [[{ options: { download_location: '/home/media/dl' }, path }]])
   },
-  torrentAction: ({ name, torrentId, removeFiles }) =>
-    query(`core.${name}_torrent`, [torrentId, removeFiles]),
+  torrentAction: ({ name, torrentId, removeFiles }) => {
+    if (name === 'remove') {
+      return query(`core.remove_torrent`, [torrentId, removeFiles])
+    }
+
+    return query(`core.${name}_torrent`, [[torrentId]])
+  },
   getDeluge: () =>
     query('web.update_ui', fields).then(async data => {
       const files = await getFiles()
