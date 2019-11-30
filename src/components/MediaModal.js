@@ -89,8 +89,23 @@ const SET_WATCHED = gql`
   }
 `
 
+const GET_WATCHED = gql`
+  {
+    config {
+      watched
+    }
+  }
+`
+
 export default ({ item, watched }) => {
-  const [setWatched] = useMutation(SET_WATCHED)
+  const [setWatched] = useMutation(SET_WATCHED, {
+    update(cache, data) {
+      const config = cache.readQuery({
+        query: GET_WATCHED,
+      })
+      console.log(config, data)
+    },
+  })
 
   const videos = uniq(item.videos)
     .map(v => {
@@ -168,7 +183,7 @@ export default ({ item, watched }) => {
                       setWatched({ variables: { path: v.path, value: !watched[v.path] } })
                     }
                   >
-                    {watched[v.path] ? <IoMdEyeOff /> : <IoMdEye />}
+                    {watched[v.path] ? <IoMdEyeOff size={20} /> : <IoMdEye size={20} />}
                   </a>
                 </Tooltip>
 

@@ -66,7 +66,6 @@ export default () => {
     (acc, path) => ((acc[path] = true), acc),
     {},
   )
-  console.log(watched)
 
   const reduced = get(data, 'deluge.torrents', [])
     .sort((a, b) =>
