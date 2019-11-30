@@ -135,12 +135,10 @@ const rootValue = {
 
     return autoGrabs
   },
-  setWatched: async ({ torrentId, value }) => {
+  setWatched: async ({ path, value }) => {
     const config = await Config.findOne({})
 
-    const watched = value
-      ? config.watched.filter(w => w !== torrentId)
-      : [...config.watched, torrentId]
+    const watched = value ? config.watched.filter(w => w !== path) : [...config.watched, path]
 
     await Config.updateOne(
       {},
