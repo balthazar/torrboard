@@ -6,6 +6,7 @@ import { MdDoneAll, MdContentCopy } from 'react-icons/md'
 import get from 'lodash/get'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { Tooltip } from 'react-tippy'
+import ptn from 'parse-torrent-name'
 
 import MediaCard from './MediaCard'
 
@@ -83,7 +84,7 @@ export default ({ item }) => {
     .map(v => {
       const splits = v.split('/')
       const name = splits[splits.length - 1]
-      const { meta } = item
+      const meta = ptn(name)
 
       const type = get(item, 'mediaInfo.type')
       if ((!type || type === 'series') && !meta.episode && !isNaN(get(meta, 'excess.0'))) {

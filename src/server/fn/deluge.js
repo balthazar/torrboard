@@ -1,5 +1,6 @@
 const got = require('got')
 const ptn = require('parse-torrent-name')
+const uniq = require('lodash/uniq')
 
 const MediaInfo = require('../models/MediaInfo')
 const getFiles = require('./getFiles')
@@ -75,7 +76,9 @@ module.exports = {
           .replace(/.s[0-9]+.*/, '')
 
         const related = files.filter(f => f.toLowerCase().includes(key))
-        const videos = related.filter(f => ['.mkv', '.avi', '.mp4'].some(ext => f.endsWith(ext)))
+        const videos = uniq(
+          related.filter(f => ['.mkv', '.avi', '.mp4'].some(ext => f.endsWith(ext))),
+        )
         const rar = related.find(f => f.endsWith('.rar'))
 
         return {
