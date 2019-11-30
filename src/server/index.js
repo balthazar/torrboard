@@ -15,7 +15,7 @@ server.listen(__APIPORT__).then(() => {
   console.log(`[TorrBoard API] Listening on ::${__APIPORT__} 🚀`) // eslint-disable-line no-console
 })
 
-// Every minute
-scheduleJob('* * * * *', () => {
+// Every 5 minutes
+scheduleJob('*/5 * * * *', () => {
   refreshMediaInfos()
 })
