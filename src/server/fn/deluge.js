@@ -67,9 +67,14 @@ module.exports = {
       }, {})
 
       const torrents = Object.keys(data.torrents).map(id => {
-        const related = files.filter(f =>
-          f.toLowerCase().includes(data.torrents[id].name.toLowerCase()),
-        )
+        const meta = ptn(data.torrents[id].name)
+        const key = meta.title
+          .toLowerCase()
+          .replace(/\s\s+/g, ' ')
+          .replace(/ /g, '.')
+          .replace(/.s[0-9]+.*/, '')
+
+        const related = files.filter(f => f.toLowerCase().includes(key))
         const videos = related.filter(f => ['.mkv', '.avi', '.mp4'].some(ext => f.endsWith(ext)))
         const rar = related.find(f => f.endsWith('.rar'))
 
@@ -78,7 +83,7 @@ module.exports = {
           ...data.torrents[id],
           rar,
           videos,
-          meta: ptn(data.torrents[id].name),
+          meta,
           mediaInfo: byTorrentId[id],
         }
       })
