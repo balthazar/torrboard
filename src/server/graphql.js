@@ -89,7 +89,7 @@ const schema = buildSchema(`
 
   type Mutation {
     setAutoGrabs(autoGrabs: [String]): [String]
-    setWatched(torrentId: String, value: Boolean): Boolean
+    setWatched(path: String, value: Boolean): Boolean
     download(link: String!): Boolean
     torrentAction(name: String!, torrentId: String!, removeFiles: Boolean): Boolean
   }

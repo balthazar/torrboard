@@ -1,13 +1,15 @@
 import React from 'react'
 import styled from 'styled-components'
-import { IoIosPlayCircle } from 'react-icons/io'
-import { GoFileZip } from 'react-icons/go'
-import { MdDoneAll, MdContentCopy } from 'react-icons/md'
-import get from 'lodash/get'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { Tooltip } from 'react-tippy'
+import { useMutation } from '@apollo/react-hooks'
+import gql from 'graphql-tag'
 import ptn from 'parse-torrent-name'
 import uniq from 'lodash/uniq'
+import get from 'lodash/get'
+import { IoIosPlayCircle, IoMdEyeOff, IoMdEye } from 'react-icons/io'
+import { GoFileZip } from 'react-icons/go'
+import { MdDoneAll, MdContentCopy } from 'react-icons/md'
 
 import MediaCard from './MediaCard'
 
@@ -61,6 +63,7 @@ const Actions = styled.div`
     justify-content: center;
     width: 25px;
     height: 25px;
+    cursor: pointer;
   }
 
   > * + * {
@@ -80,8 +83,15 @@ const Unrar = styled.a`
   }
 `
 
-export default ({ item }) => {
-  console.log(item.videos)
+const SET_WATCHED = gql`
+  mutation setWatched($path: String!, $value: Boolean!) {
+    setWatched(path: $path, value: $value)
+  }
+`
+
+export default ({ item, watched }) => {
+  const [setWatched] = useMutation(SET_WATCHED)
+
   const videos = uniq(item.videos)
     .map(v => {
       const splits = v.split('/')
@@ -106,6 +116,7 @@ export default ({ item }) => {
         : 1
 
       return {
+        path: v,
         num,
         text,
         url,
@@ -133,12 +144,17 @@ export default ({ item }) => {
               <div>{v.text}</div>
               <Actions>
                 <Tooltip title="Launch MPV" theme="light">
-                  <a href={`mpv://${v.url}`}>
+                  <a
+                    href={`mpv://${v.url}`}
+                    onClick={() => {
+                      setWatched({ variables: { path: v.path, value: true } })
+                    }}
+                  >
                     <IoIosPlayCircle size={20} />
                   </a>
                 </Tooltip>
 
-                <Tooltip title="Copy url to clipboard" theme="light">
+                <Tooltip title="Copy URL" theme="light">
                   <CopyToClipboard text={v.url}>
                     <a>
                       <MdContentCopy size={20} />
@@ -146,11 +162,23 @@ export default ({ item }) => {
                   </CopyToClipboard>
                 </Tooltip>
 
-                <Tooltip title="Watch status" theme="light">
-                  <a className="file-watched">
-                    <MdDoneAll />
+                <Tooltip title={watched[v.path] ? 'Set unwatched' : 'Set watched'} theme="light">
+                  <a
+                    onClick={() =>
+                      setWatched({ variables: { path: v.path, value: !watched[v.path] } })
+                    }
+                  >
+                    {watched[v.path] ? <IoMdEyeOff /> : <IoMdEye />}
                   </a>
                 </Tooltip>
+
+                {watched[v.path] && (
+                  <Tooltip title="Watched" theme="light">
+                    <a>
+                      <MdDoneAll />
+                    </a>
+                  </Tooltip>
+                )}
               </Actions>
             </File>
           ))}
