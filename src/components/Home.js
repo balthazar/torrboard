@@ -55,7 +55,9 @@ export default () => {
   const [sortBy, setSort] = useState('time')
   const [item, selectItem] = useState(null)
   const [category, setCategory] = useState(null)
-  const { loading, data } = useQuery(GET_MEDIAS)
+  const { loading, data } = useQuery(GET_MEDIAS, {
+    pollInterval: 10e3,
+  })
 
   const reduced = get(data, 'deluge.torrents', [])
     .sort((a, b) =>

@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React from 'react'
 import styled from 'styled-components'
 import gql from 'graphql-tag'
 import get from 'lodash/get'
 import { useQuery, useMutation } from '@apollo/react-hooks'
+import { IoIosArrowRoundDown, IoIosArrowRoundUp } from 'react-icons/io'
 
 import Placeloader from './Placeloader'
 import convertBytes from '../fn/convertBytes'
@@ -32,6 +33,12 @@ const GET_TORRENTS = gql`
   }
 `
 
+const TORRENT_ACTION = gql`
+  mutation torrentAction($name: String!, $torrentId: String!, $removeFIles: Boolean) {
+    torrentAction(name: $name, torrentId: $torrentId, removeFiles: $removeFiles)
+  }
+`
+
 const fields = [
   {
     name: 'state',
@@ -55,35 +62,47 @@ const fields = [
   },
   {
     name: 'download_payload_rate',
-    label: 'DownSpeed',
+    label: <IoIosArrowRoundDown />,
     width: 80,
     fn: v => (v ? `${convertBytes(v)}/s` : ''),
   },
   {
     name: 'upload_payload_rate',
-    label: 'UpSpeed',
+    label: <IoIosArrowRoundUp />,
     width: 80,
     fn: v => (v ? `${convertBytes(v)}/s` : ''),
   },
   {
+    name: 'progress',
+    label: '%',
+    width: 50,
+    fn: v => (v === 100 ? '' : v.toLocaleString(undefined, { maximumFractionDigits: 1 })),
+  },
+  {
     name: 'eta',
     width: 80,
-    fn: v => (v ? v : ''),
+    fn: v => (v ? `${(v / 60).toFixed(0)}m` : ''),
   },
   {
     name: 'total_peers',
-    width: 80,
-    // fn: v => (v ? v : ''),
+    label: 'Peers',
+    width: 50,
+    fn: v => Math.max(0, v),
   },
   {
     name: 'total_seeds',
-    width: 80,
-    // fn: v => (v ? v : ''),
+    label: 'Seeds',
+    width: 50,
+    fn: v => Math.max(0, v),
+  },
+  {
+    name: 'actions',
   },
 ]
 
 const Item = styled.div`
-  padding: 10px 20px;
+  ${p => (p.loading ? '' : `padding: 10px 20px;`)};
+
   margin: 5px;
   display: flex;
   align-items: center;
@@ -123,7 +142,11 @@ const State = styled.span`
 `
 
 export default () => {
-  const { loading, data } = useQuery(GET_TORRENTS)
+  const { loading, data } = useQuery(GET_TORRENTS, {
+    pollInterval: 1e3,
+  })
+
+  const [torrentAction] = useMutation(TORRENT_ACTION)
 
   const list = get(data, 'deluge.torrents', []).sort((a, b) => b.time_added - a.time_added)
 
@@ -139,8 +162,8 @@ export default () => {
 
       {loading &&
         [...Array(20).keys()].map(i => (
-          <Item key={i}>
-            <Placeloader style={{ width: '100%', height: 20 }} key={i} />
+          <Item loading="true" key={i}>
+            <Placeloader style={{ width: '100%', height: 40 }} key={i} />
           </Item>
         ))}
 
@@ -151,6 +174,27 @@ export default () => {
               return (
                 <span style={{ width }} key={name}>
                   <State value={torrent.state} />
+                </span>
+              )
+            }
+
+            if (name === 'actions') {
+              return (
+                <span key={name}>
+                  <span
+                    onClick={() =>
+                      torrentAction({ variables: { name: 'resume', torrentId: torrent.id } })
+                    }
+                  >
+                    resume
+                  </span>
+                  <span
+                    onClick={() =>
+                      torrentAction({ variables: { name: 'pause', torrentId: torrent.id } })
+                    }
+                  >
+                    pause
+                  </span>
                 </span>
               )
             }
