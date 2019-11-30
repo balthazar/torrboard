@@ -1,4 +1,5 @@
 const got = require('got')
+const uniq = require('lodash/uniq')
 const { buildSchema } = require('graphql')
 
 const MediaInfo = require('./models/MediaInfo')
@@ -138,7 +139,7 @@ const rootValue = {
   setWatched: async ({ path, value }) => {
     const config = await Config.findOne({})
 
-    const watched = value ? config.watched.filter(w => w !== path) : [...config.watched, path]
+    const watched = uniq(value ? [...config.watched, path] : config.watched.filter(w => w !== path))
 
     await Config.updateOne(
       {},
