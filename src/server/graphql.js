@@ -42,8 +42,6 @@ const schema = buildSchema(`
     name: String,
     total_done: Float
     ratio: Float
-    num_seeds: Int
-    num_peers: Int
     total_size: Float,
     state: String,
     eta: Float,
@@ -52,6 +50,11 @@ const schema = buildSchema(`
     download_payload_rate: Float,
     time_added: Float,
     total_uploaded: Float
+
+    total_seeds: Int
+    total_peers: Int
+    num_seeds: Int
+    num_peers: Int
 
     videos: [String]
     rar: String

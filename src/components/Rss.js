@@ -7,10 +7,17 @@ import { MdArrowUpward, MdArrowDownward, MdCheck } from 'react-icons/md'
 import { FiDownloadCloud } from 'react-icons/fi'
 import differenceInMinutes from 'date-fns/differenceInMinutes'
 import differenceInHours from 'date-fns/differenceInHours'
+import Youtube from 'react-youtube'
 
 import { Filters, FilterValue } from './Filters'
 import Placeloader from './Placeloader'
 import theme from '../theme'
+
+const GET_YOUTUBE_ID = gql`
+  query getYtID($query: String!) {
+    getYtID(query: $query)
+  }
+`
 
 const GET_RSS = gql`
   {
@@ -33,6 +40,7 @@ const GET_RSS = gql`
         episode
         season
         resolution
+        year
       }
     }
   }
@@ -48,7 +56,14 @@ const Item = styled.div`
   background-color: ${p => p.theme.bg};
   padding: 10px;
   margin: 5px;
-  display: flex;
+
+  > div:first-child {
+    cursor: pointer;
+  }
+
+  > div {
+    display: flex;
+  }
 `
 
 const SeedInfo = styled.div`
@@ -104,18 +119,43 @@ const Tag = styled.div`
   padding: 4px 8px;
 `
 
-export default () => {
-  const [resolution, setResolution] = useState('1080p')
-  const [sortBy, setSort] = useState('seeders')
-  const { loading, data } = useQuery(GET_RSS)
-  const [download] = useMutation(DOWNLOAD)
+const ExtraContent = styled.div`
+  margin-top: 20px;
+  height: 400px;
+`
+
+const VideoDisplay = ({ query }) => {
+  if (!query) {
+    return
+  }
+
+  const { loading, data } = useQuery(GET_YOUTUBE_ID, { variables: { query } })
 
   if (loading) {
     return <Placeloader style={{ height: '100%', width: '100%' }} />
   }
 
+  return (
+    <Youtube
+      videoId={data.getYtID}
+      opts={{
+        height: '390',
+        width: '640',
+        playerVars: { autoplay: 1 },
+      }}
+    />
+  )
+}
+
+export default () => {
+  const [resolution, setResolution] = useState('1080p')
+  const [sortBy, setSort] = useState('seeders')
+  const [selected, selectItem] = useState(null)
+  const { loading, data } = useQuery(GET_RSS)
+  const [download] = useMutation(DOWNLOAD)
+
   const activeTorrents = get(data, 'deluge.torrents', []).reduce(
-    (acc, cur) => ((acc[cur.name] = 1), acc),
+    (acc, cur) => ((acc[cur.name.replace(/\.[A-z]+$/, '')] = 1), acc),
     {},
   )
 
@@ -149,6 +189,13 @@ export default () => {
         </div>
       </Filters>
 
+      {loading &&
+        [...Array(20).keys()].map(i => (
+          <Item key={i}>
+            <Placeloader style={{ width: '100%', height: 58 }} key={i} />
+          </Item>
+        ))}
+
       {list.map(item => {
         const title = get(item, 'meta.title', item.title)
         const episode = get(item, 'meta.episode')
@@ -158,39 +205,47 @@ export default () => {
           diffMin > 60 ? `${differenceInHours(new Date(), new Date(item.date))}h` : `${diffMin}min`
 
         const { link } = item
-        const already = activeTorrents[item.title.replace(/ /g, '.')]
+        const already = activeTorrents[item.title.replace(/ /g, '.').replace(/\.[A-z]+$/, '')]
 
         return (
           <Item key={item.link}>
-            <div>
-              <span>
-                {title}
-                {episode ? ` (${season ? `S${season} ` : ''}E${episode})` : ''}
-              </span>
-              <Tags>
-                <Tag>{item.category}</Tag>
-                {get(item, 'meta.resolution') && <Tag>{item.meta.resolution}</Tag>}
-                <Tag>{diff}</Tag>
-              </Tags>
+            <div onClick={() => selectItem(selected === item.link ? null : item.link)}>
+              <div>
+                <span>
+                  {title}
+                  {episode ? ` (${season ? `S${season} ` : ''}E${episode})` : ''}
+                </span>
+                <Tags>
+                  <Tag>{item.category}</Tag>
+                  {get(item, 'meta.resolution') && <Tag>{item.meta.resolution}</Tag>}
+                  <Tag>{diff}</Tag>
+                </Tags>
+              </div>
+
+              <SeedInfo>
+                <span>
+                  <span>{item.seeders}</span>
+                  <MdArrowUpward fill={theme.green} />
+                </span>
+                <span>
+                  <span>{item.leechers}</span>
+                  <MdArrowDownward fill={theme.red} />
+                </span>
+              </SeedInfo>
+
+              <DownloadButton
+                disabled={already}
+                onClick={() => !already && download({ variables: { link } })}
+              >
+                {already ? <MdCheck /> : <FiDownloadCloud />}
+              </DownloadButton>
             </div>
 
-            <SeedInfo>
-              <span>
-                <span>{item.seeders}</span>
-                <MdArrowUpward fill={theme.green} />
-              </span>
-              <span>
-                <span>{item.leechers}</span>
-                <MdArrowDownward fill={theme.red} />
-              </span>
-            </SeedInfo>
-
-            <DownloadButton
-              disabled={already}
-              onClick={() => !already && download({ variables: { link } })}
-            >
-              {already ? <MdCheck /> : <FiDownloadCloud />}
-            </DownloadButton>
+            {item.link === selected && (
+              <ExtraContent>
+                <VideoDisplay query={`${title} ${episode ? 'series' : ''}`} />
+              </ExtraContent>
+            )}
           </Item>
         )
       })}
