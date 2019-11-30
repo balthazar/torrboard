@@ -38,8 +38,11 @@ const query = async (method, args) => {
 }
 
 module.exports = {
-  download: torrentData => query('webapi.add_torrent', [torrentData]),
-  getTorrents: () =>
+  download: async torrentUrl => {
+    const path = await query('web.download_torrent_from_url', [torrentUrl])
+    return query('web.add_torrents', [[{ options: { download_location: '/home/media/dl' }, path }]])
+  },
+  getDeluge: () =>
     query('web.update_ui', fields).then(async data => {
       const files = await getFiles()
       const medias = await MediaInfo.find({})
