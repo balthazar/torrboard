@@ -1,4 +1,5 @@
 const got = require('got')
+const ptn = require('parse-torrent-name')
 
 const MediaInfo = require('../models/MediaInfo')
 const getFiles = require('./getFiles')
@@ -68,6 +69,7 @@ module.exports = {
           ...data.torrents[id],
           rar,
           videos,
+          meta: ptn(data.torrents[id].name),
           mediaInfo: byTorrentId[id],
         }
       })

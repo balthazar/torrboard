@@ -20,6 +20,12 @@ const GET_MEDIAS = gql`
         time_added
         rar
         state
+        meta {
+          title
+          resolution
+          episode
+          season
+        }
         mediaInfo {
           id
           title

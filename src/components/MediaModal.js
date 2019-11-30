@@ -1,6 +1,5 @@
 import React from 'react'
 import styled from 'styled-components'
-import ptn from 'parse-torrent-name'
 import { IoIosPlayCircle } from 'react-icons/io'
 import { GoFileZip } from 'react-icons/go'
 import { MdDoneAll, MdContentCopy } from 'react-icons/md'
@@ -84,7 +83,7 @@ export default ({ item }) => {
     .map(v => {
       const splits = v.split('/')
       const name = splits[splits.length - 1]
-      const meta = ptn(name)
+      const { meta } = item
 
       const type = get(item, 'mediaInfo.type')
       if ((!type || type === 'series') && !meta.episode && !isNaN(get(meta, 'excess.0'))) {

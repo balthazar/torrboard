@@ -1,3 +1,4 @@
+const got = require('got')
 const { buildSchema } = require('graphql')
 
 const MediaInfo = require('./models/MediaInfo')
@@ -28,6 +29,14 @@ const schema = buildSchema(`
     freeSpace: Float
   }
 
+  type MetaInfo {
+    title: String
+    resolution: String
+    episode: Int
+    season: Int
+    year: String
+  }
+
   type DelugeTorrent {
     id: String
     name: String,
@@ -47,6 +56,7 @@ const schema = buildSchema(`
     videos: [String]
     rar: String
     mediaInfo: MediaInfo
+    meta: MetaInfo
   }
 
   type Deluge {
@@ -81,6 +91,7 @@ const schema = buildSchema(`
   }
 
   type Query {
+    getYtID(query: String!): String
     mediaInfos(title: String): [MediaInfo]
     config: Config
     deluge: Deluge
@@ -92,6 +103,14 @@ const rootValue = {
   deluge: getDeluge,
   rss,
 
+  getYtID: async ({ query }) => {
+    const res = await got(
+      `https://www.googleapis.com/youtube/v3/search?q=${query}%20trailer&part=id&key=${process.env.YOUTUBE}`,
+      { json: true },
+    )
+
+    return res.body.items[0].id.videoId
+  },
   mediaInfos: () => MediaInfo.find(),
   config: async () => {
     const config = await Config.findOne({})
