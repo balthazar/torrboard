@@ -19,6 +19,8 @@ const fields = [
     'total_uploaded',
     'num_seeds',
     'num_peers',
+    'total_seeds',
+    'total_peers',
   ],
   [],
 ]
