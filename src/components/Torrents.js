@@ -34,7 +34,7 @@ const GET_TORRENTS = gql`
 `
 
 const TORRENT_ACTION = gql`
-  mutation torrentAction($name: String!, $torrentId: String!, $removeFIles: Boolean) {
+  mutation torrentAction($name: String!, $torrentId: String!, $removeFiles: Boolean) {
     torrentAction(name: $name, torrentId: $torrentId, removeFiles: $removeFiles)
   }
 `
