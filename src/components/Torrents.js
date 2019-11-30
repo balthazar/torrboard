@@ -1,14 +1,23 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
 import gql from 'graphql-tag'
 import get from 'lodash/get'
 import { useQuery, useMutation } from '@apollo/react-hooks'
-import { IoIosArrowRoundDown, IoIosArrowRoundUp, IoMdPlay, IoMdPause } from 'react-icons/io'
+import {
+  IoIosArrowRoundDown,
+  IoIosArrowRoundUp,
+  IoMdCheckmark,
+  IoMdPlay,
+  IoMdPause,
+} from 'react-icons/io'
+import { MdCancel } from 'react-icons/md'
 import { FiDelete, FiTrash2 } from 'react-icons/fi'
 import { Tooltip } from 'react-tippy'
 
+import SearchInput from './SearchInput'
 import Placeloader from './Placeloader'
 import convertBytes from '../fn/convertBytes'
+import theme from '../theme'
 
 const GET_TORRENTS = gql`
   {
@@ -133,6 +142,10 @@ const Item = styled.div`
   > *:first-child {
     display: flex;
   }
+
+  > *:last-child {
+    margin-left: auto;
+  }
 `
 
 const State = styled.span`
@@ -161,16 +174,27 @@ const actions = [
 ]
 
 export default () => {
+  const [query, setQuery] = useState('')
+  const [pendingConfirm, askConfirm] = useState({})
   const { loading, data } = useQuery(GET_TORRENTS, {
     pollInterval: 1e3,
   })
 
   const [torrentAction] = useMutation(TORRENT_ACTION)
 
-  const list = get(data, 'deluge.torrents', []).sort((a, b) => b.time_added - a.time_added)
+  const list = get(data, 'deluge.torrents', [])
+    .filter(t =>
+      t.name
+        .toLowerCase()
+        .replace(/\./g, ' ')
+        .includes(query.toLowerCase()),
+    )
+    .sort((a, b) => b.time_added - a.time_added)
 
   return (
     <div>
+      <SearchInput onChange={e => setQuery(e.target.value)} style={{ marginBottom: 10 }} />
+
       <Item heading>
         {fields.map(({ name, label, width }) => (
           <span key={name} style={{ width }}>
@@ -182,7 +206,11 @@ export default () => {
       {loading &&
         [...Array(20).keys()].map(i => (
           <Item loading="true" key={i}>
-            <Placeloader style={{ width: '100%', height: 40 }} key={i} />
+            <Placeloader
+              time={Math.max(1000, Math.floor(Math.random() * 3000))}
+              style={{ width: '100%', height: 40 }}
+              key={i}
+            />
           </Item>
         ))}
 
@@ -200,17 +228,45 @@ export default () => {
             const torrentId = torrent.id
 
             if (name === 'actions') {
-              return (
+              return pendingConfirm[torrentId] ? (
+                <Actions key={name}>
+                  <Tooltip title="cancel" theme="light">
+                    <span onClick={() => askConfirm(prev => ({ ...prev, [torrentId]: null }))}>
+                      <MdCancel />
+                    </span>
+                  </Tooltip>
+                  <Tooltip title="confirm" theme="light">
+                    <span
+                      onClick={() => {
+                        const { name, extra } = pendingConfirm[torrentId]
+                        torrentAction({ variables: { name, torrentId, ...extra } })
+                      }}
+                    >
+                      <IoMdCheckmark fill={theme.green} />
+                    </span>
+                  </Tooltip>
+                </Actions>
+              ) : (
                 <Actions key={name}>
                   {actions.map(({ name, extra, icon }) => (
                     <Tooltip
                       title={
                         name === 'remove' && extra && extra.removeFiles ? `delete & clear` : name
                       }
+                      theme="light"
                       key={`${name}-${!!extra}`}
                     >
                       <span
-                        onClick={() => torrentAction({ variables: { name, torrentId, ...extra } })}
+                        onClick={() => {
+                          if (name === 'remove') {
+                            askConfirm(prev => ({
+                              ...prev,
+                              [torrentId]: { name, extra },
+                            }))
+                          } else {
+                            torrentAction({ variables: { name, torrentId, ...extra } })
+                          }
+                        }}
                       >
                         {icon}
                       </span>

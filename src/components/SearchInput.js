@@ -28,7 +28,7 @@ export const SearchInput = styled.input`
 `
 
 export default props => (
-  <SearchContainer className="search-container">
+  <SearchContainer style={props.style}>
     <SearchIcon>
       <IoMdSearch size={20} color={theme.body} />
     </SearchIcon>
