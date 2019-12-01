@@ -118,7 +118,7 @@ export default ({ item, watched }) => {
         meta.episode = meta.excess[0]
       }
 
-      const url = `${v.replace('/home/media', 'http://media.balthazargronon.com')}`
+      const url = encodeURI(`${v.replace('/home/media', 'http://media.balthazargronon.com')}`)
 
       const text = `${
         meta.episode
