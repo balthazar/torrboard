@@ -44,6 +44,18 @@ const GET_TORRENTS = gql`
   }
 `
 
+const GET_TORRENT_STATES = gql`
+  {
+    deluge {
+      torrents {
+        id
+        state
+        progress
+      }
+    }
+  }
+`
+
 const TORRENT_ACTION = gql`
   mutation torrentAction($name: String!, $torrentId: String!, $removeFiles: Boolean) {
     torrentAction(name: $name, torrentId: $torrentId, removeFiles: $removeFiles)
@@ -227,6 +239,63 @@ export default () => {
 
             const torrentId = torrent.id
 
+            const onClickAction = (name, extra) => {
+              if (name === 'remove') {
+                askConfirm(prev => ({
+                  ...prev,
+                  [torrentId]: { name, extra },
+                }))
+              } else {
+                torrentAction({
+                  variables: { name, torrentId, ...extra },
+                  update(cache) {
+                    const cached = cache.readQuery({
+                      query: GET_TORRENT_STATES,
+                      data: {},
+                    })
+
+                    const state =
+                      name === 'resume'
+                        ? torrent.progress === 100
+                          ? 'Seeding'
+                          : 'Downloading'
+                        : 'Paused'
+
+                    const torrents = cached.deluge.torrents.map(torrent =>
+                      torrent.id !== torrentId ? torrent : { ...torrent, state },
+                    )
+
+                    cache.writeQuery({
+                      query: GET_TORRENT_STATES,
+                      data: { deluge: { torrents, __typename: 'Deluge' } },
+                    })
+                  },
+                })
+              }
+            }
+            const deleteAction = () => {
+              const { name, extra } = pendingConfirm[torrentId]
+              torrentAction({
+                variables: { name, torrentId, ...extra },
+                update(cache) {
+                  const cached = cache.readQuery({
+                    query: GET_TORRENT_STATES,
+                    data: {},
+                  })
+
+                  cache.writeQuery({
+                    query: GET_TORRENT_STATES,
+                    data: {
+                      deluge: {
+                        torrents: cached.deluge.torrents.filter(t => t.id !== torrentId),
+                        __typename: 'Deluge',
+                      },
+                    },
+                  })
+                },
+              })
+            }
+
             if (name === 'actions') {
               return pendingConfirm[torrentId] ? (
                 <Actions key={name}>
@@ -236,42 +305,34 @@ export default () => {
                     </span>
                   </Tooltip>
                   <Tooltip title="confirm" theme="light">
-                    <span
-                      onClick={() => {
-                        const { name, extra } = pendingConfirm[torrentId]
-                        torrentAction({ variables: { name, torrentId, ...extra } })
-                      }}
-                    >
+                    <span onClick={deleteAction}>
                       <IoMdCheckmark fill={theme.green} />
                     </span>
                   </Tooltip>
                 </Actions>
               ) : (
                 <Actions key={name}>
-                  {actions.map(({ name, extra, icon }) => (
-                    <Tooltip
-                      title={
-                        name === 'remove' && extra && extra.removeFiles ? `delete & clear` : name
+                  {actions
+                    .filter(({ name }) => {
+                      if (name === 'remove') {
+                        return true
                       }
-                      theme="light"
-                      key={`${name}-${!!extra}`}
-                    >
-                      <span
-                        onClick={() => {
-                          if (name === 'remove') {
-                            askConfirm(prev => ({
-                              ...prev,
-                              [torrentId]: { name, extra },
-                            }))
-                          } else {
-                            torrentAction({ variables: { name, torrentId, ...extra } })
-                          }
-                        }}
+                      return (
+                        (torrent.state !== 'Paused' && name === 'pause') ||
+                        (torrent.state === 'Paused' && name === 'resume')
+                      )
+                    })
+                    .map(({ name, extra, icon }) => (
+                      <Tooltip
+                        title={
+                          name === 'remove' && extra && extra.removeFiles ? `delete & clear` : name
+                        }
+                        theme="light"
+                        key={`${name}-${!!extra}`}
                       >
-                        {icon}
-                      </span>
-                    </Tooltip>
-                  ))}
+                        <span onClick={() => onClickAction(name, extra)}>{icon}</span>
+                      </Tooltip>
+                    ))}
                 </Actions>
               )
             }
