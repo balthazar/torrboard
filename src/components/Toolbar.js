@@ -40,6 +40,7 @@ const Logo = styled.span`
   align-items: center;
   justify-content: center;
   margin-top: 30px;
+  flex-shrink: 0;
 
   width: 50px;
   height: 50px;

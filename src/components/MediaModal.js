@@ -99,11 +99,11 @@ const GET_WATCHED = gql`
 
 export default ({ item, watched }) => {
   const [setWatched] = useMutation(SET_WATCHED, {
-    update(cache, data) {
-      const config = cache.readQuery({
+    update(cache, { data }) {
+      cache.writeQuery({
         query: GET_WATCHED,
+        data: { config: { watched: data.setWatched, __typename: 'Config' } },
       })
-      console.log(config, data)
     },
   })
 
