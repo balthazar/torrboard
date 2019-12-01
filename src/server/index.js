@@ -9,7 +9,7 @@ const refreshMediaInfos = require('./fn/refreshMediaInfos')
 mongoose.Promise = Promise
 mongoose.connect('mongodb://localhost/torrboard')
 
-const server = new ApolloServer({ schema, rootValue, playground: true })
+const server = new ApolloServer({ schema, rootValue, playground: false })
 
 server.listen(__APIPORT__).then(() => {
   console.log(`[TorrBoard API] Listening on ::${__APIPORT__} 🚀`) // eslint-disable-line no-console
