@@ -10,6 +10,7 @@ import get from 'lodash/get'
 import { IoIosPlayCircle, IoMdEyeOff, IoMdEye } from 'react-icons/io'
 import { GoFileZip } from 'react-icons/go'
 import { MdDoneAll, MdContentCopy } from 'react-icons/md'
+import { FiTriangle } from 'react-icons/fi'
 
 import MediaCard from './MediaCard'
 
@@ -166,6 +167,17 @@ export default ({ item, watched }) => {
                     }}
                   >
                     <IoIosPlayCircle size={20} />
+                  </a>
+                </Tooltip>
+
+                <Tooltip title="Launch VLC" theme="light">
+                  <a
+                    href={`vlc://${v.url}`}
+                    onClick={() => {
+                      setWatched({ variables: { path: v.path, value: true } })
+                    }}
+                  >
+                    <FiTriangle size={17} />
                   </a>
                 </Tooltip>
 
