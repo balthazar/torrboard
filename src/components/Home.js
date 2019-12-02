@@ -130,7 +130,7 @@ export default () => {
 
       <Grid>
         {loading &&
-          [...Array(20).keys()].map(id => (
+          [...Array(30).keys()].map(id => (
             <MediaCard key={id}>
               <Placeloader
                 time={Math.max(1000, Math.floor(Math.random() * 3000))}
