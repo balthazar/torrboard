@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
+import { useQuery, useMutation } from '@apollo/react-hooks'
 import gql from 'graphql-tag'
 import get from 'lodash/get'
-import { useQuery, useMutation } from '@apollo/react-hooks'
 import { MdArrowUpward, MdArrowDownward, MdCheck } from 'react-icons/md'
 import { FiDownloadCloud } from 'react-icons/fi'
 import differenceInMinutes from 'date-fns/differenceInMinutes'
@@ -124,6 +124,11 @@ const ExtraContent = styled.div`
   height: 400px;
 `
 
+const videoSize = {
+  height: 390,
+  width: 640,
+}
+
 const VideoDisplay = ({ query }) => {
   if (!query) {
     return
@@ -132,15 +137,14 @@ const VideoDisplay = ({ query }) => {
   const { loading, data } = useQuery(GET_YOUTUBE_ID, { variables: { query } })
 
   if (loading) {
-    return <Placeloader style={{ height: '100%', width: '100%' }} />
+    return <Placeloader style={videoSize} />
   }
 
   return (
     <Youtube
       videoId={data.getYtID}
       opts={{
-        height: '390',
-        width: '640',
+        ...videoSize,
         playerVars: { autoplay: 1 },
       }}
     />

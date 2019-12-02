@@ -40,8 +40,4 @@ module.exports = async () => {
   cache.put('rss', res, 1e3 * 60)
 
   return res
-
-  // if (search.includes(meta.title) && meta.resolution === '1080p') {
-  //   relevant.push(data)
-  // }
 }
