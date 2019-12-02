@@ -19,7 +19,5 @@ server.listen(__APIPORT__).then(() => {
 // Every 5 minutes
 scheduleJob('*/5 * * * *', () => {
   refreshMediaInfos()
-  // downloadRSS()
+  downloadRSS()
 })
-
-// downloadRSS()

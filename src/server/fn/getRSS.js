@@ -30,8 +30,8 @@ module.exports = async () => {
       link,
       date,
       category,
-      seeders,
-      leechers,
+      seeders: Number(seeders),
+      leechers: Number(leechers),
       meta,
       isSerie,
     }
