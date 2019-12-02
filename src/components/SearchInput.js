@@ -4,11 +4,11 @@ import styled from 'styled-components'
 
 import theme from '../theme'
 
-export const SearchContainer = styled.div`
+const SearchContainer = styled.div`
   position: relative;
 `
 
-export const SearchIcon = styled.div`
+const SearchIcon = styled.div`
   position: absolute;
   left: 20px;
   top: 15px;

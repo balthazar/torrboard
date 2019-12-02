@@ -5,6 +5,7 @@ const { scheduleJob } = require('node-schedule')
 const { __APIPORT__ } = require('../config')
 const { schema, rootValue } = require('./graphql')
 const refreshMediaInfos = require('./fn/refreshMediaInfos')
+const downloadRSS = require('./fn/downloadRSS')
 
 mongoose.Promise = Promise
 mongoose.connect('mongodb://localhost/torrboard')
@@ -18,4 +19,7 @@ server.listen(__APIPORT__).then(() => {
 // Every 5 minutes
 scheduleJob('*/5 * * * *', () => {
   refreshMediaInfos()
+  // downloadRSS()
 })
+
+// downloadRSS()
