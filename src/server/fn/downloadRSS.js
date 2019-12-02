@@ -1,3 +1,5 @@
+const ptn = require('parse-torrent-name')
+
 const Config = require('../models/Config')
 const getRSS = require('./getRSS')
 const { getDeluge, download } = require('./deluge')
@@ -12,7 +14,11 @@ module.exports = async () => {
     {},
   )
 
-  const torrentNames = torrents.reduce((acc, tor) => ((acc[tor.name] = true), acc), {})
+  const torrentKeys = torrents.reduce((acc, tor) => {
+    const meta = ptn(tor.name.replace(/\.\.+/g, '.'))
+    acc[`${meta.title}-${meta.season}-${meta.episode}`] = true
+    return acc
+  }, {})
 
   const relevants = {}
 
@@ -29,7 +35,8 @@ module.exports = async () => {
 
   Object.keys(relevants).forEach(key => {
     const torrent = relevants[key]
-    if (torrentNames[torrent.title.replace(/\s\s+/g, ' ').replace(/ /g, '.')]) {
+    const meta = ptn(torrent.title.replace(/\s\s+/g, ' ').replace(/ /g, '.'))
+    if (torrentKeys[`${meta.title}-${meta.season}-${meta.episode}`]) {
       return
     }
 
