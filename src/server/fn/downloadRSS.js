@@ -29,7 +29,7 @@ module.exports = async () => {
 
   Object.keys(relevants).forEach(key => {
     const torrent = relevants[key]
-    if (torrentNames[torrent.title.replace(/ /g, '.')]) {
+    if (torrentNames[torrent.title.replace(/\s\s+/g, ' ').replace(/ /g, '.')]) {
       return
     }
 
