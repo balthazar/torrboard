@@ -5,6 +5,6 @@ export default b => {
     return '0B'
   }
 
-  const i = Math.floor(Math.log(b) / Math.log(1e3))
-  return `${parseFloat((b / Math.pow(1e3, i)).toFixed(2))}${sizes[i]}`
+  const i = Math.floor(Math.log(b) / Math.log(1024))
+  return `${parseFloat((b / Math.pow(1024, i)).toFixed(2))}${sizes[i]}`
 }
