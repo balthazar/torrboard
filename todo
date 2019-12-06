@@ -1,3 +1,4 @@
+- fix false matches
 - manual imdb fetch
 - https / auth
 - invite link / api restrictions

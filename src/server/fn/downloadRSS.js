@@ -36,7 +36,10 @@ module.exports = async () => {
   Object.keys(relevants).forEach(key => {
     const torrent = relevants[key]
     const meta = ptn(torrent.title.replace(/\s\s+/g, ' ').replace(/ /g, '.'))
-    if (torrentKeys[`${meta.title}-${meta.season}-${meta.episode}`]) {
+    if (
+      torrentKeys[`${meta.title}-${meta.season}-${meta.episode}`] ||
+      torrent.title.toLowerCase().includes('dubbed')
+    ) {
       return
     }
 
