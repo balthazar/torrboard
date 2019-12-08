@@ -91,6 +91,30 @@ const DateInput = styled.input`
   border-radius: 3px;
 `
 
+const Users = styled.div`
+  > * + * {
+    margin-top: 10px;
+  }
+`
+
+const UserInfos = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: ${p => p.theme.bg};
+
+  .status {
+    margin-left: auto;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background-color: ${p => p.theme[p.inviteCode ? 'red' : 'green']};
+  }
+
+  > * + * {
+    margin-left: 10px;
+  }
+`
+
 const GET_GRABS = gql`
   {
     config {
@@ -105,6 +129,7 @@ const GET_USERS = gql`
       name
       email
       expires
+      inviteCode
       ips {
         value
         lastSeen
@@ -137,8 +162,6 @@ export default () => {
   const { loading: loadingGrabs, data: grabsData } = useQuery(GET_GRABS, {
     pollInterval: 30e3,
   })
-
-  console.log(usersData)
 
   const [setGrabs] = useMutation(SET_GRABS, {
     update(cache, { data }) {
@@ -215,11 +238,17 @@ export default () => {
       {loadingUsers ? (
         <Placeloader style={{ width: '100%', height: 100 }} />
       ) : (
-        <div>
-          {'userssss'}
-          {'userssss'}
-          {'userssss'}
-        </div>
+        <Users>
+          {get(usersData, 'users', [])
+            .filter(u => u.name !== 'master')
+            .map(user => (
+              <UserInfos inviteCode={user.inviteCode} key={user.name}>
+                <span>{user.name}</span>
+                <span>({user.email})</span>
+                <span className="status">{user.inviteCode ? 'inactive' : 'active'}</span>
+              </UserInfos>
+            ))}
+        </Users>
       )}
 
       <h3>{'create'}</h3>

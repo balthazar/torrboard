@@ -1,5 +1,6 @@
 - fix false matches
 - manual imdb fetch
-- https / auth
-- invite link / api restrictions
 - extract rar
+
+- user watch history
+- user expire
