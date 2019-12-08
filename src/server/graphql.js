@@ -1,18 +1,19 @@
 const got = require('got')
 const uniq = require('lodash/uniq')
-const { buildSchema } = require('graphql')
-const bcrypt = require('bcrypt')
-const randomstring = require('randomstring')
-const jwt = require('jsonwebtoken')
+const { makeExecutableSchema } = require('graphql-tools')
+const gql = require('graphql-tag')
 
-const MediaInfo = require('./models/MediaInfo')
-const User = require('./models/User')
 const Config = require('./models/Config')
 
 const { download, torrentAction, getDeluge } = require('./fn/deluge')
 const rss = require('./fn/getRSS')
+const auth = require('./api/auth')
+const schemaDirectives = require('./directives')
 
-const schema = buildSchema(`
+const typeDefs = gql`
+  directive @auth on FIELD | FIELD_DEFINITION
+  directive @hasRole(role: String) on FIELD | FIELD_DEFINITION
+
   type MediaInfo {
     id: ID
     title: String
@@ -44,16 +45,16 @@ const schema = buildSchema(`
 
   type DelugeTorrent {
     id: String
-    name: String,
+    name: String
     total_done: Float
     ratio: Float
-    total_size: Float,
-    state: String,
-    eta: Float,
-    progress: Float,
-    upload_payload_rate: Float,
-    download_payload_rate: Float,
-    time_added: Float,
+    total_size: Float
+    state: String
+    eta: Float
+    progress: Float
+    upload_payload_rate: Float
+    download_payload_rate: Float
+    time_added: Float
     total_uploaded: Float
 
     total_seeds: Int
@@ -105,114 +106,90 @@ const schema = buildSchema(`
   }
 
   type Mutation {
-    setAutoGrabs(autoGrabs: [String]): [String]
-    setWatched(path: String, value: Boolean): [String]
-    download(link: String!): Boolean
+    login(name: String, password: String!): String!
+    setPassword(inviteCode: String!, password: String!): String!
+
+    setWatched(path: String, value: Boolean): [String] @auth
+
+    createUser(name: String!, email: String!, expires: Int!): Boolean @hasRole(role: "master")
+    setAutoGrabs(autoGrabs: [String]): [String] @hasRole(role: "master")
+    download(link: String!): Boolean @hasRole(role: "master")
     torrentAction(name: String!, torrentId: String!, removeFiles: Boolean): Boolean
+      @hasRole(role: "master")
   }
 
   type Query {
-    getYtID(query: String!): String
-    mediaInfos(title: String): [MediaInfo]
+    deluge: Deluge @auth
 
-    config: Config
-    deluge: Deluge
-    rss: [RssItem]
+    getYtID(query: String!): String @hasRole(role: "master")
+    config: Config @hasRole(role: "master")
+    rss: [RssItem] @hasRole(role: "master")
   }
-`)
+`
 
-const rootValue = {
-  deluge: getDeluge,
-  torrentAction,
-  download,
-  rss,
+const resolvers = {
+  Query: {
+    deluge: getDeluge,
+    rss,
+    getYtID: async ({ query }) => {
+      const res = await got(
+        `https://www.googleapis.com/youtube/v3/search?q=${query}%20trailer&part=id&key=${process.env.YOUTUBE}`,
+        { json: true },
+      )
 
-  getYtID: async ({ query }) => {
-    const res = await got(
-      `https://www.googleapis.com/youtube/v3/search?q=${query}%20trailer&part=id&key=${process.env.YOUTUBE}`,
-      { json: true },
-    )
-
-    return res.body.items[0].id.videoId
-  },
-  mediaInfos: () => MediaInfo.find(),
-  config: async () => {
-    const config = await Config.findOne({})
-    return config || { autoGrabs: [], watched: [], fetchedMedias: {} }
+      return res.body.items[0].id.videoId
+    },
+    config: async () => {
+      const config = await Config.findOne({})
+      return config || { autoGrabs: [], watched: [], fetchedMedias: {} }
+    },
   },
 
-  setAutoGrabs: async ({ autoGrabs = [] }) => {
-    await Config.updateOne(
-      {},
-      {
-        $set: { autoGrabs },
-      },
-      { upsert: true },
-    )
+  Mutation: {
+    torrentAction,
+    download,
 
-    return autoGrabs
-  },
-  setWatched: async ({ path, value }) => {
-    const config = await Config.findOne({})
+    setAutoGrabs: async (data, { autoGrabs = [] }) => {
+      await Config.updateOne(
+        {},
+        {
+          $set: { autoGrabs },
+        },
+        { upsert: true },
+      )
 
-    const watched = uniq(value ? [...config.watched, path] : config.watched.filter(w => w !== path))
+      return autoGrabs
+    },
+    setWatched: async (data, { path, value }) => {
+      const config = await Config.findOne({})
 
-    await Config.updateOne(
-      {},
-      {
-        watched,
-      },
-      { upsert: true },
-    )
+      const watched = uniq(
+        value ? [...config.watched, path] : config.watched.filter(w => w !== path),
+      )
 
-    return watched
-  },
+      await Config.updateOne(
+        {},
+        {
+          watched,
+        },
+        { upsert: true },
+      )
 
-  createUser: async ({ name, email, expires }) => {
-    const inviteCode = randomstring.generate()
+      return watched
+    },
 
-    await User.create({
-      name,
-      email,
-      inviteCode,
-      expires,
-    })
-  },
-
-  setPassword: async ({ inviteCode, password }) => {
-    if (!password || !inviteCode || password.length < 5) {
-      throw new Error('Invalid invite code or password.')
-    }
-
-    const user = await User.findOne({ inviteCode })
-    if (!user || user.password) {
-      throw new Error('Invalid user.')
-    }
-
-    const hashed = await bcrypt.hash(password, 10)
-
-    await User.updateOne(
-      { _id: user._id },
-      {
-        password: hashed,
-        inviteCode: null,
-      },
-    )
-
-    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET)
+    // Auth
+    createUser: auth.createUser,
+    login: auth.login,
+    setPassword: auth.setPassword,
   },
 }
 
-const context = async ({ req }) => {
-  const token = req.headers.authorization || ''
-
-  try {
-    const { _id } = jwt.verify(token.split(' ')[1], process.env.JWT_SECRET)
-    const user = await User.findById(_id)
-    return user
-  } catch (e) {
-    throw new Error('Invalid Auth')
-  }
+module.exports = {
+  schema: makeExecutableSchema({
+    typeDefs,
+    resolvers,
+    schemaDirectives,
+  }),
+  context: auth.context,
 }
-
-module.exports = { schema, rootValue, context }

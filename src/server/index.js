@@ -1,18 +1,26 @@
+const express = require('express')
 const mongoose = require('mongoose')
-const { ApolloServer } = require('apollo-server')
+const { ApolloServer } = require('apollo-server-express')
 const { scheduleJob } = require('node-schedule')
+const cookieParser = require('cookie-parser')
 
 const { __APIPORT__ } = require('../config')
-const { schema, rootValue } = require('./graphql')
+const graphql = require('./graphql')
 const refreshMediaInfos = require('./fn/refreshMediaInfos')
 const downloadRSS = require('./fn/downloadRSS')
 
 mongoose.Promise = Promise
 mongoose.connect('mongodb://localhost/torrboard')
 
-const server = new ApolloServer({ schema, rootValue, playground: false })
+const server = new ApolloServer({ ...graphql, playground: true })
 
-server.listen(__APIPORT__).then(() => {
+const app = express()
+
+app.use(cookieParser())
+
+server.applyMiddleware({ app })
+
+app.listen(__APIPORT__, () => {
   console.log(`[TorrBoard API] Listening on ::${__APIPORT__} 🚀`) // eslint-disable-line no-console
 })
 
