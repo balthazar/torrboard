@@ -181,8 +181,8 @@ const resolvers = {
 
       const watched = uniq(value ? [...u.watched, path] : u.watched.filter(w => w !== path))
 
-      user.watched = watched
-      await user.save()
+      u.watched = watched
+      await u.save()
 
       return watched
     },
