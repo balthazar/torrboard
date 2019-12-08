@@ -85,12 +85,12 @@ export default ({ inviteCode }) => {
       <Logo />
       {inviteCode ? (
         <>
-          <span>{'Welcome to the future.'}</span>
+          <span style={{ marginBottom: 20 }}>{'Welcome to the future.'}</span>
           <Input
             autoFocus
             onChange={e => setPassword(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Password"
+            placeholder="Set password"
           />
         </>
       ) : (
