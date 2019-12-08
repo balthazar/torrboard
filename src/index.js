@@ -51,14 +51,17 @@ const Content = () => {
         <>
           <Toolbar />
           <Router>
-            <Home path="/" />
+            <Home path="/" default />
             <Torrents path="/torrents" />
             <Rss path="/rss" />
             <Settings path="/settings" />
           </Router>
         </>
       ) : (
-        <Login />
+        <Router>
+          <Login path="/" default />
+          <Login path="/invite/:inviteCode" />
+        </Router>
       )}
     </Container>
   )
@@ -84,3 +87,7 @@ const App = () => {
 }
 
 ReactDOM.render(<App />, document.getElementById('root'))
+
+if (module.hot) {
+  module.hot.accept()
+}

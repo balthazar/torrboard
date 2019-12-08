@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import styled from 'styled-components'
 import gql from 'graphql-tag'
 import { useMutation } from '@apollo/react-hooks'
 import { useToasts } from 'react-toast-notifications'
@@ -8,28 +7,12 @@ import jwt from 'jsonwebtoken'
 
 import { useStore } from '../state'
 import Input from './Input'
+import GuestContainer from './GuestContainer'
 import Logo from './Logo'
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  position: absolute;
-  top: 50%;
-  left: 50%;
-
-  transform: translate(-50%, -50%);
-
-  > div:first-child {
-    margin-bottom: 30px;
-  }
-
-  > input {
-    width: 300px;
-    & + input {
-      margin-top: 10px;
-    }
+const SET_PASSWORD = gql`
+  mutation setPassword($inviteCode: String!, $password: String!) {
+    setPassword(inviteCode: $inviteCode, password: $password)
   }
 `
 
@@ -39,27 +22,56 @@ const LOGIN = gql`
   }
 `
 
-export default () => {
+const apiHandlers = ({
+  addToast,
+  onError = err => addToast(err.message.replace('GraphQL error: ', ''), { appearance: 'error' }),
+  onCompleted = () => {},
+}) => ({ onError, onCompleted })
+
+export default ({ inviteCode }) => {
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const { addToast } = useToasts()
   const [, dispatch] = useStore()
 
-  const [login, { loading }] = useMutation(LOGIN, {
-    onError: err => {
-      addToast(err.message.replace('GraphQL error: ', ''), { appearance: 'error' })
-    },
-    onCompleted: data => {
-      addToast("You're in.", { appearance: 'success' })
-      const token = data.login
-      Cookies.set('token', token, { expires: 7 })
-      const decoded = jwt.decode(token)
-      dispatch({ type: 'LOGIN', payload: { ...decoded, token } })
-    },
-  })
+  const isInvite = !!inviteCode
+
+  const [setAccountPassword] = useMutation(
+    SET_PASSWORD,
+    apiHandlers({
+      onCompleted: data => {
+        console.log(data)
+        addToast('Account activated.', { appearance: 'success' })
+      },
+      addToast,
+    }),
+  )
+
+  const [login, { loading: loginLoading }] = useMutation(
+    LOGIN,
+    apiHandlers({
+      onCompleted: data => {
+        addToast("You're in.", { appearance: 'success' })
+        const token = data.login
+        Cookies.set('token', token, { expires: 7 })
+        const decoded = jwt.decode(token)
+        dispatch({ type: 'LOGIN', payload: { ...decoded, token } })
+      },
+      addToast,
+    }),
+  )
 
   const onKeyDown = e => {
-    if (e.keyCode === 13 && !loading && password) {
+    const isEnter = e.keyCode === 13
+    if (!isEnter) {
+      return
+    }
+
+    if (isInvite) {
+      setAccountPassword({ variables: { inviteCode, password } })
+    }
+
+    if (!isInvite && !loginLoading && password) {
       login({
         variables: { name, password },
       })
@@ -67,14 +79,28 @@ export default () => {
   }
 
   return (
-    <Container>
+    <GuestContainer>
       <Logo />
-      <Input autoFocus onChange={e => setName(e.target.value)} placeholder="Name" />
-      <Input
-        onChange={e => setPassword(e.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder="Password "
-      />
-    </Container>
+      {inviteCode ? (
+        <>
+          <span>{'Welcome to the future.'}</span>
+          <Input
+            autoFocus
+            onChange={e => setPassword(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder="Password"
+          />
+        </>
+      ) : (
+        <>
+          <Input autoFocus onChange={e => setName(e.target.value)} placeholder="Name" />
+          <Input
+            onChange={e => setPassword(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder="Password "
+          />
+        </>
+      )}
+    </GuestContainer>
   )
 }
