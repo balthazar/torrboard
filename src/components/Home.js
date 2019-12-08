@@ -16,6 +16,7 @@ import apiHandlers from '../fn/apiHandlers'
 
 const GET_MEDIAS = gql`
   {
+    watched
     deluge {
       torrents {
         name
@@ -65,13 +66,7 @@ export default () => {
     ...apiHandlers({ addToast }),
   })
 
-  // TODO
-  const watched = {}
-
-  // const watched = get(data, 'config.watched', []).reduce(
-  //   (acc, path) => ((acc[path] = true), acc),
-  //   {},
-  // )
+  const watched = get(data, 'watched', []).reduce((acc, path) => ((acc[path] = true), acc), {})
 
   const reduced = get(data, 'deluge.torrents', [])
     .sort((a, b) =>
