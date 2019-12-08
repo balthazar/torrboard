@@ -5,7 +5,9 @@ export default ({
   onCompleted = f => f,
 }) => {
   const errorHandler = err => {
-    const msg = (err[0] || err).message.replace('GraphQL error: ', '')
+    const msgs = err.message.split('\n')
+    const msg = msgs[0].replace('GraphQL error: ', '')
+
     addToast(msg, { appearance: 'error' })
     onError({ err, msg })
   }
