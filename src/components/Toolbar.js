@@ -4,11 +4,15 @@ import { useQuery } from '@apollo/react-hooks'
 import gql from 'graphql-tag'
 import { Link } from '@reach/router'
 import { GoRss } from 'react-icons/go'
-import { MdHome, MdList, MdSettings } from 'react-icons/md'
+import { MdHome, MdList, MdSettings, MdPowerSettingsNew } from 'react-icons/md'
 import { IoIosArrowRoundDown, IoIosArrowRoundUp } from 'react-icons/io'
 import { AiFillDatabase } from 'react-icons/ai'
+import Cookies from 'js-cookie'
+import get from 'lodash/get'
 
 import convertBytes from '../fn/convertBytes'
+import { useStore } from '../state'
+import Logo from './Logo'
 
 export const TOOLBAR_WIDTH = 100
 
@@ -33,19 +37,6 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-`
-
-const Logo = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 30px;
-  flex-shrink: 0;
-
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background-color: ${p => p.theme.opacityLight(0.2)};
 `
 
 const Menu = styled.div`
@@ -102,11 +93,18 @@ export default () => {
     pollInterval: 1e3,
   })
 
+  const [state, dispatch] = useStore()
+
+  const disconnect = () => {
+    Cookies.remove('token')
+    dispatch({ type: 'LOGOUT' })
+  }
+
+  const isAdmin = get(state, 'user.name') === 'master'
+
   return (
     <Container>
-      <Logo>
-        <img src="http://media.balthazargronon.com/dl/statics/torrboard.png" width="25" />
-      </Logo>
+      <Logo />
 
       <Menu>
         <LinkContainer>
@@ -115,22 +113,34 @@ export default () => {
           </Link>
         </LinkContainer>
 
-        <LinkContainer>
-          <Link to="/torrents">
-            <MdList />
-          </Link>
-        </LinkContainer>
+        {isAdmin && (
+          <LinkContainer>
+            <Link to="/torrents">
+              <MdList />
+            </Link>
+          </LinkContainer>
+        )}
+
+        {isAdmin && (
+          <LinkContainer>
+            <Link to="/rss">
+              <GoRss />
+            </Link>
+          </LinkContainer>
+        )}
+
+        {isAdmin && (
+          <LinkContainer>
+            <Link to="/settings">
+              <MdSettings />
+            </Link>
+          </LinkContainer>
+        )}
 
         <LinkContainer>
-          <Link to="/rss">
-            <GoRss />
-          </Link>
-        </LinkContainer>
-
-        <LinkContainer>
-          <Link to="/settings">
-            <MdSettings />
-          </Link>
+          <a onClick={disconnect}>
+            <MdPowerSettingsNew />
+          </a>
         </LinkContainer>
       </Menu>
 
