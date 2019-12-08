@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import gql from 'graphql-tag'
 import { useQuery } from '@apollo/react-hooks'
 import get from 'lodash/get'
+import { useToasts } from 'react-toast-notifications'
 
 import Placeloader from './Placeloader'
 import SearchInput from './SearchInput'
@@ -11,11 +12,10 @@ import MediaCard, { CARD_HEIGHT, CARD_WIDTH } from './MediaCard'
 import MediaModal from './MediaModal'
 import { Filters, FilterValue } from './Filters'
 
+import apiHandlers from '../fn/apiHandlers'
+
 const GET_MEDIAS = gql`
   {
-    config {
-      watched
-    }
     deluge {
       torrents {
         name
@@ -58,14 +58,20 @@ export default () => {
   const [sortBy, setSort] = useState('time')
   const [item, selectItem] = useState(null)
   const [category, setCategory] = useState(null)
+  const { addToast } = useToasts()
+
   const { loading, data } = useQuery(GET_MEDIAS, {
     pollInterval: 10e3,
+    ...apiHandlers({ addToast }),
   })
 
-  const watched = get(data, 'config.watched', []).reduce(
-    (acc, path) => ((acc[path] = true), acc),
-    {},
-  )
+  // TODO
+  const watched = {}
+
+  // const watched = get(data, 'config.watched', []).reduce(
+  //   (acc, path) => ((acc[path] = true), acc),
+  //   {},
+  // )
 
   const reduced = get(data, 'deluge.torrents', [])
     .sort((a, b) =>

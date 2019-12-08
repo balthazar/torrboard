@@ -7,6 +7,8 @@ import jwt from 'jsonwebtoken'
 import { navigate } from '@reach/router'
 
 import { useStore } from '../state'
+import apiHandlers from '../fn/apiHandlers'
+
 import Input from './Input'
 import GuestContainer from './GuestContainer'
 import Logo from './Logo'
@@ -22,12 +24,6 @@ const LOGIN = gql`
     login(name: $name, password: $password)
   }
 `
-
-const apiHandlers = ({
-  addToast,
-  onError = err => addToast(err.message.replace('GraphQL error: ', ''), { appearance: 'error' }),
-  onCompleted = () => {},
-}) => ({ onError, onCompleted })
 
 export default ({ inviteCode }) => {
   const [name, setName] = useState('')
