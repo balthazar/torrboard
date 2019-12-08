@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const mjml2html = require('mjml')
 const sendgrid = require('@sendgrid/mail')
 const randomstring = require('randomstring')
+const cache = require('memory-cache')
 
 const User = require('../models/User')
 
@@ -119,11 +120,37 @@ const setPassword = async (parent, { inviteCode, password }) => {
   return makeToken(user)
 }
 
-const context = ({ req }) => {
-  const token = req.headers.authorization || ''
+const getUsers = async name => {
+  const cached = cache.get('users')
 
+  if (cached && cached[name]) {
+    return cached
+  }
+
+  const users = await User.find()
+
+  const reduced = users.reduce((acc, user) => ((acc[user.name] = user), acc), {
+    [name]: {},
+  })
+
+  cache.put('users', reduced, 1e3 * 60 * 5)
+
+  return reduced
+}
+
+const context = async ({ req }) => {
   try {
-    const user = jwt.verify(token.split(' ')[1], process.env.JWT_SECRET)
+    const token = req.headers.authorization || ''
+    const payload = jwt.verify(token.split(' ')[1], process.env.JWT_SECRET)
+
+    const { name } = payload
+    const users = await getUsers(name)
+    const user = users[name]
+
+    if (!user.name) {
+      throw new Error('Unknown or expired user.')
+    }
+
     return { user }
   } catch (e) {
     return {}
