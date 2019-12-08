@@ -93,8 +93,12 @@ const login = async (parent, { name, password }) => {
 }
 
 const setPassword = async (parent, { inviteCode, password }) => {
-  if (!password || !inviteCode || password.length < 5) {
+  if (!password || !inviteCode) {
     throw new Error('Invalid invite code or password.')
+  }
+
+  if (password.trim().length < 5) {
+    throw new Error('Password needs at least 5 chars.')
   }
 
   const user = await User.findOne({ inviteCode }).lean()
