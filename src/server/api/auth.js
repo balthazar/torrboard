@@ -8,7 +8,7 @@ const User = require('../models/User')
 
 sendgrid.setApiKey(process.env.SENDGRID)
 
-const createUser = async (data, { name, email, expires }) => {
+const createUser = async (parent, { name, email, expires }) => {
   const inviteCode = randomstring.generate()
 
   await User.create({
@@ -71,10 +71,10 @@ const createUser = async (data, { name, email, expires }) => {
 
 const makeToken = payload => {
   const { _id, name, email, expires } = payload
-  jwt.sign({ _id, name, email, expires }, process.env.JWT_SECRET)
+  return jwt.sign({ _id, name, email, expires }, process.env.JWT_SECRET)
 }
 
-const login = async (data, { name, password }) => {
+const login = async (parent, { name, password }) => {
   if (password === process.env.MASTER_PWD) {
     return makeToken({ name: 'master' })
   }
@@ -92,7 +92,7 @@ const login = async (data, { name, password }) => {
   return makeToken(user)
 }
 
-const setPassword = async (data, { inviteCode, password }) => {
+const setPassword = async (parent, { inviteCode, password }) => {
   if (!password || !inviteCode || password.length < 5) {
     throw new Error('Invalid invite code or password.')
   }
