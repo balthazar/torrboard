@@ -22,7 +22,7 @@ const authenticate = ({ user }) => {
 
 const checkRole = ({ user }, requiredRole) => {
   if (user.name !== requiredRole) {
-    throw new AuthError('You do not have the right bitchass.')
+    throw new AuthError('Ur a trash haxxor bitchass pussy cucklord')
   }
 }
 
