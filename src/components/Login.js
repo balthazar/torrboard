@@ -43,7 +43,7 @@ export default () => {
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const { addToast } = useToasts()
-  const dispatch = useStore()[1]
+  const [, dispatch] = useStore()
 
   const [login, { loading }] = useMutation(LOGIN, {
     onError: err => {
@@ -69,7 +69,7 @@ export default () => {
   return (
     <Container>
       <Logo />
-      <Input onChange={e => setName(e.target.value)} placeholder="Name" />
+      <Input autoFocus onChange={e => setName(e.target.value)} placeholder="Name" />
       <Input
         onChange={e => setPassword(e.target.value)}
         onKeyDown={onKeyDown}
