@@ -27,7 +27,6 @@ const typeDefs = gql`
 
   type Config {
     autoGrabs: [String]
-    watched: [String]
   }
 
   type DelugeStats {
@@ -103,6 +102,7 @@ const typeDefs = gql`
     name: String
     email: String
     expires: String
+    inviteCode: String
     ips: [IPItem]
   }
 
