@@ -105,7 +105,10 @@ const GET_USERS = gql`
       name
       email
       expires
-      ips
+      ips {
+        value
+        lastSeen
+      }
     }
   }
 `

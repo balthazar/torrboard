@@ -96,13 +96,13 @@ const typeDefs = gql`
 
   type IPItem {
     value: String
-    lastSeen: Int
+    lastSeen: String
   }
 
   type User {
     name: String
     email: String
-    expires: Int
+    expires: String
     ips: [IPItem]
   }
 
