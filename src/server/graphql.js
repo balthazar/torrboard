@@ -111,7 +111,7 @@ const typeDefs = gql`
 
     setWatched(path: String, value: Boolean): [String] @auth
 
-    createUser(name: String!, email: String!, expires: Int!): Boolean @hasRole(role: "master")
+    createUser(name: String!, email: String!, expires: String!): Boolean @hasRole(role: "master")
     setAutoGrabs(autoGrabs: [String]): [String] @hasRole(role: "master")
     download(link: String!): Boolean @hasRole(role: "master")
     torrentAction(name: String!, torrentId: String!, removeFiles: Boolean): Boolean
