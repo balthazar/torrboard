@@ -90,11 +90,13 @@ const Stats = styled.div`
 `
 
 export default () => {
+  const [state, dispatch] = useStore()
+
   const { loading, data } = useQuery(GET_STATS, {
     pollInterval: 1e3,
+    skip: get(state, 'user.name') !== 'master',
   })
 
-  const [state, dispatch] = useStore()
   const { addToast } = useToasts()
 
   const disconnect = () => {

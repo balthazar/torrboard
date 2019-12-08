@@ -1,4 +1,3 @@
-const jwt = require('jsonwebtoken')
 const { SchemaDirectiveVisitor } = require('graphql-tools')
 const {
   DirectiveLocation,
