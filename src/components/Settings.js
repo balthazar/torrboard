@@ -4,6 +4,7 @@ import gql from 'graphql-tag'
 import styled from 'styled-components'
 import { MdAdd, MdRemove } from 'react-icons/md'
 import { useToasts } from 'react-toast-notifications'
+import get from 'lodash/get'
 
 import Placeloader from './Placeloader'
 import Button from './Button'
@@ -98,6 +99,17 @@ const GET_GRABS = gql`
   }
 `
 
+const GET_USERS = gql`
+  {
+    users {
+      name
+      email
+      expires
+      ips
+    }
+  }
+`
+
 const SET_GRABS = gql`
   mutation setAutoGrabs($autoGrabs: [String]!) {
     setAutoGrabs(autoGrabs: $autoGrabs)
@@ -117,9 +129,13 @@ export default () => {
   const [expires, setExpires] = useState(null)
   const { addToast } = useToasts()
 
-  const { loading, data } = useQuery(GET_GRABS, {
+  const { loading: loadingUsers, data: usersData } = useQuery(GET_USERS)
+
+  const { loading: loadingGrabs, data: grabsData } = useQuery(GET_GRABS, {
     pollInterval: 30e3,
   })
+
+  console.log(usersData)
 
   const [setGrabs] = useMutation(SET_GRABS, {
     update(cache, { data }) {
@@ -139,11 +155,8 @@ export default () => {
     onError: err => addToast(err.message, { appearance: 'error' }),
   })
 
-  if (loading) {
-    return <Placeloader style={{ width: '100%', height: '100%' }} />
-  }
+  const grabs = get(grabsData, 'config.autoGrabs')
 
-  const grabs = data.config.autoGrabs
   const removeGrab = text => {
     setGrabs({ variables: { autoGrabs: grabs.filter(t => t !== text) } })
   }
@@ -179,18 +192,32 @@ export default () => {
         />
       </InputContainer>
 
-      <Autos>
-        {grabs.map((text, i) => (
-          <span key={i}>
-            <a onClick={() => removeGrab(text)}>
-              <MdRemove />
-            </a>
-            <span title={text}>{text}</span>
-          </span>
-        ))}
-      </Autos>
+      {loadingGrabs ? (
+        <Placeloader style={{ width: '100%', height: 100 }} />
+      ) : (
+        <Autos>
+          {grabs.map((text, i) => (
+            <span key={i}>
+              <a onClick={() => removeGrab(text)}>
+                <MdRemove />
+              </a>
+              <span title={text}>{text}</span>
+            </span>
+          ))}
+        </Autos>
+      )}
 
       <h3>{'users'}</h3>
+
+      {loadingUsers ? (
+        <Placeloader style={{ width: '100%', height: 100 }} />
+      ) : (
+        <div>
+          {'userssss'}
+          {'userssss'}
+          {'userssss'}
+        </div>
+      )}
 
       <h3>{'create'}</h3>
 
