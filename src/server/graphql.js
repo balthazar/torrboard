@@ -145,7 +145,7 @@ const resolvers = {
 
     rss,
     users: () => User.find(),
-    getYtID: async ({ query }) => {
+    getYtID: async (parent, { query }) => {
       const res = await got(
         `https://www.googleapis.com/youtube/v3/search?q=${query}%20trailer&part=id&key=${process.env.YOUTUBE}`,
         { json: true },
