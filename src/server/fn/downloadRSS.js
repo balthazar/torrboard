@@ -43,6 +43,6 @@ module.exports = async () => {
       return
     }
 
-    download({ link: torrent.link })
+    download(null, { link: torrent.link })
   })
 }
