@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom'
 import { Router } from '@reach/router'
 import { ApolloProvider } from '@apollo/react-hooks'
 import styled, { ThemeProvider } from 'styled-components'
-import { useCookie } from '@use-hook/use-cookie'
 import Cookies from 'js-cookie'
 import { ToastProvider } from 'react-toast-notifications'
 
