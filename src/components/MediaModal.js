@@ -92,9 +92,7 @@ const SET_WATCHED = gql`
 
 const GET_WATCHED = gql`
   {
-    config {
-      watched
-    }
+    watched
   }
 `
 
@@ -103,7 +101,7 @@ export default ({ item, watched }) => {
     update(cache, { data }) {
       cache.writeQuery({
         query: GET_WATCHED,
-        data: { config: { watched: data.setWatched, __typename: 'Config' } },
+        data: { watched: data.setWatched },
       })
     },
   })
