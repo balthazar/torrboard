@@ -11,4 +11,6 @@ RSS_URL={rssUrl}
 OMDB={omdbKey}
 DELUGE={pass}:{host}
 YOUTUBE={apiKey}
+JWT_SECRET={secret}
+SENDGRID={apiKey}
 ```
