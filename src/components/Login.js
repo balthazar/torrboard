@@ -4,6 +4,7 @@ import { useMutation } from '@apollo/react-hooks'
 import { useToasts } from 'react-toast-notifications'
 import Cookies from 'js-cookie'
 import jwt from 'jsonwebtoken'
+import { navigate } from '@reach/router'
 
 import { useStore } from '../state'
 import Input from './Input'
@@ -36,12 +37,20 @@ export default ({ inviteCode }) => {
 
   const isInvite = !!inviteCode
 
+  const doLogin = (data, fieldName) => {
+    const token = data[fieldName]
+    Cookies.set('token', token, { expires: 7 })
+    const decoded = jwt.decode(token)
+    dispatch({ type: 'LOGIN', payload: { ...decoded, token } })
+    navigate('/')
+  }
+
   const [setAccountPassword] = useMutation(
     SET_PASSWORD,
     apiHandlers({
       onCompleted: data => {
-        console.log(data)
         addToast('Account activated.', { appearance: 'success' })
+        doLogin(data, 'setPassword')
       },
       addToast,
     }),
@@ -52,10 +61,7 @@ export default ({ inviteCode }) => {
     apiHandlers({
       onCompleted: data => {
         addToast("You're in.", { appearance: 'success' })
-        const token = data.login
-        Cookies.set('token', token, { expires: 7 })
-        const decoded = jwt.decode(token)
-        dispatch({ type: 'LOGIN', payload: { ...decoded, token } })
+        doLogin(data, 'login')
       },
       addToast,
     }),
