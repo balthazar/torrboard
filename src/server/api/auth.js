@@ -42,7 +42,7 @@ const createUser = async (parent, { name, email, expires }) => {
           <mj-image
                     css-class="logo"
                     padding-top="110px"
-                    height="50" src="http://media.balthazargronon.com/dl/statics/torrboard.png" width="50" />
+                    height="50" src="https://media.balthazar.dev/statics/torrboard.png" width="50" />
         </mj-hero>
         <mj-text font-size="15px">Hello ${name}!</mj-text>
         <mj-text font-size="15px">An amazing benefactor invited you to the ultra-select club of TorrBoard, a futuristic new way of consuming movies and series!</mj-text>

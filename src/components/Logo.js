@@ -16,6 +16,6 @@ const Logo = styled.div`
 
 export default () => (
   <Logo>
-    <img src="http://media.balthazargronon.com/dl/statics/torrboard.png" width="25" />
+    <img src="https://media.balthazar.dev/statics/torrboard.png" width="25" />
   </Logo>
 )
