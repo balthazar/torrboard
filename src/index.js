@@ -2,7 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Router } from '@reach/router'
 import { ApolloProvider } from '@apollo/react-hooks'
-import ApolloClient from 'apollo-boost'
 import styled, { ThemeProvider } from 'styled-components'
 
 import Toolbar, { TOOLBAR_WIDTH } from './components/Toolbar'
@@ -11,8 +10,8 @@ import Torrents from './components/Torrents'
 import Rss from './components/Rss'
 import Settings from './components/Settings'
 
-import { __APIURL__ } from './config'
 import theme from './theme'
+import apolloClient from './apollo'
 
 const Container = styled.div`
   display: flex;
@@ -32,13 +31,9 @@ const Container = styled.div`
   }
 `
 
-const client = new ApolloClient({
-  uri: __APIURL__,
-})
-
 const App = () => {
   return (
-    <ApolloProvider client={client}>
+    <ApolloProvider client={apolloClient}>
       <ThemeProvider theme={theme}>
         <Container>
           <Toolbar />
