@@ -4,6 +4,7 @@ const { makeExecutableSchema } = require('graphql-tools')
 const gql = require('graphql-tag')
 
 const Config = require('./models/Config')
+const User = require('./models/User')
 
 const { download, torrentAction, getDeluge } = require('./fn/deluge')
 const rss = require('./fn/getRSS')
@@ -131,9 +132,14 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     deluge: getDeluge,
-    watched: async (...payload) => {
-      console.log(payload)
-      return []
+    watched: async (parent, params, { user }) => {
+      const { name } = user
+      const u = await User.findOne({ name })
+      if (!u) {
+        return []
+      }
+
+      return u.watched
     },
 
     rss,
@@ -155,7 +161,7 @@ const resolvers = {
     torrentAction,
     download,
 
-    setAutoGrabs: async (data, { autoGrabs = [] }) => {
+    setAutoGrabs: async (parent, { autoGrabs = [] }) => {
       await Config.updateOne(
         {},
         {
@@ -166,12 +172,14 @@ const resolvers = {
 
       return autoGrabs
     },
-    setWatched: async (data, { path, value }) => {
-      const config = await Config.findOne({})
+    setWatched: async (parent, { path, value }, { user }) => {
+      const { name } = user
+      const u = await User.findOne({ name })
+      if (!u) {
+        return null
+      }
 
-      const watched = uniq(
-        value ? [...config.watched, path] : config.watched.filter(w => w !== path),
-      )
+      const watched = uniq(value ? [...u.watched, path] : u.watched.filter(w => w !== path))
 
       return watched
     },
