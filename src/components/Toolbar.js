@@ -35,7 +35,7 @@ const Container = styled.div`
   align-items: center;
 `
 
-const Logo = styled.span`
+const Logo = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -104,7 +104,9 @@ export default () => {
 
   return (
     <Container>
-      <Logo>TB</Logo>
+      <Logo>
+        <img src="http://media.balthazargronon.com/dl/statics/torrboard.png" width="25" />
+      </Logo>
 
       <Menu>
         <LinkContainer>

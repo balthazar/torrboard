@@ -1,8 +1,12 @@
 const got = require('got')
 const uniq = require('lodash/uniq')
 const { buildSchema } = require('graphql')
+const bcrypt = require('bcrypt')
+const randomstring = require('randomstring')
+const jwt = require('jsonwebtoken')
 
 const MediaInfo = require('./models/MediaInfo')
+const User = require('./models/User')
 const Config = require('./models/Config')
 
 const { download, torrentAction, getDeluge } = require('./fn/deluge')
@@ -88,6 +92,18 @@ const schema = buildSchema(`
     meta: TorrentMeta
   }
 
+  type IPItem {
+    value: String
+    lastSeen: Int
+  }
+
+  type User {
+    name: String
+    email: String
+    expires: Int
+    ips: [IPItem]
+  }
+
   type Mutation {
     setAutoGrabs(autoGrabs: [String]): [String]
     setWatched(path: String, value: Boolean): [String]
@@ -151,6 +167,52 @@ const rootValue = {
 
     return watched
   },
+
+  createUser: async ({ name, email, expires }) => {
+    const inviteCode = randomstring.generate()
+
+    await User.create({
+      name,
+      email,
+      inviteCode,
+      expires,
+    })
+  },
+
+  setPassword: async ({ inviteCode, password }) => {
+    if (!password || !inviteCode || password.length < 5) {
+      throw new Error('Invalid invite code or password.')
+    }
+
+    const user = await User.findOne({ inviteCode })
+    if (!user || user.password) {
+      throw new Error('Invalid user.')
+    }
+
+    const hashed = await bcrypt.hash(password, 10)
+
+    await User.updateOne(
+      { _id: user._id },
+      {
+        password: hashed,
+        inviteCode: null,
+      },
+    )
+
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET)
+  },
 }
 
-module.exports = { schema, rootValue }
+const context = async ({ req }) => {
+  const token = req.headers.authorization || ''
+
+  try {
+    const { _id } = jwt.verify(token.split(' ')[1], process.env.JWT_SECRET)
+    const user = await User.findById(_id)
+    return user
+  } catch (e) {
+    throw new Error('Invalid Auth')
+  }
+}
+
+module.exports = { schema, rootValue, context }
