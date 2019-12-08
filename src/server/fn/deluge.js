@@ -44,18 +44,18 @@ const query = async (method, args) => {
 }
 
 module.exports = {
-  download: async ({ link }) => {
+  download: async (data, { link }) => {
     const path = await query('web.download_torrent_from_url', [link])
     return query('web.add_torrents', [[{ options: { download_location: '/home/media/dl' }, path }]])
   },
-  torrentAction: ({ name, torrentId, removeFiles }) => {
+  torrentAction: (data, { name, torrentId, removeFiles }) => {
     if (name === 'remove') {
       return query(`core.remove_torrent`, [torrentId, removeFiles])
     }
 
     return query(`core.${name}_torrent`, [[torrentId]])
   },
-  getDeluge: () =>
+  getDeluge: params =>
     query('web.update_ui', fields).then(async data => {
       const files = await getFiles()
       const medias = await MediaInfo.find({})
