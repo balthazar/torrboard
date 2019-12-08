@@ -13,6 +13,7 @@ import MediaModal from './MediaModal'
 import { Filters, FilterValue } from './Filters'
 
 import apiHandlers from '../fn/apiHandlers'
+import { useStore } from '../state'
 
 const GET_MEDIAS = gql`
   {
@@ -60,10 +61,18 @@ export default () => {
   const [item, selectItem] = useState(null)
   const [category, setCategory] = useState(null)
   const { addToast } = useToasts()
+  const [, dispatch] = useStore()
 
   const { loading, data } = useQuery(GET_MEDIAS, {
     pollInterval: 10e3,
-    ...apiHandlers({ addToast }),
+    ...apiHandlers({
+      addToast,
+      onError: ({ msg }) => {
+        if (msg.includes('fuck out')) {
+          dispatch({ type: 'LOGOUT' })
+        }
+      },
+    }),
   })
 
   const watched = get(data, 'watched', []).reduce((acc, path) => ((acc[path] = true), acc), {})

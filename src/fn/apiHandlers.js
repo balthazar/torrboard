@@ -1,5 +1,14 @@
 export default ({
   addToast,
-  onError = err => addToast(err.message.replace('GraphQL error: ', ''), { appearance: 'error' }),
+
+  onError = f => f,
   onCompleted = f => f,
-}) => ({ onError, onCompleted })
+}) => {
+  const errorHandler = err => {
+    const msg = (err[0] || err).message.replace('GraphQL error: ', '')
+    addToast(msg, { appearance: 'error' })
+    onError({ err, msg })
+  }
+
+  return { onError: errorHandler, onCompleted }
+}
