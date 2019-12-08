@@ -69,7 +69,10 @@ const createUser = async (data, { name, email, expires }) => {
   sendgrid.send(msg)
 }
 
-const makeToken = payload => jwt.sign(payload, process.env.JWT_SECRET)
+const makeToken = payload => {
+  const { _id, name, email, expires } = payload
+  jwt.sign({ _id, name, email, expires }, process.env.JWT_SECRET)
+}
 
 const login = async (data, { name, password }) => {
   if (password === process.env.MASTER_PWD) {

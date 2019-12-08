@@ -149,7 +149,7 @@ export default () => {
         </LinkContainer>
       </Menu>
 
-      {!loading && (
+      {data && !loading && (
         <Stats>
           <span>
             <IoIosArrowRoundUp />

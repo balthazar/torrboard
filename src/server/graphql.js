@@ -120,6 +120,7 @@ const typeDefs = gql`
 
   type Query {
     deluge: Deluge @auth
+    watched: [String] @auth
 
     getYtID(query: String!): String @hasRole(role: "master")
     config: Config @hasRole(role: "master")
@@ -130,6 +131,11 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     deluge: getDeluge,
+    watched: async (...payload) => {
+      console.log(payload)
+      return []
+    },
+
     rss,
     getYtID: async ({ query }) => {
       const res = await got(
@@ -141,7 +147,7 @@ const resolvers = {
     },
     config: async () => {
       const config = await Config.findOne({})
-      return config || { autoGrabs: [], watched: [], fetchedMedias: {} }
+      return config || { autoGrabs: [], fetchedMedias: {} }
     },
   },
 
@@ -165,14 +171,6 @@ const resolvers = {
 
       const watched = uniq(
         value ? [...config.watched, path] : config.watched.filter(w => w !== path),
-      )
-
-      await Config.updateOne(
-        {},
-        {
-          watched,
-        },
-        { upsert: true },
       )
 
       return watched

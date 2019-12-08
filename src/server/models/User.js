@@ -8,6 +8,8 @@ const schema = new mongoose.Schema({
   inviteCode: String,
 
   expires: Date,
+  watched: [String],
+
   ips: [
     {
       value: String,
