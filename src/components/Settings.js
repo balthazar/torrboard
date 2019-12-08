@@ -10,6 +10,8 @@ import Placeloader from './Placeloader'
 import Button from './Button'
 import Input from './Input'
 
+import apiHandlers from '../fn/apiHandlers'
+
 const Container = styled.div`
   h3 {
     font-size: 13px;
@@ -172,16 +174,20 @@ export default () => {
     },
   })
 
-  const [createUserMut] = useMutation(CREATE_USER, {
-    onCompleted: () => {
-      addToast('User created.', { appearance: 'success' })
-      setName('')
-      setEmail('')
-    },
-    onError: err => addToast(err.message, { appearance: 'error' }),
-  })
+  const [createUserMut] = useMutation(
+    CREATE_USER,
+    apiHandlers({
+      onCompleted: () => {
+        addToast('User created.', { appearance: 'success' })
+        setName('')
+        setEmail('')
+      },
+      addToast,
+    }),
+  )
 
   const grabs = get(grabsData, 'config.autoGrabs')
+  const users = get(usersData, 'users', []).filter(u => u.name !== 'master')
 
   const removeGrab = text => {
     setGrabs({ variables: { autoGrabs: grabs.filter(t => t !== text) } })
@@ -239,15 +245,14 @@ export default () => {
         <Placeloader style={{ width: '100%', height: 100 }} />
       ) : (
         <Users>
-          {get(usersData, 'users', [])
-            .filter(u => u.name !== 'master')
-            .map(user => (
-              <UserInfos inviteCode={user.inviteCode} key={user.name}>
-                <span>{user.name}</span>
-                <span>({user.email})</span>
-                <span className="status">{user.inviteCode ? 'inactive' : 'active'}</span>
-              </UserInfos>
-            ))}
+          {!users.length && <span>{'No users to display.'}</span>}
+          {users.map(user => (
+            <UserInfos inviteCode={user.inviteCode} key={user.name}>
+              <span>{user.name}</span>
+              <span>({user.email})</span>
+              <span className="status">{user.inviteCode ? 'inactive' : 'active'}</span>
+            </UserInfos>
+          ))}
         </Users>
       )}
 

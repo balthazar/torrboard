@@ -43,7 +43,6 @@ const Container = styled.div`
 
 const Content = () => {
   const [state, dispatch] = useStore()
-  console.log(state)
 
   return (
     <Container user={state.user}>
