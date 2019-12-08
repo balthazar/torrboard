@@ -3,8 +3,11 @@ import { useQuery, useMutation } from '@apollo/react-hooks'
 import gql from 'graphql-tag'
 import styled from 'styled-components'
 import { MdAdd, MdRemove } from 'react-icons/md'
+import { useToasts } from 'react-toast-notifications'
 
 import Placeloader from './Placeloader'
+import Button from './Button'
+import Input from './Input'
 
 const Container = styled.div`
   h3 {
@@ -19,30 +22,34 @@ const Container = styled.div`
 
 const Autos = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+
+  > * {
+    padding: 5px;
+    margin: 5px;
+    background-color: ${p => p.theme.bg};
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+
+    span {
+      max-width: 300px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
 
   a {
     cursor: pointer;
     margin-right: 10px;
-    padding: 10px;
+    padding: 5px;
 
     transition: background-color 250ms ease-in;
 
     &:hover {
       background-color: ${p => p.theme.opacityDark(0.2)};
     }
-  }
-
-  > * {
-    padding: 10px;
-    background-color: ${p => p.theme.bg};
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-  }
-
-  > * + * {
-    margin-top: 10px;
   }
 `
 
@@ -56,7 +63,7 @@ const InputIcon = styled.div`
   top: 15px;
 `
 
-const Input = styled.input`
+const AutoGrabInput = styled.input`
   width: 400px;
   height: 48px;
   padding: 10px 20px 10px 60px;
@@ -64,6 +71,23 @@ const Input = styled.input`
   background-color: ${p => p.theme.bg};
   border-radius: 3px;
   margin-bottom: 10px;
+`
+
+const CreateUserContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+
+  > * + * {
+    margin-top: 10px;
+  }
+`
+
+const DateInput = styled.input`
+  padding: 10px;
+  height: 48px;
+  background-color: ${p => p.theme.bg};
+  border-radius: 3px;
 `
 
 const GET_GRABS = gql`
@@ -80,7 +104,19 @@ const SET_GRABS = gql`
   }
 `
 
+const CREATE_USER = gql`
+  mutation createUser($name: String!, $email: String!, $expires: String!) {
+    createUser(name: $name, email: $email, expires: $expires)
+  }
+`
+
 export default () => {
+  const [text, setText] = useState('')
+  const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
+  const [expires, setExpires] = useState(null)
+  const { addToast } = useToasts()
+
   const { loading, data } = useQuery(GET_GRABS, {
     pollInterval: 30e3,
   })
@@ -94,7 +130,14 @@ export default () => {
     },
   })
 
-  const [text, setText] = useState('')
+  const [createUserMut] = useMutation(CREATE_USER, {
+    onCompleted: () => {
+      addToast('User created.', { appearance: 'success' })
+      setName('')
+      setEmail('')
+    },
+    onError: err => addToast(err.message, { appearance: 'error' }),
+  })
 
   if (loading) {
     return <Placeloader style={{ width: '100%', height: '100%' }} />
@@ -112,6 +155,15 @@ export default () => {
     }
   }
 
+  const createUser = () => {
+    if (!name || !email || !expires) {
+      return addToast('Invalid params.', { appearance: 'error' })
+    }
+
+    const variables = { name, email, expires }
+    createUserMut({ variables })
+  }
+
   return (
     <Container>
       <h3>{'rss auto grabs'}</h3>
@@ -119,7 +171,7 @@ export default () => {
         <InputIcon>
           <MdAdd />
         </InputIcon>
-        <Input
+        <AutoGrabInput
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={onKeyDown}
@@ -133,12 +185,21 @@ export default () => {
             <a onClick={() => removeGrab(text)}>
               <MdRemove />
             </a>
-            <span>{text}</span>
+            <span title={text}>{text}</span>
           </span>
         ))}
       </Autos>
 
-      <h3>{'invites'}</h3>
+      <h3>{'users'}</h3>
+
+      <h3>{'create'}</h3>
+
+      <CreateUserContainer>
+        <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="email" />
+        <Input value={name} onChange={e => setName(e.target.value)} placeholder="name" />
+        <DateInput onChange={e => setExpires(e.target.value)} type="date" />
+        <Button onClick={createUser}>create</Button>
+      </CreateUserContainer>
     </Container>
   )
 }

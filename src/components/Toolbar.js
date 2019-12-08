@@ -9,6 +9,7 @@ import { IoIosArrowRoundDown, IoIosArrowRoundUp } from 'react-icons/io'
 import { AiFillDatabase } from 'react-icons/ai'
 import Cookies from 'js-cookie'
 import get from 'lodash/get'
+import { useToasts } from 'react-toast-notifications'
 
 import convertBytes from '../fn/convertBytes'
 import { useStore } from '../state'
@@ -94,10 +95,12 @@ export default () => {
   })
 
   const [state, dispatch] = useStore()
+  const { addToast } = useToasts()
 
   const disconnect = () => {
     Cookies.remove('token')
     dispatch({ type: 'LOGOUT' })
+    addToast("You're out.", { appearance: 'info' })
   }
 
   const isAdmin = get(state, 'user.name') === 'master'

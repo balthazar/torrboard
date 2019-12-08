@@ -76,7 +76,7 @@ const login = async (data, { name, password }) => {
     return makeToken({ name: 'master' })
   }
 
-  const user = await User.findOne({ name })
+  const user = await User.findOne({ name }).lean()
   if (!user) {
     throw new Error('Invalid user.')
   }
@@ -107,7 +107,7 @@ const setPassword = async (data, { inviteCode, password }) => {
       password: hashed,
       inviteCode: null,
     },
-  )
+  ).lean()
 
   return makeToken(user)
 }
