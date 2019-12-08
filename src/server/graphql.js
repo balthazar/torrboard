@@ -123,6 +123,7 @@ const typeDefs = gql`
     deluge: Deluge @auth
     watched: [String] @auth
 
+    users: [User] @hasRole(role: "master")
     getYtID(query: String!): String @hasRole(role: "master")
     config: Config @hasRole(role: "master")
     rss: [RssItem] @hasRole(role: "master")
@@ -143,6 +144,7 @@ const resolvers = {
     },
 
     rss,
+    users: () => User.find(),
     getYtID: async ({ query }) => {
       const res = await got(
         `https://www.googleapis.com/youtube/v3/search?q=${query}%20trailer&part=id&key=${process.env.YOUTUBE}`,
