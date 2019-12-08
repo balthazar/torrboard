@@ -2,6 +2,7 @@ import React from 'react'
 import { IoMdSearch } from 'react-icons/io'
 import styled from 'styled-components'
 
+import Input from './Input'
 import theme from '../theme'
 
 const SearchContainer = styled.div`
@@ -14,17 +15,9 @@ const SearchIcon = styled.div`
   top: 15px;
 `
 
-export const SearchInput = styled.input`
-  background-color: ${p => p.theme.bg};
-  color: ${p => p.theme.body};
-  border-radius: 3px;
-  height: 48px;
+export const SearchInput = styled(Input)`
   width: 100%;
   padding: 10px 20px 10px 60px;
-  font-size: 10pt;
-
-  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.2),
-    0px 2px 1px -1px rgba(0, 0, 0, 0.2);
 `
 
 export default props => (

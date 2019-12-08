@@ -3,26 +3,37 @@ import ReactDOM from 'react-dom'
 import { Router } from '@reach/router'
 import { ApolloProvider } from '@apollo/react-hooks'
 import styled, { ThemeProvider } from 'styled-components'
+import { useCookie } from '@use-hook/use-cookie'
+import Cookies from 'js-cookie'
+import { ToastProvider } from 'react-toast-notifications'
 
 import Toolbar, { TOOLBAR_WIDTH } from './components/Toolbar'
 import Home from './components/Home'
 import Torrents from './components/Torrents'
 import Rss from './components/Rss'
 import Settings from './components/Settings'
+import Login from './components/Login'
+import Toast from './components/Toast'
 
 import theme from './theme'
 import apolloClient from './apollo'
+import { StoreProvider, useStore } from './state'
 
 const Container = styled.div`
   display: flex;
   background-color: ${p => p.theme.bg2};
   color: ${p => p.theme.body};
 
+  ${p =>
+    p.user
+      ? `
   > div:last-child {
     flex-grow: 1;
     margin-left: ${TOOLBAR_WIDTH};
     padding: 20px;
   }
+`
+      : ''}
 
   *:focus {
     outline-style: solid;
@@ -31,11 +42,14 @@ const Container = styled.div`
   }
 `
 
-const App = () => {
+const Content = () => {
+  const [state, dispatch] = useStore()
+  console.log(state)
+
   return (
-    <ApolloProvider client={apolloClient}>
-      <ThemeProvider theme={theme}>
-        <Container>
+    <Container user={state.user}>
+      {state.user ? (
+        <>
           <Toolbar />
           <Router>
             <Home path="/" />
@@ -43,10 +57,31 @@ const App = () => {
             <Rss path="/rss" />
             <Settings path="/settings" />
           </Router>
-        </Container>
-      </ThemeProvider>
-    </ApolloProvider>
+        </>
+      ) : (
+        <Login />
+      )}
+    </Container>
   )
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />)
+const App = () => {
+  return (
+    <StoreProvider>
+      <ThemeProvider theme={theme}>
+        <ToastProvider
+          placement="bottom-right"
+          components={{ Toast }}
+          autoDismiss
+          autoDismissTimeout={2500}
+        >
+          <ApolloProvider client={apolloClient}>
+            <Content />
+          </ApolloProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </StoreProvider>
+  )
+}
+
+ReactDOM.render(<App />, document.getElementById('root'))

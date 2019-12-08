@@ -15,4 +15,10 @@ export default {
 
   opacityLight: opacity => `rgba(255, 255, 255, ${opacity})`,
   opacityDark: opacity => `rgba(0, 0, 0, ${opacity})`,
+
+  toasts: {
+    error: red,
+    info: blue,
+    success: green,
+  },
 }
