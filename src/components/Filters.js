@@ -6,6 +6,7 @@ export const Filters = styled.div`
 
   > * {
     display: flex;
+    flex-wrap: wrap;
     overflow: hidden;
     border-radius: 3px;
   }
