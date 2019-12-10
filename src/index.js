@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom'
 import { Router } from '@reach/router'
 import { ApolloProvider } from '@apollo/react-hooks'
 import styled, { ThemeProvider } from 'styled-components'
-import Cookies from 'js-cookie'
 import { ToastProvider } from 'react-toast-notifications'
 
 import Toolbar, { TOOLBAR_WIDTH } from './components/Toolbar'
@@ -42,7 +41,7 @@ const Container = styled.div`
 `
 
 const Content = () => {
-  const [state, dispatch] = useStore()
+  const [state] = useStore()
 
   return (
     <Container user={state.user}>

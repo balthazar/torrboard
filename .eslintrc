@@ -7,7 +7,11 @@
     "__APIURL__": false,
   },
   "parser": "babel-eslint",
+  "plugins": ["react-hooks"],
   "rules": {
-    "react/no-array-index-key": 0
+    "react/no-array-index-key": 0,
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "camelcase": 0
   }
 }

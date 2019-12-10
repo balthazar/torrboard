@@ -43,6 +43,9 @@ const query = async (method, args) => {
   return res.body.result
 }
 
+const getVideos = related =>
+  uniq(related.filter(f => ['.mkv', '.avi', '.mp4'].some(ext => f.endsWith(ext))))
+
 module.exports = {
   download: async (parent, { link }) => {
     const path = await query('web.download_torrent_from_url', [link])
@@ -80,9 +83,8 @@ module.exports = {
             f.toLowerCase().includes(data.torrents[id].name.toLowerCase()) ||
             f.toLowerCase().includes(key),
         )
-        const videos = uniq(
-          related.filter(f => ['.mkv', '.avi', '.mp4'].some(ext => f.endsWith(ext))),
-        )
+
+        const videos = getVideos(related)
         const rar = related.find(f => f.endsWith('.rar'))
 
         return {
