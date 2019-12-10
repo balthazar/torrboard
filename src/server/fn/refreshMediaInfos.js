@@ -35,7 +35,7 @@ const getMediaInfo = async (id, { title, year }) => {
       { upsert: true },
     )
   } catch (err) {
-    console.log(err)
+    console.log(err) // eslint-disable-line no-console
   }
 }
 

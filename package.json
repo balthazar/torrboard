@@ -49,10 +49,12 @@
     "styled-components": "^4.4.1"
   },
   "devDependencies": {
-    "eslint": "^6.7.1",
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.7.2",
     "eslint-config-prettier": "^6.7.0",
     "eslint-config-zavatta": "^6.0.3",
     "eslint-config-zavatta-react": "^2.3.1",
+    "eslint-plugin-react-hooks": "^2.3.0",
     "parcel-bundler": "^1.12.4",
     "prettier": "^1.19.1"
   },
