@@ -95,7 +95,12 @@ export default ({ inviteCode }) => {
         </>
       ) : (
         <>
-          <Input autoFocus onChange={e => setName(e.target.value)} placeholder="Name" />
+          <Input
+            autoFocus
+            onKeyDown={onKeyDown}
+            onChange={e => setName(e.target.value)}
+            placeholder="Name"
+          />
           <Input
             onChange={e => setPassword(e.target.value)}
             onKeyDown={onKeyDown}
