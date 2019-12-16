@@ -5,6 +5,10 @@
 Media browser, torrent manager, RSS list with optional automated downloads.
 Includes authentication and invite system.
 
+![](./screens/1.png)
+
+![](./screens/2.png)
+
 ### Installation
 
 - Deluge
