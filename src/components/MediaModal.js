@@ -143,6 +143,7 @@ export default ({ item, watched }) => {
       <MediaCard bg={get(item, 'mediaInfo.image')} />
       <div>
         <h3>{get(item, 'mediaInfo.title', item.name)}</h3>
+        {get(item, 'mediaInfo.year') && <i>{get(item, 'mediaInfo.year')}</i>}
         <div>{get(item, 'mediaInfo.plot')}</div>
 
         {item.rar && !item.videos.length && (

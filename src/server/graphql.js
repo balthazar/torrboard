@@ -22,6 +22,7 @@ const typeDefs = gql`
     plot: String
     image: String
     type: String
+    year: String
     rating: Float
   }
 
