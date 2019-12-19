@@ -39,6 +39,7 @@ const GET_MEDIAS = gql`
           plot
           rating
           tags
+          year
         }
       }
     }

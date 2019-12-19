@@ -18,7 +18,7 @@ const getMediaInfo = async (id, { title, year }) => {
       return
     }
 
-    const { Title, Genre, Type, Plot, Poster, imdbRating, imdbID } = res.body
+    const { Title, Genre, Type, Plot, Poster, Year, imdbRating, imdbID } = res.body
 
     await MediaInfo.updateOne(
       { imdbID },
@@ -29,6 +29,7 @@ const getMediaInfo = async (id, { title, year }) => {
         type: Type,
         image: Poster === 'N/A' ? null : Poster,
         rating: !isNaN(imdbRating) ? imdbRating : null,
+        year,
         imdbID,
         $addToSet: { torrents: id },
       },

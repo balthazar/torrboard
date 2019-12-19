@@ -9,6 +9,7 @@ const schema = new mongoose.Schema({
   image: String,
   type: { type: String, enum: ['movie', 'series'] },
   rating: Number,
+  year: String,
   torrents: [String],
 })
 
