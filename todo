@@ -4,3 +4,7 @@
 
 - user watch history
 - user expire
+
+- un-hardcode /dl download directory, routing for file-grabbing should be moved
+  to nginx conf (or apache, in case of 2007-ness)
+- commit /statics/ to this repository

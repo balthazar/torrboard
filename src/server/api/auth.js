@@ -7,7 +7,9 @@ const cache = require('memory-cache')
 
 const User = require('../models/User')
 
-sendgrid.setApiKey(process.env.SENDGRID)
+const { BASE_URL, SENDGRID, SENDGRID_EMAIL } = process.env
+
+sendgrid.setApiKey(SENDGRID)
 
 const createUser = async (parent, { name, email, expires }) => {
   const inviteCode = randomstring.generate()
@@ -19,7 +21,7 @@ const createUser = async (parent, { name, email, expires }) => {
     expires: new Date(expires),
   })
 
-  const url = `https://media.balthazar.dev/invite/${inviteCode}`
+  const url = `${BASE_URL}/invite/${inviteCode}`
 
   const { html } = mjml2html(`
 <mjml>
@@ -43,7 +45,7 @@ const createUser = async (parent, { name, email, expires }) => {
           <mj-image
                     css-class="logo"
                     padding-top="110px"
-                    height="50" src="https://media.balthazar.dev/statics/torrboard.png" width="50" />
+                    height="50" src="/statics/torrboard.png" width="50" />
         </mj-hero>
         <mj-text font-size="15px">Hello ${name}!</mj-text>
         <mj-text font-size="15px">An amazing benefactor invited you to the ultra-select club of TorrBoard, a futuristic new way of consuming movies and series!</mj-text>
@@ -62,7 +64,7 @@ const createUser = async (parent, { name, email, expires }) => {
 
   const msg = {
     to: email,
-    from: 'media@balthazar.dev',
+    from: SENDGRID_EMAIL,
     subject: '[TorrBoard] Welcome!',
     html,
   }

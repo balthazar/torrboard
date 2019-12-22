@@ -14,6 +14,8 @@ import { FiTriangle } from 'react-icons/fi'
 
 import MediaCard from './MediaCard'
 
+const { BASE_URL } = process.env
+
 const ModalContent = styled.div`
   display: flex;
   word-break: break-word;
@@ -117,7 +119,7 @@ export default ({ item, watched }) => {
         meta.episode = meta.excess[0]
       }
 
-      const url = encodeURI(`${v.replace('/home/media', 'http://media.balthazargronon.com')}`)
+      const url = encodeURI(`${v.replace(DOWNLOAD_DIR, BASE_URL)}`)
 
       const text = `${
         meta.episode

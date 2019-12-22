@@ -5,6 +5,8 @@ const uniq = require('lodash/uniq')
 const MediaInfo = require('../models/MediaInfo')
 const getFiles = require('./getFiles')
 
+const { DOWNLOAD_DIR } = process.env
+
 const fields = [
   [
     'name',
@@ -49,7 +51,8 @@ const getVideos = related =>
 module.exports = {
   download: async (parent, { link }) => {
     const path = await query('web.download_torrent_from_url', [link])
-    return query('web.add_torrents', [[{ options: { download_location: '/home/media/dl' }, path }]])
+    // TODO: once /dl is handled by proxy, this can be changed to DOWNLOAD_DIR
+    return query('web.add_torrents', [[{ options: { download_location: `${DOWNLOAD_DIR}/dl` }, path }]])
   },
   torrentAction: (parent, { name, torrentId, removeFiles }) => {
     if (name === 'remove') {
