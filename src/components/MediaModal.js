@@ -122,7 +122,7 @@ export default ({ item, watched }) => {
         meta.episode
           ? `${meta.season ? `S${meta.season} ` : ''}E${meta.episode}`
           : meta.title || name
-      }${meta.resolution ? `(${meta.resolution})` : ''}`
+      }${meta.resolution ? ` (${meta.resolution})` : ''}`
 
       const num = meta.episode
         ? Number(meta.episode) + Number(meta.season ? meta.season * 100 : 0)
