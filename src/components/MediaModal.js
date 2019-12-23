@@ -11,10 +11,10 @@ import { IoIosPlayCircle, IoMdEyeOff, IoMdEye } from 'react-icons/io'
 import { GoFileZip } from 'react-icons/go'
 import { MdDoneAll, MdContentCopy } from 'react-icons/md'
 import { FiTriangle } from 'react-icons/fi'
+import { BASE_URL, DOWNLOAD_DIR } from '../config'
 
 import MediaCard from './MediaCard'
 
-const { BASE_URL } = require('../config')
 
 const ModalContent = styled.div`
   display: flex;

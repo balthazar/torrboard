@@ -28,4 +28,3 @@ DELUGE={pass}:{host}
 YOUTUBE={apiKey}
 JWT_SECRET={secret}
 SENDGRID={apiKey}
-DOWNLOAD_DIR={/path/to/your/download/directory}
