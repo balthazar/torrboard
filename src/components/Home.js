@@ -3,7 +3,9 @@ import styled from 'styled-components'
 import gql from 'graphql-tag'
 import { useQuery } from '@apollo/react-hooks'
 import get from 'lodash/get'
+import uniq from 'lodash/uniq'
 import { useToasts } from 'react-toast-notifications'
+import { MdDoneAll } from 'react-icons/md'
 
 import Placeloader from './Placeloader'
 import SearchInput from './SearchInput'
@@ -54,6 +56,25 @@ const Grid = styled.div`
 
 const CardFallback = styled.div`
   padding: 10px;
+`
+
+const WatchCardStatus = styled.div`
+  ${p => (p.isWatched ? '' : 'display: none;')};
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  top: 0;
+  right: 0;
+
+  border-style: solid;
+  border-width: 0 50px 50px 0;
+  border-color: transparent ${p => p.theme.green} transparent transparent;
+
+  > svg {
+    position: absolute;
+    right: -42px;
+    top: 6px;
+  }
 `
 
 export default () => {
@@ -110,7 +131,13 @@ export default () => {
     }, {})
 
   const list = Object.keys(reduced)
-    .map(k => reduced[k])
+    .map(k => {
+      const obj = reduced[k]
+      const videos = uniq(obj.videos)
+      const isWatched = videos.length && !videos.some(path => !watched[path])
+
+      return { ...obj, videos, isWatched }
+    })
     .filter(item => item.videos.length || item.rar)
 
   return (
@@ -160,6 +187,10 @@ export default () => {
             {!get(item, 'mediaInfo.image') && (
               <CardFallback>{get(item, 'mediaInfo.title') || item.name}</CardFallback>
             )}
+
+            <WatchCardStatus isWatched={item.isWatched}>
+              <MdDoneAll />
+            </WatchCardStatus>
           </MediaCard>
         ))}
       </Grid>

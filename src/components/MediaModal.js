@@ -5,7 +5,6 @@ import { Tooltip } from 'react-tippy'
 import { useMutation } from '@apollo/react-hooks'
 import gql from 'graphql-tag'
 import ptn from 'parse-torrent-name'
-import uniq from 'lodash/uniq'
 import get from 'lodash/get'
 import { IoIosPlayCircle, IoMdEyeOff, IoMdEye } from 'react-icons/io'
 import { GoFileZip } from 'react-icons/go'
@@ -106,7 +105,7 @@ export default ({ item, watched }) => {
     },
   })
 
-  const videos = uniq(item.videos)
+  const videos = item.videos
     .map(v => {
       const splits = v.split('/')
       const name = splits[splits.length - 1]
@@ -123,7 +122,7 @@ export default ({ item, watched }) => {
         meta.episode
           ? `${meta.season ? `S${meta.season} ` : ''}E${meta.episode}`
           : meta.title || name
-      } (${meta.resolution})`
+      }${meta.resolution ? `(${meta.resolution})` : ''}`
 
       const num = meta.episode
         ? Number(meta.episode) + Number(meta.season ? meta.season * 100 : 0)
