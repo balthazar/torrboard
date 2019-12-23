@@ -7,7 +7,8 @@ const cache = require('memory-cache')
 
 const User = require('../models/User')
 
-const { BASE_URL, SENDGRID, SENDGRID_EMAIL } = process.env
+const { BASE_URL, SENDGRID_EMAIL } = require('../../config')
+const { SENDGRID } = process.env
 
 sendgrid.setApiKey(SENDGRID)
 
@@ -22,6 +23,7 @@ const createUser = async (parent, { name, email, expires }) => {
   })
 
   const url = `${BASE_URL}/invite/${inviteCode}`
+  const imageUrl = `${BASE_URL}/statics/torrboard.png`
 
   const { html } = mjml2html(`
 <mjml>
@@ -45,7 +47,7 @@ const createUser = async (parent, { name, email, expires }) => {
           <mj-image
                     css-class="logo"
                     padding-top="110px"
-                    height="50" src="/statics/torrboard.png" width="50" />
+                    height="50" src="${imageUrl}" width="50" />
         </mj-hero>
         <mj-text font-size="15px">Hello ${name}!</mj-text>
         <mj-text font-size="15px">An amazing benefactor invited you to the ultra-select club of TorrBoard, a futuristic new way of consuming movies and series!</mj-text>
@@ -64,7 +66,7 @@ const createUser = async (parent, { name, email, expires }) => {
 
   const msg = {
     to: email,
-    from: SENDGRID_EMAIL,
+    from: SYSTEM_EMAIL,
     subject: '[TorrBoard] Welcome!',
     html,
   }

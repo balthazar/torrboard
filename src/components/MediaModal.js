@@ -14,7 +14,7 @@ import { FiTriangle } from 'react-icons/fi'
 
 import MediaCard from './MediaCard'
 
-const { BASE_URL } = process.env
+const { BASE_URL } = require('../config')
 
 const ModalContent = styled.div`
   display: flex;
