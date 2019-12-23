@@ -11,6 +11,7 @@ import { GoFileZip } from 'react-icons/go'
 import { MdDoneAll, MdContentCopy } from 'react-icons/md'
 import { FiTriangle } from 'react-icons/fi'
 
+import { DOWNLOAD_URL, DOWNLOAD_DIR } from '../config'
 import MediaCard from './MediaCard'
 
 const ModalContent = styled.div`
@@ -116,7 +117,7 @@ export default ({ item, watched }) => {
         meta.episode = meta.excess[0]
       }
 
-      const url = encodeURI(`${v.replace('/home/media', 'http://media.balthazargronon.com')}`)
+      const url = encodeURI(`${v.replace(DOWNLOAD_DIR, DOWNLOAD_URL)}`)
 
       const text = `${
         meta.episode

@@ -1,6 +1,8 @@
 import React from 'react'
 import styled from 'styled-components'
 
+import { IMAGE_URL } from '../config'
+
 const Logo = styled.div`
   display: flex;
   align-items: center;
@@ -16,6 +18,6 @@ const Logo = styled.div`
 
 export default () => (
   <Logo>
-    <img src="https://media.balthazar.dev/statics/torrboard.png" width="25" />
+    <img src={IMAGE_URL} width="25" />
   </Logo>
 )
