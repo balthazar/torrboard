@@ -12,7 +12,7 @@ module.exports = {
 
   BASE_URL,
   IMAGE_URL: `${BASE_URL}/statics/torrboard.png`,
-  DOWNLOAD_URL: 'http://balthazargronon.com',
+  DOWNLOAD_URL: 'http://media.balthazargronon.com',
   DOWNLOAD_DIR: '/home/media',
   SYSTEM_EMAIL: 'media@balthazar.dev',
 }
