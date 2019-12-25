@@ -105,6 +105,7 @@ const typeDefs = gql`
     expires: String
     inviteCode: String
     ips: [IPItem]
+    watched: [String]
   }
 
   type Mutation {
