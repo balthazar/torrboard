@@ -132,6 +132,7 @@ const GET_USERS = gql`
       email
       expires
       inviteCode
+      watched
       ips {
         value
         lastSeen
@@ -250,6 +251,10 @@ export default () => {
             <UserInfos inviteCode={user.inviteCode} key={user.name}>
               <span>{user.name}</span>
               <span>({user.email})</span>
+              <span>
+                {user.watched.length}
+                {' watchs'}
+              </span>
               <span className="status">{user.inviteCode ? 'inactive' : 'active'}</span>
             </UserInfos>
           ))}
