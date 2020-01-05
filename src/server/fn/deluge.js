@@ -45,9 +45,6 @@ const query = async (method, args) => {
   return res.body.result
 }
 
-const getVideos = related =>
-  uniq(related.filter(f => ['.mkv', '.avi', '.mp4'].some(ext => f.endsWith(ext))))
-
 module.exports = {
   download: async (parent, { link }) => {
     const path = await query('web.download_torrent_from_url', [link])
@@ -80,19 +77,30 @@ module.exports = {
           .toLowerCase()
           .replace(/\s\s+/g, ' ')
           .replace(/ /g, '.')
+          .replace('trilogy', '')
           .replace(/.s[0-9]+.*/, '')
 
         const related = files.filter(f => {
           const fl = f.toLowerCase()
-
-          return (
-            !fl.includes('sample') &&
-            (fl.includes(data.torrents[id].name.toLowerCase()) || fl.includes(key))
-          )
+          return fl.includes(data.torrents[id].name.toLowerCase()) || fl.includes(key)
         })
 
-        const videos = getVideos(related)
-        const rar = related.find(f => f.endsWith('.rar'))
+        const rar = related.find(f => f.endsWith('.rar') && !f.match(/\.part[0-9]+\.rar/))
+
+        const rawVideos = related.filter(f => !f.endsWith('.rar'))
+        const videos =
+          rawVideos.length > 1
+            ? rawVideos.filter(path => {
+                const pathMeta = ptn(path.split('/').pop())
+                const pathTitle = pathMeta.title.toLowerCase().replace(/part.*$/, '')
+
+                if (pathTitle.length > key.length + 3) {
+                  return false
+                }
+
+                return true
+              })
+            : rawVideos
 
         return {
           id,

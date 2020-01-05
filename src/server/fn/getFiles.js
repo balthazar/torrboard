@@ -1,5 +1,6 @@
 const { resolve } = require('path')
 const { readdir } = require('fs').promises
+const uniq = require('lodash/uniq')
 
 const { DOWNLOAD_DIR } = require('../../config')
 
@@ -12,7 +13,17 @@ const getFiles = async dir => {
     }),
   )
 
-  return Array.prototype.concat(...files).filter(file => !/sample\..*$/.test(file))
+  return Array.prototype.concat(...files)
 }
 
-module.exports = () => getFiles(`${DOWNLOAD_DIR}/dl`)
+module.exports = async () => {
+  const raw = await getFiles(`${DOWNLOAD_DIR}/dl`)
+
+  return uniq(
+    raw.filter(
+      f =>
+        !f.toLowerCase().includes('sample') &&
+        ['.mkv', '.avi', '.mp4', '.rar'].some(ext => f.endsWith(ext)),
+    ),
+  )
+}
