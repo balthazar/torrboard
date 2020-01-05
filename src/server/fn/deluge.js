@@ -82,11 +82,14 @@ module.exports = {
           .replace(/ /g, '.')
           .replace(/.s[0-9]+.*/, '')
 
-        const related = files.filter(
-          f =>
-            f.toLowerCase().includes(data.torrents[id].name.toLowerCase()) ||
-            f.toLowerCase().includes(key),
-        )
+        const related = files.filter(f => {
+          const fl = f.toLowerCase()
+
+          return (
+            !fl.includes('sample') &&
+            (fl.includes(data.torrents[id].name.toLowerCase()) || fl.includes(key))
+          )
+        })
 
         const videos = getVideos(related)
         const rar = related.find(f => f.endsWith('.rar'))
