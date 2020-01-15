@@ -179,8 +179,8 @@ const resolvers = {
       return autoGrabs
     },
 
-    setImdb: async (parent, { oldId, newId }) => {
-      await getMediaInfo(null, { oldId, newId })
+    setImdb: async (parent, { oldId, torrentIds, newId }) => {
+      await getMediaInfo(null, { oldId, torrentIds, newId })
       return true
     },
 
