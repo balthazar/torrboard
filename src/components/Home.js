@@ -22,6 +22,7 @@ const GET_MEDIAS = gql`
     watched
     deluge {
       torrents {
+        id
         name
         videos
         time_added
@@ -34,7 +35,7 @@ const GET_MEDIAS = gql`
           season
         }
         mediaInfo {
-          id
+          imdbID
           title
           type
           image
@@ -106,7 +107,7 @@ export default () => {
         : get(a, 'mediaInfo.title', a.name).localeCompare(get(b, 'mediaInfo.title', b.name)),
     )
     .reduce((acc, cur) => {
-      const key = get(cur, 'mediaInfo.id') || cur.name
+      const key = get(cur, 'mediaInfo.imdbID') || get(cur, 'meta.title') || cur.name
 
       if (category && !get(cur, 'mediaInfo.tags', []).includes(category)) {
         return acc
@@ -122,9 +123,10 @@ export default () => {
       }
 
       if (!acc[key]) {
-        acc[key] = { ...cur }
+        acc[key] = { ...cur, ids: [cur.id] }
       } else {
         acc[key].videos = acc[key].videos.concat(cur.videos).sort((a, b) => b - a)
+        acc[key].ids.push(cur.id)
       }
 
       return acc
