@@ -19,6 +19,7 @@ import Button from './Button'
 const ModalContent = styled.div`
   display: flex;
   word-break: break-word;
+  margin-bottom: 10px;
 
   h3 {
     font-size: 25px;
@@ -36,7 +37,7 @@ const ModalContent = styled.div`
 `
 
 const Files = styled.div`
-  height: 200px;
+  max-height: 200px;
   overflow: auto;
   display: flex;
   flex-direction: column;
