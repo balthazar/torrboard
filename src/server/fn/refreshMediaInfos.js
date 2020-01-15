@@ -1,44 +1,8 @@
-const got = require('got')
 const ptn = require('parse-torrent-name')
 
 const { getDeluge } = require('./deluge')
 const Config = require('../models/Config')
-const MediaInfo = require('../models/MediaInfo')
-
-const getMediaInfo = async (id, { title, year }) => {
-  try {
-    const res = await got(
-      `http://www.omdbapi.com/?t=${title}${year ? `&y=${year}` : ''}&apiKey=${process.env.OMDB}`,
-      {
-        json: true,
-      },
-    )
-
-    if (res.body.Response !== 'True') {
-      return
-    }
-
-    const { Title, Genre, Type, Plot, Poster, Year, imdbRating, imdbID } = res.body
-
-    await MediaInfo.updateOne(
-      { imdbID },
-      {
-        title: Title,
-        plot: Plot === 'N/A' ? null : Plot,
-        tags: Genre === 'N/A' ? null : Genre.split(', ').map(g => g.toLowerCase()),
-        type: Type,
-        image: Poster === 'N/A' ? null : Poster,
-        rating: !isNaN(imdbRating) ? imdbRating : null,
-        year,
-        imdbID,
-        $addToSet: { torrents: id },
-      },
-      { upsert: true },
-    )
-  } catch (err) {
-    console.log(err) // eslint-disable-line no-console
-  }
-}
+const getMediaInfo = require('./getMediaInfo')
 
 module.exports = async () => {
   const { torrents } = await getDeluge()

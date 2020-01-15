@@ -8,6 +8,7 @@ const User = require('./models/User')
 
 const { download, torrentAction, getDeluge } = require('./fn/deluge')
 const rss = require('./fn/getRSS')
+const getMediaInfo = require('./fn/getMediaInfo')
 const auth = require('./api/auth')
 const schemaDirectives = require('./directives')
 
@@ -116,6 +117,7 @@ const typeDefs = gql`
 
     createUser(name: String!, email: String!, expires: String!): Boolean @hasRole(role: "master")
     setAutoGrabs(autoGrabs: [String]): [String] @hasRole(role: "master")
+    setImdb(oldId: String!, newId: String!): Boolean @hasRole(role: "master")
     download(link: String!): Boolean @hasRole(role: "master")
     torrentAction(name: String!, torrentId: String!, removeFiles: Boolean): Boolean
       @hasRole(role: "master")
@@ -176,6 +178,12 @@ const resolvers = {
 
       return autoGrabs
     },
+
+    setImdb: async (parent, { oldId, newId }) => {
+      await getMediaInfo(null, { oldId, newId })
+      return true
+    },
+
     setWatched: async (parent, { path, value }, { user }) => {
       const { name } = user
       const u = await User.findOne({ name })
