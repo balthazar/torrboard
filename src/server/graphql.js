@@ -117,7 +117,7 @@ const typeDefs = gql`
 
     createUser(name: String!, email: String!, expires: String!): Boolean @hasRole(role: "master")
     setAutoGrabs(autoGrabs: [String]): [String] @hasRole(role: "master")
-    setImdb(oldId: String!, newId: String!): Boolean @hasRole(role: "master")
+    setImdb(oldId: String, torrentIds: [String], newId: String!): Boolean @hasRole(role: "master")
     download(link: String!): Boolean @hasRole(role: "master")
     torrentAction(name: String!, torrentId: String!, removeFiles: Boolean): Boolean
       @hasRole(role: "master")
