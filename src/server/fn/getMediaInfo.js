@@ -26,6 +26,8 @@ module.exports = async (id, { oldId, newId, title, year }) => {
     }
 
     if (oldId) {
+      await MediaInfo.remove({ imdbID: oldId })
+
       await MediaInfo.updateOne(
         { imdbID: oldId },
         {
