@@ -2,7 +2,7 @@ const got = require('got')
 
 const MediaInfo = require('../models/MediaInfo')
 
-module.exports = async (id, { oldId, newId, title, year }) => {
+module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
   try {
     const query = newId ? `i=${newId}` : `t=${title}${year ? `&y=${year}` : ''}`
     const res = await got(`http://www.omdbapi.com/?${query}&apiKey=${process.env.OMDB}`, {
@@ -25,16 +25,24 @@ module.exports = async (id, { oldId, newId, title, year }) => {
       year: Year,
     }
 
-    if (oldId) {
-      await MediaInfo.remove({ imdbID: oldId })
+    if (newId) {
+      await MediaInfo.remove({ imdbID: newId })
 
-      await MediaInfo.updateOne(
-        { imdbID: oldId },
-        {
+      if (oldId) {
+        await MediaInfo.updateOne(
+          { imdbID: oldId },
+          {
+            ...payload,
+            imdbID: newId,
+          },
+        )
+      } else {
+        await MediaInfo.create({
           ...payload,
           imdbID: newId,
-        },
-      )
+          torrents: torrentIds,
+        })
+      }
 
       return
     }
