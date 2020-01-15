@@ -17,7 +17,7 @@ const typeDefs = gql`
   directive @hasRole(role: String) on FIELD | FIELD_DEFINITION
 
   type MediaInfo {
-    id: ID
+    imdbID: ID
     title: String
     tags: [String]
     plot: String
