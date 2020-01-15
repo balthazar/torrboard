@@ -126,9 +126,9 @@ const typeDefs = gql`
   type Query {
     deluge: Deluge @auth
     watched: [String] @auth
+    getYtID(query: String!): String @auth
 
     users: [User] @hasRole(role: "master")
-    getYtID(query: String!): String @hasRole(role: "master")
     config: Config @hasRole(role: "master")
     rss: [RssItem] @hasRole(role: "master")
   }
