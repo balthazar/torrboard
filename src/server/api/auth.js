@@ -53,7 +53,7 @@ const createUser = async (parent, { name, email, expires }) => {
         <mj-divider border-width="1px" border-color="#f5f5f5" />
         <mj-text font-size="20px" padding-bottom="0px">Total Due</mj-text>
         <mj-text font-size="20px" font-weight="bold">$0</mj-text>
-        <mj-text font-size="5px">Conditions and surcharges may apply. First month free of charge, but legally binding to a 10 year non-cancellable contract of $12.98/month/user minimum. Payments available in BTC or bitbean with a 15% discount. Service can be abruptly cancelled if you were to become a little cunt. Note that service cancellation does not release you from the obligation to pay.</mj-text>
+        <mj-text font-size="5px">Conditions and surcharges may apply. First month free of charge, but legally binding to a 10 year non-cancellable contract of $12.98/month/user minimum. Payments available in BTC or bitbean with a 15% discount. Service can be abruptly cancelled if you were to become a little fukboi/fukgurl. Note that service cancellation does not release you from the obligation to pay.</mj-text>
         <mj-button href="${url}" align="left" background-color="blue">
           ACTIVATE
         </mj-button>

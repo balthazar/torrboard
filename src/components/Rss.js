@@ -7,17 +7,11 @@ import { MdArrowUpward, MdArrowDownward, MdCheck } from 'react-icons/md'
 import { FiDownloadCloud } from 'react-icons/fi'
 import differenceInMinutes from 'date-fns/differenceInMinutes'
 import differenceInHours from 'date-fns/differenceInHours'
-import Youtube from 'react-youtube'
 
 import { Filters, FilterValue } from './Filters'
 import Placeloader from './Placeloader'
+import VideoDisplay from './VideoDisplay'
 import theme from '../theme'
-
-const GET_YOUTUBE_ID = gql`
-  query getYtID($query: String!) {
-    getYtID(query: $query)
-  }
-`
 
 const GET_RSS = gql`
   {
@@ -124,33 +118,6 @@ const ExtraContent = styled.div`
   height: 400px;
 `
 
-const videoSize = {
-  height: 390,
-  width: 640,
-}
-
-const VideoDisplay = ({ query }) => {
-  if (!query) {
-    return
-  }
-
-  const { loading, data } = useQuery(GET_YOUTUBE_ID, { variables: { query } })
-
-  if (loading) {
-    return <Placeloader style={videoSize} />
-  }
-
-  return (
-    <Youtube
-      videoId={data.getYtID}
-      opts={{
-        ...videoSize,
-        playerVars: { autoplay: 1 },
-      }}
-    />
-  )
-}
-
 export default () => {
   const [resolution, setResolution] = useState('1080p')
   const [sortBy, setSort] = useState('seeders')
@@ -246,7 +213,14 @@ export default () => {
 
               <DownloadButton
                 disabled={already}
-                onClick={() => !already && download({ variables: { link } })}
+                onClick={e => {
+                  e.stopPropagation()
+                  if (already) {
+                    return
+                  }
+
+                  download({ variables: { link } })
+                }}
               >
                 {already ? <MdCheck /> : <FiDownloadCloud />}
               </DownloadButton>

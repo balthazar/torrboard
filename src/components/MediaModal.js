@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import { Tooltip } from 'react-tippy'
@@ -13,6 +13,8 @@ import { FiTriangle } from 'react-icons/fi'
 
 import { DOWNLOAD_URL, DOWNLOAD_DIR } from '../config'
 import MediaCard from './MediaCard'
+import VideoDisplay from './VideoDisplay'
+import Button from './Button'
 
 const ModalContent = styled.div`
   display: flex;
@@ -97,6 +99,7 @@ const GET_WATCHED = gql`
 `
 
 export default ({ item, watched }) => {
+  const [showTrailer, toggleTrailer] = useState(false)
   const [setWatched] = useMutation(SET_WATCHED, {
     update(cache, { data }) {
       cache.writeQuery({
@@ -133,83 +136,96 @@ export default ({ item, watched }) => {
         path: v,
         num,
         text,
+        title: meta.title,
         url,
       }
     })
     .sort((a, b) => b.num - a.num)
 
+  const title = get(item, 'mediaInfo.title', videos.length ? videos[0].title : item.name)
+
   return (
-    <ModalContent>
-      <MediaCard bg={get(item, 'mediaInfo.image')} />
-      <div>
-        <h3>{get(item, 'mediaInfo.title', item.name)}</h3>
-        {get(item, 'mediaInfo.year') && <i>{get(item, 'mediaInfo.year')}</i>}
-        <div>{get(item, 'mediaInfo.plot')}</div>
+    <div>
+      <ModalContent>
+        <MediaCard bg={get(item, 'mediaInfo.image')} />
+        <div>
+          <h3>{title}</h3>
+          {get(item, 'mediaInfo.year') && <i>{get(item, 'mediaInfo.year')}</i>}
+          <div>{get(item, 'mediaInfo.plot')}</div>
 
-        {item.rar && !item.videos.length && (
-          <Unrar>
-            <span>{'RAR'}</span>
-            <GoFileZip />
-          </Unrar>
-        )}
+          {item.rar && !item.videos.length && (
+            <Unrar>
+              <span>{'RAR'}</span>
+              <GoFileZip />
+            </Unrar>
+          )}
 
-        <Files>
-          {videos.map(v => (
-            <File key={v.url}>
-              <div>{v.text}</div>
-              <Actions>
-                <Tooltip title="Launch MPV" theme="light">
-                  <a
-                    href={`mpv://${v.url}`}
-                    onClick={() => {
-                      setWatched({ variables: { path: v.path, value: true } })
-                    }}
-                  >
-                    <IoIosPlayCircle size={20} />
-                  </a>
-                </Tooltip>
-
-                <Tooltip title="Launch VLC" theme="light">
-                  <a
-                    href={`vlc://${v.url}`}
-                    onClick={() => {
-                      setWatched({ variables: { path: v.path, value: true } })
-                    }}
-                  >
-                    <FiTriangle size={17} />
-                  </a>
-                </Tooltip>
-
-                <Tooltip title="Copy URL" theme="light">
-                  <CopyToClipboard text={v.url}>
-                    <a>
-                      <MdContentCopy size={20} />
-                    </a>
-                  </CopyToClipboard>
-                </Tooltip>
-
-                <Tooltip title={watched[v.path] ? 'Set unwatched' : 'Set watched'} theme="light">
-                  <a
-                    onClick={() =>
-                      setWatched({ variables: { path: v.path, value: !watched[v.path] } })
-                    }
-                  >
-                    {watched[v.path] ? <IoMdEyeOff size={20} /> : <IoMdEye size={20} />}
-                  </a>
-                </Tooltip>
-
-                {watched[v.path] && (
-                  <Tooltip title="Watched" theme="light">
-                    <a>
-                      <MdDoneAll />
+          <Files>
+            {videos.map(v => (
+              <File key={v.url}>
+                <div>{v.text}</div>
+                <Actions>
+                  <Tooltip title="Launch MPV" theme="light">
+                    <a
+                      href={`mpv://${v.url}`}
+                      onClick={() => {
+                        setWatched({ variables: { path: v.path, value: true } })
+                      }}
+                    >
+                      <IoIosPlayCircle size={20} />
                     </a>
                   </Tooltip>
-                )}
-              </Actions>
-            </File>
-          ))}
-        </Files>
+
+                  <Tooltip title="Launch VLC" theme="light">
+                    <a
+                      href={`vlc://${v.url}`}
+                      onClick={() => {
+                        setWatched({ variables: { path: v.path, value: true } })
+                      }}
+                    >
+                      <FiTriangle size={17} />
+                    </a>
+                  </Tooltip>
+
+                  <Tooltip title="Copy URL" theme="light">
+                    <CopyToClipboard text={v.url}>
+                      <a>
+                        <MdContentCopy size={20} />
+                      </a>
+                    </CopyToClipboard>
+                  </Tooltip>
+
+                  <Tooltip title={watched[v.path] ? 'Set unwatched' : 'Set watched'} theme="light">
+                    <a
+                      onClick={() =>
+                        setWatched({ variables: { path: v.path, value: !watched[v.path] } })
+                      }
+                    >
+                      {watched[v.path] ? <IoMdEyeOff size={20} /> : <IoMdEye size={20} />}
+                    </a>
+                  </Tooltip>
+
+                  {watched[v.path] && (
+                    <Tooltip title="Watched" theme="light">
+                      <a>
+                        <MdDoneAll />
+                      </a>
+                    </Tooltip>
+                  )}
+                </Actions>
+              </File>
+            ))}
+          </Files>
+        </div>
+      </ModalContent>
+
+      <div>
+        {showTrailer ? (
+          <VideoDisplay query={title} videoSize={{ width: 450, height: 300 }} />
+        ) : (
+          <Button onClick={() => toggleTrailer(true)}>Show trailer</Button>
+        )}
       </div>
-    </ModalContent>
+    </div>
   )
 }
