@@ -12,6 +12,7 @@ import { MdDoneAll, MdContentCopy } from 'react-icons/md'
 import { FiTriangle } from 'react-icons/fi'
 
 import { DOWNLOAD_URL, DOWNLOAD_DIR } from '../config'
+import { useStore } from '../state'
 import MediaCard from './MediaCard'
 import VideoDisplay from './VideoDisplay'
 import Button from './Button'
@@ -87,9 +88,36 @@ const Unrar = styled.a`
   }
 `
 
+const ImdbSet = styled.div`
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+
+  input {
+    height: 25px;
+    padding: 4px;
+    color: black;
+  }
+
+  button {
+    height: 25px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    padding: 2px 10px;
+    font-size: 10px;
+  }
+`
+
 const SET_WATCHED = gql`
   mutation setWatched($path: String!, $value: Boolean!) {
     setWatched(path: $path, value: $value)
+  }
+`
+
+const SET_IMDB = gql`
+  mutation setImdb($oldId: String, $torrentIds: [String], $newId: String!) {
+    setImdb(oldId: $oldId, torrentIds: $torrentIds, newId: $newId)
   }
 `
 
@@ -100,6 +128,8 @@ const GET_WATCHED = gql`
 `
 
 export default ({ item, watched }) => {
+  const [state] = useStore()
+  const [newId, setNewId] = useState('')
   const [showTrailer, toggleTrailer] = useState(false)
   const [setWatched] = useMutation(SET_WATCHED, {
     update(cache, { data }) {
@@ -109,6 +139,17 @@ export default ({ item, watched }) => {
       })
     },
   })
+
+  const [setImdb] = useMutation(SET_IMDB)
+  const doChangeImdb = () => {
+    setImdb({
+      variables: { torrentIds: item.ids, newId, oldId: get(item, 'mediaInfo.imdbID') },
+    })
+
+    setNewId('')
+  }
+
+  const isAdmin = get(state, 'user.name') === 'master'
 
   const videos = item.videos
     .map(v => {
@@ -227,6 +268,15 @@ export default ({ item, watched }) => {
           <Button onClick={() => toggleTrailer(true)}>Show trailer</Button>
         )}
       </div>
+
+      {isAdmin && (
+        <ImdbSet>
+          <input type="text" value={newId} onChange={e => setNewId(e.target.value)} />
+          <Button small onClick={doChangeImdb}>
+            SET IMDB
+          </Button>
+        </ImdbSet>
+      )}
     </div>
   )
 }
