@@ -1,4 +1,5 @@
 const got = require('got')
+const uniq = require('lodash/uniq')
 
 const MediaInfo = require('../models/MediaInfo')
 
@@ -26,6 +27,9 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
     }
 
     if (newId) {
+      const others = await MediaInfo.findOne({ imdbID: newId })
+      const torrents = uniq([...(others ? others.torrents : []), ...torrentIds])
+
       await MediaInfo.remove({ imdbID: newId })
 
       if (oldId) {
@@ -33,6 +37,7 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
           { imdbID: oldId },
           {
             ...payload,
+            torrents,
             imdbID: newId,
           },
         )
@@ -40,7 +45,7 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
         await MediaInfo.create({
           ...payload,
           imdbID: newId,
-          torrents: torrentIds,
+          torrents,
         })
       }
 
