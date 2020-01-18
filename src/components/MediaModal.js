@@ -109,6 +109,16 @@ const ImdbSet = styled.div`
   }
 `
 
+const TrailerButton = styled(Button)`
+  background-color: rgba(0, 0, 0, 0.2);
+  font-size: 10px;
+
+  transition: background-color 250ms ease-in;
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+`
+
 const SET_WATCHED = gql`
   mutation setWatched($path: String!, $value: Boolean!) {
     setWatched(path: $path, value: $value)
@@ -129,7 +139,7 @@ const GET_WATCHED = gql`
 
 export default ({ item, watched }) => {
   const [state] = useStore()
-  const [newId, setNewId] = useState('')
+  const [newId, setNewId] = useState(item.mediaInfo.imdbID)
   const [showTrailer, toggleTrailer] = useState(false)
   const [setWatched] = useMutation(SET_WATCHED, {
     update(cache, { data }) {
@@ -265,16 +275,14 @@ export default ({ item, watched }) => {
         {showTrailer ? (
           <VideoDisplay query={title} videoSize={{ width: 450, height: 300 }} />
         ) : (
-          <Button onClick={() => toggleTrailer(true)}>Show trailer</Button>
+          <TrailerButton onClick={() => toggleTrailer(true)}>SHOW TRAILER</TrailerButton>
         )}
       </div>
 
       {isAdmin && (
         <ImdbSet>
           <input type="text" value={newId} onChange={e => setNewId(e.target.value)} />
-          <Button small onClick={doChangeImdb}>
-            SET IMDB
-          </Button>
+          <Button onClick={doChangeImdb}>SET IMDB</Button>
         </ImdbSet>
       )}
     </div>
