@@ -139,7 +139,7 @@ const GET_WATCHED = gql`
 
 export default ({ item, watched }) => {
   const [state] = useStore()
-  const [newId, setNewId] = useState(item.mediaInfo.imdbID)
+  const [newId, setNewId] = useState(item.mediaInfo ? item.mediaInfo.imdbID : '')
   const [showTrailer, toggleTrailer] = useState(false)
   const [setWatched] = useMutation(SET_WATCHED, {
     update(cache, { data }) {
