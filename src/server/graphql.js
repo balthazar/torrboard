@@ -1,3 +1,5 @@
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
 const got = require('got')
 const uniq = require('lodash/uniq')
 const { makeExecutableSchema } = require('graphql-tools')
@@ -109,6 +111,14 @@ const typeDefs = gql`
     watched: [String]
   }
 
+  type Playback {
+    title: String
+    image: String
+    playing: Boolean
+    pos: String
+    duration: String
+  }
+
   type Mutation {
     login(name: String, password: String!): String!
     setPassword(inviteCode: String!, password: String!): String!
@@ -121,12 +131,16 @@ const typeDefs = gql`
     download(link: String!): Boolean @hasRole(role: "master")
     torrentAction(name: String!, torrentId: String!, removeFiles: Boolean): Boolean
       @hasRole(role: "master")
+
+    cast(title: String!, url: String!, image: String): Boolean @hasRole(role: "master")
+    castAction(name: String!): Boolean @hasRole(role: "master")
   }
 
   type Query {
     deluge: Deluge @auth
     watched: [String] @auth
     getYtID(query: String!): String @auth
+    playback: Playback @auth
 
     users: [User] @hasRole(role: "master")
     config: Config @hasRole(role: "master")
@@ -134,9 +148,64 @@ const typeDefs = gql`
   }
 `
 
+const castActions = {
+  play: 'keypress space',
+  pause: 'keypress space',
+  seekbackward: 'seek -15',
+  seekforward: 'seek 15',
+  nexttrack: 'keypress Q',
+}
+
+const currentPlayback = {}
+
+const getProperties = async params => {
+  const payload = params
+    .map((param, i) => `{ "command": ["get_property", "${param}"], "request_id": ${i} }`)
+    .join('\n')
+
+  const { stdout } = await exec(`echo '${payload}' | socat - /tmp/mpvsocket`)
+  if (!stdout) {
+    return null
+  }
+
+  const res = stdout.split('\n').reduce((acc, cur, i) => {
+    if (!cur || !cur.includes('request_id')) {
+      return acc
+    }
+
+    const json = JSON.parse(cur)
+    acc[params[i]] = json.data
+    return acc
+  }, {})
+
+  return params.map(name => res[name])
+}
+
+const timeFromSeconds = sec => new Date(sec * 1e3).toISOString().substr(11, 8)
+
 const resolvers = {
   Query: {
     deluge: getDeluge,
+    playback: async (parent, params, { user }) => {
+      if (user.name !== 'master') {
+        return null
+      }
+
+      const res = await getProperties(['duration', 'playback-time', 'core-idle'])
+
+      if (!res) {
+        return currentPlayback
+      }
+
+      const [duration, pos, idle] = res
+
+      return {
+        ...currentPlayback,
+        playing: !idle,
+        pos: timeFromSeconds(pos),
+        duration: timeFromSeconds(duration),
+      }
+    },
     watched: async (parent, params, { user }) => {
       const { name } = user
       const u = await User.findOne({ name })
@@ -164,6 +233,21 @@ const resolvers = {
   },
 
   Mutation: {
+    cast: async (parent, { title, image, url }) => {
+      currentPlayback.title = title
+      currentPlayback.image = image
+
+      await exec(
+        `ssh me@localhost -p 2222 "DISPLAY=:0 mpv ${url} --fs --alang=jpn,eng,en,fre,fr --slang=eng,en --no-sub-visibility --really-quiet --input-ipc-server=/tmp/mpvsocket"`,
+      )
+    },
+    castAction: async (parent, { name }) => {
+      if (name === 'nexttrack') {
+        currentPlayback.title = ''
+      }
+
+      await exec(`echo '${castActions[name]}' | socat - /tmp/mpvsocket`)
+    },
     torrentAction,
     download,
 

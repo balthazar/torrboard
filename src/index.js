@@ -5,7 +5,7 @@ import { ApolloProvider } from '@apollo/react-hooks'
 import styled, { ThemeProvider } from 'styled-components'
 import { ToastProvider } from 'react-toast-notifications'
 
-import Toolbar, { TOOLBAR_WIDTH } from './components/Toolbar'
+import Toolbar from './components/Toolbar'
 import Home from './components/Home'
 import Torrents from './components/Torrents'
 import Rss from './components/Rss'
@@ -16,6 +16,7 @@ import Toast from './components/Toast'
 import theme from './theme'
 import apolloClient from './apollo'
 import { StoreProvider, useStore } from './state'
+import { TOOLBAR_WIDTH } from './config'
 
 const Container = styled.div`
   display: flex;

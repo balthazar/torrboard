@@ -12,7 +12,7 @@ const downloadRSS = require('./fn/downloadRSS')
 mongoose.Promise = Promise
 mongoose.connect('mongodb://localhost/torrboard')
 
-const server = new ApolloServer({ ...graphql, playground: false })
+const server = new ApolloServer({ ...graphql, playground: true })
 
 const app = express()
 

@@ -5,6 +5,7 @@
     "__DEV__": false,
     "__PROD__": false,
     "__APIURL__": false,
+    "MediaMetadata": false,
   },
   "parser": "babel-eslint",
   "plugins": ["react-hooks"],

@@ -13,6 +13,7 @@ import {
 import { MdCancel } from 'react-icons/md'
 import { FiDelete, FiTrash2 } from 'react-icons/fi'
 import { Tooltip } from 'react-tippy'
+import { isMobile } from 'react-device-detect'
 
 import SearchInput from './SearchInput'
 import Placeloader from './Placeloader'
@@ -70,40 +71,45 @@ const fields = [
   },
   {
     name: 'name',
-    width: 300,
+    width: isMobile ? 100 : 300,
   },
   {
     name: 'total_size',
     label: 'Size',
     width: 80,
     fn: convertBytes,
+    hide: isMobile,
   },
   {
     name: 'ratio',
     width: 50,
     fn: v => v.toLocaleString(undefined, { maximumFractionDigits: 2 }),
+    hide: isMobile,
   },
   {
     name: 'download_payload_rate',
     label: <IoIosArrowRoundDown />,
     width: 80,
     fn: v => (v ? `${convertBytes(v)}/s` : ''),
+    hide: isMobile,
   },
   {
     name: 'upload_payload_rate',
     label: <IoIosArrowRoundUp />,
     width: 80,
     fn: v => (v ? `${convertBytes(v)}/s` : ''),
+    hide: isMobile,
   },
   {
     name: 'progress',
     label: '%',
     width: 50,
     fn: v => (v === 100 ? '' : v.toLocaleString(undefined, { maximumFractionDigits: 1 })),
+    hide: isMobile,
   },
   {
     name: 'eta',
-    width: 80,
+    width: isMobile ? 50 : 80,
     fn: v => (v ? `${(v / 60).toFixed(0)}m` : ''),
   },
   {
@@ -111,12 +117,14 @@ const fields = [
     label: 'Peers',
     width: 50,
     fn: v => Math.max(0, v),
+    hide: isMobile,
   },
   {
     name: 'total_seeds',
     label: 'Seeds',
     width: 50,
     fn: v => Math.max(0, v),
+    hide: isMobile,
   },
   {
     name: 'actions',
@@ -140,6 +148,8 @@ const Item = styled.div`
 
   background-color: ${p.theme.bg};
       `}
+
+  ${() => (isMobile ? 'font-size: 10px' : '')};
 
   > * + * {
     margin-left: 20px;
@@ -208,11 +218,13 @@ export default () => {
       <SearchInput onChange={e => setQuery(e.target.value)} style={{ marginBottom: 10 }} />
 
       <Item heading>
-        {fields.map(({ name, label, width }) => (
-          <span key={name} style={{ width }}>
-            {name === 'state' ? '' : label || name}
-          </span>
-        ))}
+        {fields
+          .filter(f => !f.hide)
+          .map(({ name, label, width }) => (
+            <span key={name} style={{ width }}>
+              {name === 'state' ? '' : label || name}
+            </span>
+          ))}
       </Item>
 
       {loading &&
@@ -228,24 +240,55 @@ export default () => {
 
       {list.map(torrent => (
         <Item key={torrent.id}>
-          {fields.map(({ name, fn = f => f, width }) => {
-            if (name === 'state') {
-              return (
-                <span style={{ width }} key={name}>
-                  <State value={torrent.state} />
-                </span>
-              )
-            }
+          {fields
+            .filter(f => !f.hide)
+            .map(({ name, fn = f => f, width }) => {
+              if (name === 'state') {
+                return (
+                  <span style={{ width }} key={name}>
+                    <State value={torrent.state} />
+                  </span>
+                )
+              }
 
-            const torrentId = torrent.id
+              const torrentId = torrent.id
 
-            const onClickAction = (name, extra) => {
-              if (name === 'remove') {
-                askConfirm(prev => ({
-                  ...prev,
-                  [torrentId]: { name, extra },
-                }))
-              } else {
+              const onClickAction = (name, extra) => {
+                if (name === 'remove') {
+                  askConfirm(prev => ({
+                    ...prev,
+                    [torrentId]: { name, extra },
+                  }))
+                } else {
+                  torrentAction({
+                    variables: { name, torrentId, ...extra },
+                    update(cache) {
+                      const cached = cache.readQuery({
+                        query: GET_TORRENT_STATES,
+                        data: {},
+                      })
+
+                      const state =
+                        name === 'resume'
+                          ? torrent.progress === 100
+                            ? 'Seeding'
+                            : 'Downloading'
+                          : 'Paused'
+
+                      const torrents = cached.deluge.torrents.map(torrent =>
+                        torrent.id !== torrentId ? torrent : { ...torrent, state },
+                      )
+
+                      cache.writeQuery({
+                        query: GET_TORRENT_STATES,
+                        data: { deluge: { torrents, __typename: 'Deluge' } },
+                      })
+                    },
+                  })
+                }
+              }
+              const deleteAction = () => {
+                const { name, extra } = pendingConfirm[torrentId]
                 torrentAction({
                   variables: { name, torrentId, ...extra },
                   update(cache) {
@@ -254,97 +297,70 @@ export default () => {
                       data: {},
                     })
 
-                    const state =
-                      name === 'resume'
-                        ? torrent.progress === 100
-                          ? 'Seeding'
-                          : 'Downloading'
-                        : 'Paused'
-
-                    const torrents = cached.deluge.torrents.map(torrent =>
-                      torrent.id !== torrentId ? torrent : { ...torrent, state },
-                    )
-
                     cache.writeQuery({
                       query: GET_TORRENT_STATES,
-                      data: { deluge: { torrents, __typename: 'Deluge' } },
+                      data: {
+                        deluge: {
+                          torrents: cached.deluge.torrents.filter(t => t.id !== torrentId),
+                          __typename: 'Deluge',
+                        },
+                      },
                     })
                   },
                 })
               }
-            }
-            const deleteAction = () => {
-              const { name, extra } = pendingConfirm[torrentId]
-              torrentAction({
-                variables: { name, torrentId, ...extra },
-                update(cache) {
-                  const cached = cache.readQuery({
-                    query: GET_TORRENT_STATES,
-                    data: {},
-                  })
 
-                  cache.writeQuery({
-                    query: GET_TORRENT_STATES,
-                    data: {
-                      deluge: {
-                        torrents: cached.deluge.torrents.filter(t => t.id !== torrentId),
-                        __typename: 'Deluge',
-                      },
-                    },
-                  })
-                },
-              })
-            }
-
-            if (name === 'actions') {
-              return pendingConfirm[torrentId] ? (
-                <Actions key={name}>
-                  <Tooltip title="cancel" theme="light">
-                    <span onClick={() => askConfirm(prev => ({ ...prev, [torrentId]: null }))}>
-                      <MdCancel />
-                    </span>
-                  </Tooltip>
-                  <Tooltip title="confirm" theme="light">
-                    <span onClick={deleteAction}>
-                      <IoMdCheckmark fill={theme.green} />
-                    </span>
-                  </Tooltip>
-                </Actions>
-              ) : (
-                <Actions key={name}>
-                  {actions
-                    .filter(({ name }) => {
-                      if (name === 'remove') {
-                        return true
-                      }
-                      return (
-                        (torrent.state !== 'Paused' && name === 'pause') ||
-                        (torrent.state === 'Paused' && name === 'resume')
-                      )
-                    })
-                    .map(({ name, extra, icon }) => (
-                      <Tooltip
-                        title={
-                          name === 'remove' && extra && extra.removeFiles ? `delete & clear` : name
+              if (name === 'actions') {
+                return pendingConfirm[torrentId] ? (
+                  <Actions key={name}>
+                    <Tooltip title="cancel" theme="light">
+                      <span onClick={() => askConfirm(prev => ({ ...prev, [torrentId]: null }))}>
+                        <MdCancel />
+                      </span>
+                    </Tooltip>
+                    <Tooltip title="confirm" theme="light">
+                      <span onClick={deleteAction}>
+                        <IoMdCheckmark fill={theme.green} />
+                      </span>
+                    </Tooltip>
+                  </Actions>
+                ) : (
+                  <Actions key={name}>
+                    {actions
+                      .filter(({ name }) => {
+                        if (name === 'remove') {
+                          return true
                         }
-                        theme="light"
-                        key={`${name}-${!!extra}`}
-                      >
-                        <span onClick={() => onClickAction(name, extra)}>{icon}</span>
-                      </Tooltip>
-                    ))}
-                </Actions>
+                        return (
+                          (torrent.state !== 'Paused' && name === 'pause') ||
+                          (torrent.state === 'Paused' && name === 'resume')
+                        )
+                      })
+                      .map(({ name, extra, icon }) => (
+                        <Tooltip
+                          title={
+                            name === 'remove' && extra && extra.removeFiles
+                              ? `delete & clear`
+                              : name
+                          }
+                          theme="light"
+                          key={`${name}-${!!extra}`}
+                        >
+                          <span onClick={() => onClickAction(name, extra)}>{icon}</span>
+                        </Tooltip>
+                      ))}
+                  </Actions>
+                )
+              }
+
+              const value = fn(get(torrent, name))
+
+              return (
+                <span style={{ width }} title={value} key={name}>
+                  {value}
+                </span>
               )
-            }
-
-            const value = fn(get(torrent, name))
-
-            return (
-              <span style={{ width }} title={value} key={name}>
-                {value}
-              </span>
-            )
-          })}
+            })}
         </Item>
       ))}
     </div>

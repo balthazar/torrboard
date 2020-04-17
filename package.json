@@ -39,6 +39,7 @@
     "react": "^16.8.0",
     "react-calendar": "^2.19.2",
     "react-copy-to-clipboard": "^5.0.2",
+    "react-device-detect": "^1.11.14",
     "react-dom": "^16.8.0",
     "react-icons": "^3.8.0",
     "react-mortal": "^3.3.0",
