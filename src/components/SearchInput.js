@@ -1,6 +1,7 @@
 import React from 'react'
 import { IoMdSearch } from 'react-icons/io'
 import styled from 'styled-components'
+import { isMobile } from 'react-device-detect'
 
 import Input from './Input'
 import theme from '../theme'
@@ -26,6 +27,6 @@ export default props => (
       <IoMdSearch size={20} color={theme.body} />
     </SearchIcon>
 
-    <SearchInput type="text" placeholder="Search..." autoFocus {...props} />
+    <SearchInput type="text" placeholder="Search..." autoFocus={!isMobile} {...props} />
   </SearchContainer>
 )

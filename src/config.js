@@ -1,3 +1,5 @@
+const { isMobile } = require('react-device-detect')
+
 const __DEV__ = process.env.NODE_ENV !== 'production'
 
 const __APIPORT__ = 3434
@@ -15,4 +17,6 @@ module.exports = {
   DOWNLOAD_URL: 'http://media.balthazargronon.com',
   DOWNLOAD_DIR: '/home/media',
   SYSTEM_EMAIL: 'media@balthazar.dev',
+
+  TOOLBAR_WIDTH: isMobile ? 50 : 100,
 }

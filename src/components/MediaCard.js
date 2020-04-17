@@ -1,7 +1,8 @@
 import styled from 'styled-components'
+import { isMobile } from 'react-device-detect'
 
-export const CARD_HEIGHT = 300
-export const CARD_WIDTH = 200
+export const CARD_HEIGHT = isMobile ? 135 : 300
+export const CARD_WIDTH = isMobile ? 90 : 200
 
 export default styled.div`
   background: ${p => (p.bg ? `url(${p.bg})` : p.theme.bg)};
@@ -11,6 +12,7 @@ export default styled.div`
   margin: 5px;
   word-break: break-all;
   flex-shrink: 0;
+  overflow: hidden;
 
   display: flex;
   align-items: center;

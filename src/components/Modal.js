@@ -1,6 +1,8 @@
 import React from 'react'
 import Mortal from 'react-mortal'
 import styled from 'styled-components'
+import { isMobile } from 'react-device-detect'
+import { MdClose } from 'react-icons/md'
 
 const Modal = styled.div`
   position: fixed;
@@ -25,13 +27,36 @@ const Overlay = styled.div`
 `
 
 const Body = styled.div`
-  padding: 20px;
-  margin-top: 100px;
+  padding: ${isMobile ? 10 : 20}px;
+  margin-top: ${isMobile ? 0 : 100};
   background-color: ${p => p.theme.bg2};
   color: ${p => p.theme.body};
+  display: flex;
+
+  ${isMobile
+    ? `
+
+  height: 100vh;
+  width: 100vw;
+
+  `
+    : `
   min-width: 400px;
   max-width: 600px;
+  `}
+`
+
+const CloseButton = styled.div`
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.2);
+  width: 100%;
+  height: 50px;
   display: flex;
+  align-items: center;
+  justify-content: center;
+
+  bottom: 0;
+  right: 0;
 `
 
 export default ({ isOpened, onClose, children }) => (
@@ -66,6 +91,12 @@ export default ({ isOpened, onClose, children }) => (
           }}
         >
           {children}
+
+          {isMobile && (
+            <CloseButton onClick={onClose}>
+              <MdClose />
+            </CloseButton>
+          )}
         </Body>
       </Modal>
     )}
