@@ -124,9 +124,13 @@ export default () => {
       return fakeAudio(true)
     }
 
-    fakeAudio()
-
     const { image, title, pos, duration, playing } = data.playback
+
+    fakeAudio(false, playing ? 'play' : 'pause')
+
+    if (!('mediaSession' in navigator)) {
+      return
+    }
 
     navigator.mediaSession.metadata = new MediaMetadata({
       title,
