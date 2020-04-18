@@ -1,5 +1,7 @@
 import get from 'lodash/get'
 
+let state = 'play'
+
 export default (disable, action) => {
   const already = get(document.getElementsByTagName('audio'), '0')
 
@@ -12,7 +14,8 @@ export default (disable, action) => {
   }
 
   if (already) {
-    if (action) {
+    if (action && action !== state) {
+      state = action
       already[action]()
     }
     return
