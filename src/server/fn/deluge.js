@@ -1,6 +1,5 @@
 const got = require('got')
 const ptn = require('parse-torrent-name')
-const uniq = require('lodash/uniq')
 
 const MediaInfo = require('../models/MediaInfo')
 const getFiles = require('./getFiles')
@@ -86,21 +85,7 @@ module.exports = {
         })
 
         const rar = related.find(f => f.endsWith('.rar') && !f.match(/\.part[0-9]+\.rar/))
-
-        const rawVideos = related.filter(f => !f.endsWith('.rar'))
-        const videos =
-          rawVideos.length > 1
-            ? rawVideos.filter(path => {
-                const pathMeta = ptn(path.split('/').pop())
-                const pathTitle = pathMeta.title.toLowerCase().replace(/part.*$/, '')
-
-                if (pathTitle.length > key.length + 3) {
-                  return false
-                }
-
-                return true
-              })
-            : rawVideos
+        const videos = related.filter(f => !f.endsWith('.rar'))
 
         return {
           id,
