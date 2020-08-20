@@ -17,7 +17,7 @@
     "apollo-link-context": "^1.0.19",
     "apollo-link-http": "^1.5.16",
     "apollo-server-express": "^2.9.13",
-    "bcrypt": "^3.0.7",
+    "bcrypt": "^5.0.0",
     "cookie-parser": "^1.4.4",
     "date-fns": "^2.8.1",
     "dotenv": "^8.2.0",
