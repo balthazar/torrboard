@@ -176,6 +176,7 @@ export default ({ item, watched }) => {
   }
 
   const isAdmin = get(state, 'user.name') === 'master'
+  const isCaster = isAdmin || get(state, 'user.name') === 'nataliya'
 
   const videos = item.videos
     .map(v => {
@@ -234,7 +235,7 @@ export default ({ item, watched }) => {
               <File key={v.url}>
                 <div>{v.text}</div>
                 <Actions>
-                  {isMobile && (
+                  {isCaster && (
                     <a onClick={() => doCast(v.url)}>
                       <FaChromecast size={20} />
                     </a>
