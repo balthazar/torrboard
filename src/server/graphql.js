@@ -207,12 +207,17 @@ const resolvers = {
     rss,
     users: () => User.find(),
     getYtID: async (parent, { query }) => {
-      const res = await got(
-        `https://www.googleapis.com/youtube/v3/search?q=${query}%20trailer&part=id&key=${process.env.YOUTUBE}`,
-        { json: true },
-      )
+      try {
+        const res = await got(
+          `https://www.googleapis.com/youtube/v3/search?q=${query}%20trailer&part=id&key=${process.env.YOUTUBE}`,
+          { json: true },
+        )
 
-      return res.body.items[0].id.videoId
+        return res.body.items[0].id.videoId
+      } catch (err) {
+        console.log(err)
+        return ''
+      }
     },
     config: async () => {
       const config = await Config.findOne({})
@@ -225,16 +230,14 @@ const resolvers = {
       currentPlayback.title = title
       currentPlayback.image = image
 
-      await exec(
-        `ssh me@localhost -p 2222 "DISPLAY=:0 mpv ${url} --fs --alang=jpn,eng,en,fre,fr --slang=eng,en --no-sub-visibility --really-quiet --input-ipc-server=/tmp/mpvsocket"`,
-      )
+      await exec(`ssh me@${process.env.SSH_IP} "omxplayer --no-keys ${url} &"`)
     },
     castAction: async (parent, { name }) => {
       if (name === 'nexttrack') {
         currentPlayback.title = null
       }
 
-      await exec(`echo '${castActions[name]}' | socat - /tmp/mpvsocket`)
+      // await exec(`echo '${castActions[name]}' | socat - /tmp/mpvsocket`)
     },
     torrentAction,
     download,
