@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "start": "parcel src/index.html",
-    "api": "/home/me/.nvm/versions/node/v11.15.0/bin/node -r dotenv/config src/server",
+    "api": "node -r dotenv/config src/server",
     "build": "rm -rf dist && parcel build src/index.html",
     "deploy": "pm2 deploy ecosystem.json5 production"
   },
@@ -17,7 +17,7 @@
     "apollo-link-context": "^1.0.19",
     "apollo-link-http": "^1.5.16",
     "apollo-server-express": "^2.9.13",
-    "bcrypt": "^3.0.7",
+    "bcrypt": "^5.1.1",
     "cookie-parser": "^1.4.4",
     "date-fns": "^2.8.1",
     "dotenv": "^8.2.0",
