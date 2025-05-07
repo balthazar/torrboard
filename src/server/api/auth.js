@@ -1,16 +1,15 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const mjml2html = require('mjml')
-const sendgrid = require('@sendgrid/mail')
 const randomstring = require('randomstring')
 const cache = require('memory-cache')
+const Mailjet = require('node-mailjet')
 
 const User = require('../models/User')
 
 const { BASE_URL, IMAGE_URL, SYSTEM_EMAIL } = require('../../config')
-const { SENDGRID } = process.env
 
-sendgrid.setApiKey(SENDGRID)
+const mailjet = Mailjet.apiConnect(process.env.MAILJET_KEY, process.env.MAILJET_SECRET)
 
 const createUser = async (parent, { name, email, expires }) => {
   const inviteCode = randomstring.generate()
@@ -63,14 +62,23 @@ const createUser = async (parent, { name, email, expires }) => {
 </mjml>
   `)
 
-  const msg = {
-    to: email,
-    from: SYSTEM_EMAIL,
-    subject: '[TorrBoard] Welcome!',
-    html,
-  }
-
-  sendgrid.send(msg)
+  const request = mailjet.post('send', { version: 'v3.1' }).request({
+    Messages: [
+      {
+        From: {
+          Email: SYSTEM_EMAIL,
+          Name: 'TorrBoard',
+        },
+        To: [
+          {
+            Email: email,
+          },
+        ],
+        Subject: '[TorrBoard] Welcome!',
+        HTMLPart: html,
+      },
+    ],
+  })
 }
 
 const makeToken = payload => {
