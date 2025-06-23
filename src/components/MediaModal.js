@@ -243,7 +243,7 @@ export default ({ item, watched }) => {
 
                   <Tooltip title="Launch MPV" theme="light">
                     <a
-                      href={`mpv://${v.url}`}
+                      href={`mpv://${encodeURIComponent(v.url)}`}
                       onClick={() => {
                         setWatched({ variables: { path: v.path, value: true } })
                       }}
@@ -254,7 +254,7 @@ export default ({ item, watched }) => {
 
                   <Tooltip title="Launch VLC" theme="light">
                     <a
-                      href={`vlc://${v.url}`}
+                      href={`vlc://${encodeURIComponent(v.url)}`}
                       onClick={() => {
                         setWatched({ variables: { path: v.path, value: true } })
                       }}
