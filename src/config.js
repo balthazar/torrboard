@@ -2,7 +2,7 @@ const { isMobile } = require('react-device-detect')
 
 const __DEV__ = process.env.NODE_ENV !== 'production'
 
-const __APIPORT__ = 3434
+const __APIPORT__ = process.env.PORT || 3000
 
 const BASE_URL = 'https://media.balthazar.dev'
 const __APIURL__ = `${BASE_URL}/graphql`
