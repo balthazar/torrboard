@@ -1,23 +1,22 @@
-# Stage 1: builder
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci
 
 COPY src/ ./src/
 RUN npm run build
 
-# Stage 2: runner
-FROM node:20-alpine AS runner
+# ---
 
-ENV NODE_ENV=production
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --production
+COPY package.json package-lock.json ./
+ENV NODE_ENV=production
+RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 COPY src/ ./src/
