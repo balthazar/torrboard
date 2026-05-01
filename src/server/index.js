@@ -10,7 +10,7 @@ const refreshMediaInfos = require('./fn/refreshMediaInfos')
 const downloadRSS = require('./fn/downloadRSS')
 
 mongoose.Promise = Promise
-mongoose.connect('mongodb://127.0.0.1:27017/torrboard', {
+mongoose.connect(process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/torrboard', {
   directConnection: true,
   useNewUrlParser: true,
   useUnifiedTopology: true,
