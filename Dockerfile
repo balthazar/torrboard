@@ -6,6 +6,10 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY src/ ./src/
+
+ARG BASE_URL
+ENV BASE_URL=$BASE_URL
+
 RUN npm run build
 
 # ---
