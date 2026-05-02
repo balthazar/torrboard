@@ -1,3 +1,4 @@
+const path = require('path')
 const express = require('express')
 const mongoose = require('mongoose')
 const { ApolloServer } = require('apollo-server-express')
@@ -21,8 +22,11 @@ const server = new ApolloServer({ ...graphql, playground: true })
 const app = express()
 
 app.use(cookieParser())
+app.use(express.static(path.join(__dirname, '../../dist')))
 
 server.applyMiddleware({ app })
+
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../../dist/index.html')))
 
 app.listen(__APIPORT__, () => {
   console.log(`[TorrBoard API] Listening on ::${__APIPORT__} 🚀`) // eslint-disable-line no-console
