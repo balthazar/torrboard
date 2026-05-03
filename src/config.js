@@ -14,7 +14,7 @@ module.exports = {
 
   BASE_URL,
   IMAGE_URL: `${BASE_URL}/statics/torrboard.png`,
-  DOWNLOAD_URL: process.env.DOWNLOAD_URL || `${BASE_URL}/dl`,
+  DOWNLOAD_URL: process.env.DOWNLOAD_URL || BASE_URL,
   DOWNLOAD_DIR: process.env.DOWNLOAD_DIR || '/home/media',
   SYSTEM_EMAIL: process.env.SYSTEM_EMAIL || 'media@balthazar.dev',
 
