@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@apollo/client'
 import gql from 'graphql-tag'
 import styled from 'styled-components'
 import { MdAdd, MdRemove } from 'react-icons/md'
-import { useToasts } from 'react-toast-notifications'
+import { useToasts } from './toasts'
 import get from 'lodash/get'
 
 import Placeloader from './Placeloader'

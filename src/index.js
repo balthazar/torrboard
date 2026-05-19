@@ -3,7 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ApolloProvider } from '@apollo/client'
 import styled, { ThemeProvider } from 'styled-components'
-import { ToastProvider } from 'react-toast-notifications'
+import 'tippy.js/dist/tippy.css'
+import 'tippy.js/themes/light.css'
+import { ToastProvider } from './components/toasts'
 
 import Toolbar from './components/Toolbar'
 import Home from './components/Home'
@@ -11,7 +13,6 @@ import Torrents from './components/Torrents'
 import Rss from './components/Rss'
 import Settings from './components/Settings'
 import Login from './components/Login'
-import Toast from './components/Toast'
 
 import theme from './theme'
 import apolloClient from './apollo'
@@ -71,12 +72,7 @@ const App = () => {
   return (
     <StoreProvider>
       <ThemeProvider theme={theme}>
-        <ToastProvider
-          placement="bottom-right"
-          components={{ Toast }}
-          autoDismiss
-          autoDismissTimeout={2500}
-        >
+        <ToastProvider>
           <ApolloProvider client={apolloClient}>
             <BrowserRouter>
               <Content />

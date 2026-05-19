@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import gql from 'graphql-tag'
 import { useMutation } from '@apollo/client'
-import { useToasts } from 'react-toast-notifications'
+import { useToasts } from './toasts'
 import Cookies from 'js-cookie'
 import jwt from 'jsonwebtoken'
 import { useNavigate, useParams } from 'react-router-dom'

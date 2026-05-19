@@ -12,7 +12,7 @@ import {
 } from 'react-icons/io'
 import { MdCancel } from 'react-icons/md'
 import { FiDelete, FiTrash2 } from 'react-icons/fi'
-import { Tooltip } from 'react-tippy'
+import Tippy from '@tippyjs/react'
 import { isMobile } from 'react-device-detect'
 
 import SearchInput from './SearchInput'
@@ -313,16 +313,16 @@ export default () => {
               if (name === 'actions') {
                 return pendingConfirm[torrentId] ? (
                   <Actions key={name}>
-                    <Tooltip title="cancel" theme="light">
+                    <Tippy content="cancel" theme="light">
                       <span onClick={() => askConfirm(prev => ({ ...prev, [torrentId]: null }))}>
                         <MdCancel />
                       </span>
-                    </Tooltip>
-                    <Tooltip title="confirm" theme="light">
+                    </Tippy>
+                    <Tippy content="confirm" theme="light">
                       <span onClick={deleteAction}>
                         <IoMdCheckmark fill={theme.green} />
                       </span>
-                    </Tooltip>
+                    </Tippy>
                   </Actions>
                 ) : (
                   <Actions key={name}>
@@ -337,8 +337,8 @@ export default () => {
                         )
                       })
                       .map(({ name, extra, icon }) => (
-                        <Tooltip
-                          title={
+                        <Tippy
+                          content={
                             name === 'remove' && extra && extra.removeFiles
                               ? `delete & clear`
                               : name
@@ -347,7 +347,7 @@ export default () => {
                           key={`${name}-${!!extra}`}
                         >
                           <span onClick={() => onClickAction(name, extra)}>{icon}</span>
-                        </Tooltip>
+                        </Tippy>
                       ))}
                   </Actions>
                 )

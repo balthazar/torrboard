@@ -4,7 +4,7 @@ import gql from 'graphql-tag'
 import { useQuery } from '@apollo/client'
 import get from 'lodash/get'
 import uniq from 'lodash/uniq'
-import { useToasts } from 'react-toast-notifications'
+import { useToasts } from './toasts'
 import { MdDoneAll } from 'react-icons/md'
 
 import Placeloader from './Placeloader'

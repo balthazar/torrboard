@@ -9,7 +9,7 @@ import { IoIosArrowRoundDown, IoIosArrowRoundUp } from 'react-icons/io'
 import { AiFillDatabase } from 'react-icons/ai'
 import Cookies from 'js-cookie'
 import get from 'lodash/get'
-import { useToasts } from 'react-toast-notifications'
+import { useToasts } from './toasts'
 import { isMobile } from 'react-device-detect'
 
 import convertBytes from '../fn/convertBytes'

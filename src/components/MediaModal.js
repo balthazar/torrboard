@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
-import { Tooltip } from 'react-tippy'
+import Tippy from '@tippyjs/react'
 import { useMutation } from '@apollo/client'
 import gql from 'graphql-tag'
 import ptn from 'parse-torrent-name'
@@ -270,7 +270,7 @@ export default ({ item, watched }) => {
                     </a>
                   )}
 
-                  <Tooltip title="Launch MPV" theme="light">
+                  <Tippy content="Launch MPV" theme="light">
                     <a
                       href={`mpv://${encodeURIComponent(v.url)}`}
                       onClick={() => {
@@ -279,9 +279,9 @@ export default ({ item, watched }) => {
                     >
                       <IoIosPlayCircle size={20} />
                     </a>
-                  </Tooltip>
+                  </Tippy>
 
-                  <Tooltip title="Launch VLC" theme="light">
+                  <Tippy content="Launch VLC" theme="light">
                     <a
                       href={`vlc://${encodeURIComponent(v.url)}`}
                       onClick={() => {
@@ -290,17 +290,17 @@ export default ({ item, watched }) => {
                     >
                       <FiTriangle size={17} />
                     </a>
-                  </Tooltip>
+                  </Tippy>
 
-                  <Tooltip title="Copy URL" theme="light">
+                  <Tippy content="Copy URL" theme="light">
                     <CopyToClipboard text={v.url}>
                       <a>
                         <MdContentCopy size={20} />
                       </a>
                     </CopyToClipboard>
-                  </Tooltip>
+                  </Tippy>
 
-                  <Tooltip title={watched[v.path] ? 'Set unwatched' : 'Set watched'} theme="light">
+                  <Tippy content={watched[v.path] ? 'Set unwatched' : 'Set watched'} theme="light">
                     <a
                       onClick={() =>
                         setWatched({ variables: { path: v.path, value: !watched[v.path] } })
@@ -308,14 +308,14 @@ export default ({ item, watched }) => {
                     >
                       {watched[v.path] ? <IoMdEyeOff size={20} /> : <IoMdEye size={20} />}
                     </a>
-                  </Tooltip>
+                  </Tippy>
 
                   {watched[v.path] && (
-                    <Tooltip title="Watched" theme="light">
+                    <Tippy content="Watched" theme="light">
                       <a>
                         <MdDoneAll />
                       </a>
-                    </Tooltip>
+                    </Tippy>
                   )}
                 </Actions>
               </File>
