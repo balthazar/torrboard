@@ -185,8 +185,37 @@ export default ({ item, watched }) => {
       const meta = ptn(name)
 
       const type = get(item, 'mediaInfo.type')
-      if ((!type || type === 'series') && !meta.episode && !isNaN(get(meta, 'excess.0'))) {
-        meta.episode = meta.excess[0]
+      if ((!type || type === 'series') && !meta.episode) {
+        // Strip extension and known noise so digits inside codecs/release tags can't win.
+        const stem = name
+          .replace(/\.[a-z0-9]{2,4}$/i, '')
+          .replace(/\b(x|h)\.?26[45]\b/gi, '')
+          .replace(/\b10\s?bit\b/gi, '')
+          .replace(/\b(720|1080|2160|480)p\b/gi, '')
+
+        const seMatch = stem.match(/\bS(\d{1,2})\s?E(\d{1,3})\b/i)
+        const xMatch = !seMatch && stem.match(/\b(\d{1,2})x(\d{1,3})\b/)
+        const epMatch =
+          !seMatch &&
+          !xMatch &&
+          stem.match(/(?:^|[\s._-])(?:E|Ep|Episode)\s?(\d{1,3})(?!\d)/i)
+        const dashMatch =
+          !seMatch &&
+          !xMatch &&
+          !epMatch &&
+          stem.match(/(?:^|[\s._-])-\s*(\d{1,3})(?:v\d)?(?=\s|[._-]|$)/)
+
+        if (seMatch) {
+          meta.season = Number(seMatch[1])
+          meta.episode = Number(seMatch[2])
+        } else if (xMatch) {
+          meta.season = Number(xMatch[1])
+          meta.episode = Number(xMatch[2])
+        } else if (epMatch) {
+          meta.episode = Number(epMatch[1])
+        } else if (dashMatch) {
+          meta.episode = Number(dashMatch[1])
+        }
       }
 
       const url = encodeURI(`${v.replace(DOWNLOAD_DIR, DOWNLOAD_URL)}`)
