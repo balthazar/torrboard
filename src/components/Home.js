@@ -16,6 +16,7 @@ import { Filters, FilterValue } from './Filters'
 
 import apiHandlers from '../fn/apiHandlers'
 import { useStore } from '../state'
+import { __DEV__ } from '../config'
 
 const GET_MEDIAS = gql`
   {
@@ -140,7 +141,7 @@ export default () => {
 
       return { ...obj, videos, isWatched }
     })
-    .filter(item => item.videos.length || item.rar)
+    .filter(item => __DEV__ || item.videos.length || item.rar)
 
   return (
     <div>
