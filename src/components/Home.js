@@ -109,7 +109,7 @@ export default () => {
     .reduce((acc, cur) => {
       const key = get(cur, 'mediaInfo.imdbID') || get(cur, 'meta.title') || cur.name
 
-      if (category && !get(cur, 'mediaInfo.tags', []).includes(category)) {
+      if (category && !(get(cur, 'mediaInfo.tags') || []).includes(category)) {
         return acc
       }
 
