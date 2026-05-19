@@ -2,10 +2,10 @@
   "name": "torrboard",
   "version": "0.0.1",
   "scripts": {
-    "start": "parcel src/index.html",
+    "start": "vite",
     "api": "./scripts/dev.sh",
     "db": "kubectl --context dadonew -n infra port-forward svc/mongo 27018:27017",
-    "build": "rm -rf dist && parcel build src/index.html",
+    "build": "vite build",
     "deploy": "pm2 deploy ecosystem.json5 production"
   },
   "dependencies": {
@@ -16,6 +16,7 @@
     "cookie-parser": "^1.4.4",
     "date-fns": "^2.8.1",
     "dotenv": "^8.2.0",
+    "events": "^3.3.0",
     "express": "^4.17.1",
     "got": "^9.6.0",
     "graphql": "^15.10.2",
@@ -46,16 +47,14 @@
     "subscriptions-transport-ws": "^0.11.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.2",
     "babel-eslint": "^10.0.3",
     "eslint": "^6.7.2",
     "eslint-config-prettier": "^6.7.0",
     "eslint-config-zavatta": "^6.0.3",
     "eslint-config-zavatta-react": "^2.3.1",
     "eslint-plugin-react-hooks": "^2.3.0",
-    "parcel-bundler": "^1.12.4",
-    "prettier": "^1.19.1"
-  },
-  "browserslist": [
-    "Chrome 78"
-  ]
+    "prettier": "^1.19.1",
+    "vite": "^8.0.13"
+  }
 }

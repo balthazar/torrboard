@@ -3,11 +3,11 @@ import gql from 'graphql-tag'
 import { useMutation } from '@apollo/client'
 import { useToasts } from './toasts'
 import Cookies from 'js-cookie'
-import jwt from 'jsonwebtoken'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { useStore } from '../state'
 import apiHandlers from '../fn/apiHandlers'
+import decodeToken from '../fn/decodeToken'
 
 import Input from './Input'
 import GuestContainer from './GuestContainer'
@@ -38,7 +38,7 @@ export default () => {
   const doLogin = (data, fieldName) => {
     const token = data[fieldName]
     Cookies.set('token', token, { expires: 7 })
-    const decoded = jwt.decode(token)
+    const decoded = decodeToken(token)
     dispatch({ type: 'LOGIN', payload: { ...decoded, token } })
     navigate('/')
   }

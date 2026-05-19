@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer } from 'react'
 import Cookies from 'js-cookie'
-import jwt from 'jsonwebtoken'
+
+import decodeToken from './fn/decodeToken'
 
 export const StateContext = createContext()
 
@@ -23,12 +24,8 @@ const reducer = createReducer({
 const getUser = () => {
   const token = Cookies.get('token')
 
-  try {
-    const decoded = jwt.decode(token)
-    return token ? { ...decoded, token } : null
-  } catch (err) {
-    return null
-  }
+  const decoded = decodeToken(token)
+  return decoded ? { ...decoded, token } : null
 }
 
 const initialState = {
