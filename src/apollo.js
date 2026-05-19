@@ -1,10 +1,8 @@
-import { ApolloClient } from 'apollo-client'
-import { createHttpLink } from 'apollo-link-http'
-import { InMemoryCache } from 'apollo-cache-inmemory'
-import { setContext } from 'apollo-link-context'
+import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client'
+import { setContext } from '@apollo/client/link/context'
 import Cookies from 'js-cookie'
 
-import { __APIURL__ } from './config'
+import { __APIURL__ } from './config.client'
 
 const httpLink = createHttpLink({ uri: __APIURL__ })
 

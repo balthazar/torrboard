@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import gql from 'graphql-tag'
-import { useMutation } from '@apollo/react-hooks'
+import { useMutation } from '@apollo/client'
 import { useToasts } from 'react-toast-notifications'
 import Cookies from 'js-cookie'
 import jwt from 'jsonwebtoken'
-import { navigate } from '@reach/router'
+import { useNavigate, useParams } from 'react-router-dom'
 
 import { useStore } from '../state'
 import apiHandlers from '../fn/apiHandlers'
@@ -25,7 +25,9 @@ const LOGIN = gql`
   }
 `
 
-export default ({ inviteCode }) => {
+export default () => {
+  const { inviteCode } = useParams()
+  const navigate = useNavigate()
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const { addToast } = useToasts()

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import styled from 'styled-components'
 import gql from 'graphql-tag'
 import get from 'lodash/get'
-import { useQuery, useMutation } from '@apollo/react-hooks'
+import { useQuery, useMutation } from '@apollo/client'
 import {
   IoIosArrowRoundDown,
   IoIosArrowRoundUp,

@@ -1,7 +1,7 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
-import { Router } from '@reach/router'
-import { ApolloProvider } from '@apollo/react-hooks'
+import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { ApolloProvider } from '@apollo/client'
 import styled, { ThemeProvider } from 'styled-components'
 import { ToastProvider } from 'react-toast-notifications'
 
@@ -16,7 +16,7 @@ import Toast from './components/Toast'
 import theme from './theme'
 import apolloClient from './apollo'
 import { StoreProvider, useStore } from './state'
-import { TOOLBAR_WIDTH } from './config'
+import { TOOLBAR_WIDTH } from './config.client'
 
 const Container = styled.div`
   display: flex;
@@ -49,18 +49,19 @@ const Content = () => {
       {state.user ? (
         <>
           <Toolbar />
-          <Router>
-            <Home path="/" default />
-            <Torrents path="/torrents" />
-            <Rss path="/rss" />
-            <Settings path="/settings" />
-          </Router>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/torrents" element={<Torrents />} />
+            <Route path="/rss" element={<Rss />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<Home />} />
+          </Routes>
         </>
       ) : (
-        <Router>
-          <Login path="/" default />
-          <Login path="/invite/:inviteCode" />
-        </Router>
+        <Routes>
+          <Route path="/invite/:inviteCode" element={<Login />} />
+          <Route path="*" element={<Login />} />
+        </Routes>
       )}
     </Container>
   )
@@ -77,7 +78,9 @@ const App = () => {
           autoDismissTimeout={2500}
         >
           <ApolloProvider client={apolloClient}>
-            <Content />
+            <BrowserRouter>
+              <Content />
+            </BrowserRouter>
           </ApolloProvider>
         </ToastProvider>
       </ThemeProvider>
@@ -85,7 +88,7 @@ const App = () => {
   )
 }
 
-ReactDOM.render(<App />, document.getElementById('root'))
+createRoot(document.getElementById('root')).render(<App />)
 
 if (module.hot) {
   module.hot.accept()

@@ -1,7 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 
-import { IMAGE_URL, TOOLBAR_WIDTH } from '../config'
+import { IMAGE_URL, TOOLBAR_WIDTH } from '../config.client'
 
 const Logo = styled.div`
   display: flex;
