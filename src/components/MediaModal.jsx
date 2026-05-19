@@ -63,7 +63,7 @@ const File = styled.div`
 const Actions = styled.div`
   display: flex;
 
-  > * > * {
+  > * {
     display: flex;
     align-items: center;
     justify-content: center;

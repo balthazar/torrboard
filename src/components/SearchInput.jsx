@@ -3,30 +3,54 @@ import { IoMdSearch } from 'react-icons/io'
 import styled from 'styled-components'
 import { isMobile } from 'react-device-detect'
 
-import Input from './Input'
-import theme from '../theme'
-
 const SearchContainer = styled.div`
   position: relative;
+  margin-bottom: ${p => p.theme.spacing[3]};
 `
 
 const SearchIcon = styled.div`
   position: absolute;
-  left: 20px;
-  top: 15px;
+  left: ${p => p.theme.spacing[4]};
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  color: ${p => p.theme.colors.textMuted};
+  pointer-events: none;
 `
 
-export const SearchInput = styled(Input)`
+const StyledInput = styled.input`
   width: 100%;
-  padding: 10px 20px 10px 60px;
+  height: 44px;
+  background-color: ${p => p.theme.colors.surface};
+  color: ${p => p.theme.colors.text};
+  border: 1px solid ${p => p.theme.colors.border};
+  border-radius: ${p => p.theme.radii.lg};
+  padding: 0 ${p => p.theme.spacing[4]} 0 44px;
+  font-family: ${p => p.theme.font.sans};
+  font-size: ${p => p.theme.font.size.base};
+  transition: border-color ${p => p.theme.motion.base},
+    box-shadow ${p => p.theme.motion.base};
+
+  &::placeholder {
+    color: ${p => p.theme.colors.textSubtle};
+  }
+
+  &:hover {
+    border-color: ${p => p.theme.colors.borderHover};
+  }
+
+  &:focus {
+    border-color: ${p => p.theme.colors.accent};
+    box-shadow: 0 0 0 3px ${p => p.theme.colors.accent}26;
+  }
 `
 
 export default props => (
   <SearchContainer style={props.style}>
     <SearchIcon>
-      <IoMdSearch size={20} color={theme.body} />
+      <IoMdSearch size={18} />
     </SearchIcon>
 
-    <SearchInput type="text" placeholder="Search..." autoFocus={!isMobile} {...props} />
+    <StyledInput type="text" placeholder="Search..." autoFocus={!isMobile} {...props} />
   </SearchContainer>
 )

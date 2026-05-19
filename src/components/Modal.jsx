@@ -99,6 +99,15 @@ export default ({ isOpened, onClose, children }) => {
     return () => clearTimeout(t)
   }, [isOpened, mounted])
 
+  useEffect(() => {
+    if (!isOpened) return undefined
+    const onKey = e => {
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpened, onClose])
+
   if (!mounted) return null
 
   return createPortal(
