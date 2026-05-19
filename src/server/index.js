@@ -10,8 +10,13 @@ const graphql = require('./graphql')
 const refreshMediaInfos = require('./fn/refreshMediaInfos')
 const downloadRSS = require('./fn/downloadRSS')
 
+const MONGO_URL =
+  process.env.NODE_ENV === 'production'
+    ? process.env.MONGO_URL
+    : 'mongodb://127.0.0.1:27018/torrboard'
+
 mongoose.Promise = Promise
-mongoose.connect(process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/torrboard', {
+mongoose.connect(MONGO_URL, {
   directConnection: true,
   useNewUrlParser: true,
   useUnifiedTopology: true,
