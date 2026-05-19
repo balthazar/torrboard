@@ -5,7 +5,16 @@ const uniq = require('lodash/uniq')
 const { DOWNLOAD_DIR } = require('../../config')
 
 const getFiles = async dir => {
-  const dirents = await readdir(dir, { withFileTypes: true })
+  let dirents
+  try {
+    dirents = await readdir(dir, { withFileTypes: true })
+  } catch (err) {
+    if (err.code === 'ENOENT' || err.code === 'EACCES') {
+      return []
+    }
+    throw err
+  }
+
   const files = await Promise.all(
     dirents.map(dirent => {
       const res = resolve(dir, dirent.name)

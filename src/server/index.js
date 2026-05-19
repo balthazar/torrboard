@@ -38,8 +38,26 @@ app.listen(__APIPORT__, () => {
   console.log(`[TorrBoard API] Listening on ::${__APIPORT__} 🚀`) // eslint-disable-line no-console
 })
 
+// Last-resort handlers so a stray throw or rejection doesn't take down the api.
+// Node's default behavior on unhandledRejection switched to "terminate" in v15,
+// and node-schedule jobs are a common source of unobserved rejections.
+process.on('unhandledRejection', err => {
+  console.error('[unhandledRejection]', err) // eslint-disable-line no-console
+})
+process.on('uncaughtException', err => {
+  console.error('[uncaughtException]', err) // eslint-disable-line no-console
+})
+
+const safely = (name, fn) => async () => {
+  try {
+    await fn()
+  } catch (err) {
+    console.error(`[${name}] failed:`, err) // eslint-disable-line no-console
+  }
+}
+
 // Every 2 minutes
-scheduleJob('*/2 * * * *', () => {
-  refreshMediaInfos()
-  downloadRSS()
+scheduleJob('*/2 * * * *', async () => {
+  await safely('refreshMediaInfos', refreshMediaInfos)()
+  await safely('downloadRSS', downloadRSS)()
 })
