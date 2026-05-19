@@ -4,16 +4,14 @@ import { gql, useQuery } from '@apollo/client'
 import get from 'lodash/get'
 import uniq from 'lodash/uniq'
 import ptn from 'parse-torrent-name'
-import { isMobile } from 'react-device-detect'
 import { useToasts } from './toasts'
 import { MdDoneAll, MdStar, MdClose, MdSortByAlpha, MdSchedule } from 'react-icons/md'
 
 import Placeloader from './Placeloader'
 import SearchInput from './SearchInput'
-import Modal from './Modal'
 import MediaCard, { CARD_HEIGHT, CARD_WIDTH } from './MediaCard'
 import MediaModal from './MediaModal'
-import { Filters, FilterValue } from './Filters'
+import { FilterValue } from './Filters'
 
 import apiHandlers from '../fn/apiHandlers'
 import { useStore } from '../state'
@@ -53,7 +51,7 @@ const GET_MEDIAS = gql`
 const ControlBar = styled.div`
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: ${p => p.theme.spacing[5]};
   margin: ${p => p.theme.spacing[3]} 0;
 `
@@ -78,16 +76,17 @@ const ControlPills = styled.div`
   gap: ${p => p.theme.spacing[2]};
 `
 
-const SortIcon = styled.span`
-  display: inline-flex;
-  margin-right: ${p => p.theme.spacing[1]};
+const SearchSlot = styled.div`
+  flex: 1 1 220px;
+  min-width: 200px;
+  max-width: 420px;
+  margin-left: auto;
 `
 
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, ${CARD_WIDTH}px);
+  grid-template-columns: repeat(auto-fill, minmax(${CARD_WIDTH}px, 1fr));
   gap: ${p => p.theme.spacing[3]};
-  justify-content: center;
   padding: ${p => p.theme.spacing[3]} 0;
 `
 
@@ -203,7 +202,6 @@ const ExpansionPanel = styled.div`
   transition: grid-template-rows ${p => p.theme.motion.slow},
     opacity ${p => p.theme.motion.base};
 
-  /* fade in on mount */
   @starting-style {
     grid-template-rows: 0fr;
     opacity: 0;
@@ -247,12 +245,14 @@ export default () => {
   const [query, setQuery] = useState('')
   const [sortBy, setSort] = useState('time')
   const [selectedKey, setSelectedKey] = useState(null)
-  const [closingKey, setClosingKey] = useState(null)
+  const [closing, setClosing] = useState(false)
   const [category, setCategory] = useState(null)
   const { addToast } = useToasts()
   const [, dispatch] = useStore()
 
   const gridRef = useRef(null)
+  const searchRef = useRef(null)
+  const closeTimerRef = useRef(null)
   const [cols, setCols] = useState(1)
 
   const { loading, data } = useQuery(GET_MEDIAS, {
@@ -281,21 +281,30 @@ export default () => {
     return () => observer.disconnect()
   }, [])
 
+  const closeExpansion = () => {
+    if (selectedKey === null) return
+    setClosing(true)
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    closeTimerRef.current = setTimeout(() => {
+      setSelectedKey(null)
+      setClosing(false)
+    }, EXPANSION_ANIM_MS)
+  }
+
   useEffect(() => {
-    if (selectedKey === null) return undefined
     const onKey = e => {
-      if (e.key === 'Escape') closeExpansion()
+      if (e.key === 'Escape' && selectedKey !== null) {
+        closeExpansion()
+        return
+      }
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT') {
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [selectedKey])
-
-  const closeExpansion = () => {
-    if (selectedKey === null) return
-    setClosingKey(selectedKey)
-    setSelectedKey(null)
-    setTimeout(() => setClosingKey(null), EXPANSION_ANIM_MS)
-  }
 
   const watched = get(data, 'watched', []).reduce((acc, path) => ((acc[path] = true), acc), {})
 
@@ -357,20 +366,16 @@ export default () => {
 
   const selectedIndex = selectedKey !== null ? list.findIndex(it => it._key === selectedKey) : -1
   const selectedItem = selectedIndex >= 0 ? list[selectedIndex] : null
-
   const expandedRow = selectedIndex >= 0 ? Math.floor(selectedIndex / cols) : -1
 
   const onCardClick = item => {
-    if (isMobile) {
-      // mobile uses the modal fallback
-      setSelectedKey(item._key)
+    if (selectedKey === item._key && !closing) {
+      closeExpansion()
       return
     }
-    if (selectedKey === item._key) {
-      closeExpansion()
-    } else {
-      setSelectedKey(item._key)
-    }
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+    setClosing(false)
+    setSelectedKey(item._key)
   }
 
   const SORT_OPTIONS = [
@@ -380,15 +385,13 @@ export default () => {
 
   return (
     <div>
-      <SearchInput onChange={e => setQuery(e.target.value)} />
-
       <ControlBar>
         <ControlGroup>
           <ControlLabel>Sort by</ControlLabel>
           <ControlPills>
             {SORT_OPTIONS.map(({ value, label, icon }) => (
               <FilterValue $active={sortBy === value} key={value} onClick={() => setSort(value)}>
-                <SortIcon>{icon}</SortIcon>
+                {icon}
                 {label}
               </FilterValue>
             ))}
@@ -409,6 +412,10 @@ export default () => {
             ))}
           </ControlPills>
         </ControlGroup>
+
+        <SearchSlot>
+          <SearchInput inputRef={searchRef} onChange={e => setQuery(e.target.value)} />
+        </SearchSlot>
       </ControlBar>
 
       {!loading && (
@@ -424,7 +431,7 @@ export default () => {
             <MediaCard key={id}>
               <Placeloader
                 time={Math.max(1000, Math.floor(Math.random() * 3000))}
-                style={{ height: CARD_HEIGHT, width: CARD_WIDTH }}
+                style={{ height: '100%', width: '100%' }}
               />
             </MediaCard>
           ))}
@@ -440,16 +447,11 @@ export default () => {
           const row = Math.floor(i / cols)
           const isLastInRow = (i + 1) % cols === 0
           const isLastItem = i === list.length - 1
-          const showExpansionHere =
-            !isMobile && row === expandedRow && (isLastInRow || isLastItem)
+          const showExpansionHere = row === expandedRow && (isLastInRow || isLastItem)
 
           return (
             <Fragment key={item._key}>
-              <MediaCard
-                onClick={() => onCardClick(item)}
-                $bg={image}
-                $interactive
-              >
+              <MediaCard onClick={() => onCardClick(item)} $bg={image} $interactive>
                 {!image && <CardFallback>{title}</CardFallback>}
                 {image && (
                   <TitleOverlay>
@@ -482,7 +484,7 @@ export default () => {
               </MediaCard>
 
               {showExpansionHere && selectedItem && (
-                <ExpansionPanel $closing={closingKey === selectedKey}>
+                <ExpansionPanel $closing={closing}>
                   <ExpansionInner>
                     <ExpansionContent>
                       <ExpansionClose onClick={closeExpansion} aria-label="Close">
@@ -497,12 +499,6 @@ export default () => {
           )
         })}
       </Grid>
-
-      {isMobile && (
-        <Modal isOpened={!!selectedItem} onClose={() => setSelectedKey(null)}>
-          {selectedItem && <MediaModal item={selectedItem} watched={watched} />}
-        </Modal>
-      )}
     </div>
   )
 }

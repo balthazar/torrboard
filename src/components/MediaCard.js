@@ -6,8 +6,8 @@ export const CARD_WIDTH = isMobile ? 90 : 200
 
 export default styled.div`
   position: relative;
-  width: ${CARD_WIDTH}px;
-  height: ${CARD_HEIGHT}px;
+  width: 100%;
+  aspect-ratio: ${CARD_WIDTH} / ${CARD_HEIGHT};
   flex-shrink: 0;
   overflow: hidden;
   word-break: break-all;

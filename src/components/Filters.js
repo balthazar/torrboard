@@ -14,6 +14,9 @@ export const Filters = styled.div`
 `
 
 export const FilterValue = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 5px ${p => p.theme.spacing[3]};
   border-radius: ${p => p.theme.radii.full};
   font-size: ${p => p.theme.font.size.xs};

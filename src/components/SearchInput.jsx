@@ -5,7 +5,7 @@ import { isMobile } from 'react-device-detect'
 
 const SearchContainer = styled.div`
   position: relative;
-  margin-bottom: ${p => p.theme.spacing[3]};
+  width: 100%;
 `
 
 const SearchIcon = styled.div`
@@ -45,12 +45,18 @@ const StyledInput = styled.input`
   }
 `
 
-export default props => (
-  <SearchContainer style={props.style}>
+export default ({ inputRef, style, ...rest }) => (
+  <SearchContainer style={style}>
     <SearchIcon>
       <IoMdSearch size={18} />
     </SearchIcon>
 
-    <StyledInput type="text" placeholder="Search..." autoFocus={!isMobile} {...props} />
+    <StyledInput
+      ref={inputRef}
+      type="text"
+      placeholder="Search...  /  to focus"
+      autoFocus={!isMobile}
+      {...rest}
+    />
   </SearchContainer>
 )
