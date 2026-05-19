@@ -1,7 +1,6 @@
 const { resolve } = require('path')
 const { readdir } = require('fs').promises
-const util = require('util')
-const exec = util.promisify(require('child_process').exec)
+const got = require('got')
 const uniq = require('lodash/uniq')
 const cache = require('memory-cache')
 
@@ -11,6 +10,7 @@ const VIDEO_EXTS = ['.mkv', '.avi', '.mp4', '.rar']
 const isMedia = f =>
   !f.toLowerCase().includes('sample') && VIDEO_EXTS.some(ext => f.endsWith(ext))
 
+// Prod: recursively scan the local media volume.
 const walkLocal = async dir => {
   let dirents
   try {
@@ -32,25 +32,83 @@ const walkLocal = async dir => {
   return Array.prototype.concat(...files)
 }
 
-// In dev we can't see the prod media volume, so shell out to kubectl exec
-// against the running torrboard pod. Cached so a 10s frontend poll doesn't
-// hammer the api server with an exec per tick.
-const walkRemote = async dir => {
-  const cached = cache.get('dev-files')
-  if (cached) return cached
+// Dev: walk the prod nginx autoindex at /dl/. The api can't see the prod
+// volume so we parse <a href="..."> links recursively. Non-blocking: the
+// caller gets the cached list immediately and a background refresh repopulates
+// it. NGINX_PWD must be set in .env to "user:password".
+const REMOTE_CACHE_KEY = 'dev-files'
+const REMOTE_TTL_MS = 10 * 60 * 1000
+const HREF_RE = /<a href="([^"?][^"]*)"/gi
 
-  const cmd =
-    `kubectl --context dadonew -n apps exec deploy/torrboard -c torrboard ` +
-    `-- find ${dir} -type f`
+const fetchListing = async url => {
+  const res = await got(url, {
+    auth: process.env.NGINX_PWD,
+    timeout: 20 * 1000,
+    retry: 0,
+  })
+  const links = []
+  let m
+  while ((m = HREF_RE.exec(res.body)) !== null) {
+    if (m[1] !== '../') links.push(m[1])
+  }
+  HREF_RE.lastIndex = 0
+  return links
+}
+
+const walkHttp = async (url, basePath) => {
+  let entries
   try {
-    const { stdout } = await exec(cmd, { maxBuffer: 32 * 1024 * 1024 })
-    const files = stdout.split('\n').filter(Boolean)
-    cache.put('dev-files', files, 30 * 1000)
-    return files
+    entries = await fetchListing(url)
   } catch (err) {
-    console.error('[getFiles] kubectl exec failed:', err.message) // eslint-disable-line no-console
+    console.error(`[getFiles] ${url} failed: ${err.message}`) // eslint-disable-line no-console
     return []
   }
+
+  const out = await Promise.all(
+    entries.map(entry => {
+      const name = decodeURIComponent(entry.replace(/\/$/, ''))
+      if (entry.endsWith('/')) {
+        return walkHttp(`${url}${entry}`, `${basePath}/${name}`)
+      }
+      return [`${basePath}/${name}`]
+    }),
+  )
+
+  return Array.prototype.concat(...out)
+}
+
+let refreshing = false
+const refreshRemote = dir => {
+  if (refreshing) return
+  if (!process.env.NGINX_PWD || !process.env.NGINX_URL) {
+    console.error('[getFiles] NGINX_URL/NGINX_PWD not set; cannot list prod files') // eslint-disable-line no-console
+    return
+  }
+  refreshing = true
+
+  const started = Date.now()
+  walkHttp(`${process.env.NGINX_URL}/dl/`, dir)
+    .then(files => {
+      cache.put(REMOTE_CACHE_KEY, files, REMOTE_TTL_MS)
+      console.log( // eslint-disable-line no-console
+        `[getFiles] indexed ${files.length} files in ${Math.round((Date.now() - started) / 1000)}s`,
+      )
+    })
+    .catch(err => {
+      console.error('[getFiles] walk failed:', err.message) // eslint-disable-line no-console
+    })
+    .then(() => {
+      refreshing = false
+    })
+}
+
+const walkRemote = async dir => {
+  const cached = cache.get(REMOTE_CACHE_KEY)
+  if (!cached) {
+    refreshRemote(dir)
+    return []
+  }
+  return cached
 }
 
 module.exports = async () => {
