@@ -208,12 +208,21 @@ const resolvers = {
     users: () => User.find(),
     getYtID: async (parent, { query }) => {
       try {
-        const res = await got(
-          `https://www.googleapis.com/youtube/v3/search?q=${query}%20trailer&part=id&key=${process.env.YOUTUBE}`,
-          { json: true },
-        )
+        const params = new URLSearchParams({
+          q: `${query} trailer`,
+          part: 'id',
+          type: 'video',
+          videoEmbeddable: 'true',
+          videoSyndicated: 'true',
+          maxResults: '5',
+          key: process.env.YOUTUBE,
+        })
+        const res = await got(`https://www.googleapis.com/youtube/v3/search?${params}`, {
+          json: true,
+        })
 
-        return res.body.items[0].id.videoId
+        const first = (res.body.items || []).find(i => i.id && i.id.videoId)
+        return first ? first.id.videoId : ''
       } catch (err) {
         console.log(err)
         return ''
