@@ -14,7 +14,7 @@ import { isMobile } from 'react-device-detect'
 
 import { DOWNLOAD_URL, DOWNLOAD_DIR } from '../config.client'
 import { useStore } from '../state'
-import MediaCard from './MediaCard'
+import MediaCard, { CARD_WIDTH, CARD_HEIGHT } from './MediaCard'
 import VideoDisplay from './VideoDisplay'
 import Button from './Button'
 
@@ -245,7 +245,7 @@ export default ({ item, watched }) => {
   return (
     <div>
       <ModalContent>
-        <MediaCard $bg={image} />
+        <MediaCard $bg={image} style={{ width: CARD_WIDTH, height: CARD_HEIGHT, flexShrink: 0 }} />
         <div>
           <h3>{title}</h3>
           {get(item, 'mediaInfo.year') && <i>{get(item, 'mediaInfo.year')}</i>}
