@@ -8,6 +8,11 @@ const { DOWNLOAD_DIR } = require('../../config')
 const logErr = require('./logErr')
 
 const VIDEO_EXTS = ['.mkv', '.avi', '.mp4', '.rar']
+const IGNORE = (process.env.FILE_IGNORE || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean)
+const isIgnored = name => IGNORE.includes(name)
 const isMedia = f =>
   !f.toLowerCase().includes('sample') && VIDEO_EXTS.some(ext => f.endsWith(ext))
 
@@ -24,10 +29,12 @@ const walkLocal = async dir => {
   }
 
   const files = await Promise.all(
-    dirents.map(dirent => {
-      const res = resolve(dir, dirent.name)
-      return dirent.isDirectory() ? walkLocal(res) : res
-    }),
+    dirents
+      .filter(d => !isIgnored(d.name))
+      .map(dirent => {
+        const res = resolve(dir, dirent.name)
+        return dirent.isDirectory() ? walkLocal(res) : res
+      }),
   )
 
   return Array.prototype.concat(...files)
@@ -47,10 +54,23 @@ const fetchListing = async url => {
     timeout: 20 * 1000,
     retry: 0,
   })
+
+  // Defensive: nginx serves index.html when present instead of the autoindex,
+  // so a book or static site under /dl/ would otherwise hand us hundreds of
+  // unrelated <a> tags (absolute external URLs, anchors, etc). Only trust
+  // pages whose <title> says "Index of /...".
+  if (!/<title>\s*Index of /i.test(res.body)) {
+    return []
+  }
+
   const links = []
   let m
   while ((m = HREF_RE.exec(res.body)) !== null) {
-    if (m[1] !== '../') links.push(m[1])
+    const h = m[1]
+    if (h === '../') continue
+    if (h.startsWith('/') || h.startsWith('#')) continue
+    if (h.includes('://')) continue
+    links.push(h)
   }
   HREF_RE.lastIndex = 0
   return links
@@ -68,6 +88,9 @@ const walkHttp = async (url, basePath) => {
   const out = await Promise.all(
     entries.map(entry => {
       const name = decodeURIComponent(entry.replace(/\/$/, ''))
+      if (isIgnored(name)) {
+        return []
+      }
       if (entry.endsWith('/')) {
         return walkHttp(`${url}${entry}`, `${basePath}/${name}`)
       }
