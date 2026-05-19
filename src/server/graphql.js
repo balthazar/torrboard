@@ -208,6 +208,14 @@ const resolvers = {
     rss,
     users: () => User.find(),
     getYtID: async (parent, { query }) => {
+      // YouTube Data API search costs 100 quota units per call and the
+      // default project quota is 10k/day. Same title resolves to the same
+      // trailer indefinitely, so cache aggressively. Negative results are
+      // cached too (1h) so a quota-exhausted day doesn't keep hammering.
+      const cacheKey = `yt:${query.toLowerCase().trim()}`
+      const hit = cache.get(cacheKey)
+      if (hit !== null) return hit
+
       try {
         const params = new URLSearchParams({
           q: `${query} trailer`,
@@ -223,9 +231,12 @@ const resolvers = {
         })
 
         const first = (res.body.items || []).find(i => i.id && i.id.videoId)
-        return first ? first.id.videoId : ''
+        const id = first ? first.id.videoId : ''
+        cache.put(cacheKey, id, id ? 30 * 24 * 60 * 60 * 1000 : 60 * 60 * 1000)
+        return id
       } catch (err) {
         logErr('getYtID', err)
+        cache.put(cacheKey, '', 60 * 60 * 1000)
         return ''
       }
     },
