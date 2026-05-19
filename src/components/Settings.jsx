@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
-import { useQuery, useMutation } from '@apollo/client'
-import gql from 'graphql-tag'
+import { gql, useQuery, useMutation } from '@apollo/client'
 import styled from 'styled-components'
 import { MdAdd, MdRemove } from 'react-icons/md'
 import { useToasts } from './toasts'

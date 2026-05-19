@@ -1,6 +1,5 @@
 import React from 'react'
-import gql from 'graphql-tag'
-import { useQuery } from '@apollo/client'
+import { gql, useQuery } from '@apollo/client'
 import Youtube from 'react-youtube'
 
 import Placeloader from './Placeloader'

@@ -16,7 +16,7 @@ export const Filters = styled.div`
 `
 
 export const FilterValue = styled.span`
-  background-color: ${p => (p.active ? p.theme.blue : p.theme.bg)};
+  background-color: ${p => (p.$active ? p.theme.blue : p.theme.bg)};
   padding: 4px 8px;
   cursor: pointer;
   font-size: ${isMobile ? 10 : 13}px;

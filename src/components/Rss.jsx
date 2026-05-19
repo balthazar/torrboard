@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
-import { useQuery, useMutation } from '@apollo/client'
-import gql from 'graphql-tag'
+import { gql, useQuery, useMutation } from '@apollo/client'
 import get from 'lodash/get'
 import { MdArrowUpward, MdArrowDownward, MdCheck } from 'react-icons/md'
 import { FiDownloadCloud } from 'react-icons/fi'
@@ -47,7 +46,7 @@ const DOWNLOAD = gql`
 `
 
 const Item = styled.div`
-  ${p => (p.loading ? '' : `padding: 10px;`)};
+  ${p => (p.$loading ? '' : `padding: 10px;`)};
   background-color: ${p => p.theme.bg};
   margin: 5px;
 
@@ -85,7 +84,7 @@ const DownloadButton = styled.div`
   justify-content: center;
 
   ${p =>
-    !p.disabled
+    !p.$disabled
       ? `
   cursor: pointer;
   background-color: ${p.theme.opacityDark(0.2)};
@@ -144,7 +143,7 @@ export default () => {
       <Filters>
         <div>
           {['seeders', 'time'].map(value => (
-            <FilterValue active={sortBy === value} key={value} onClick={() => setSort(value)}>
+            <FilterValue $active={sortBy === value} key={value} onClick={() => setSort(value)}>
               {value}
             </FilterValue>
           ))}
@@ -153,7 +152,7 @@ export default () => {
         <div>
           {['480p', '720p', '1080p'].map(value => (
             <FilterValue
-              active={resolution === value}
+              $active={resolution === value}
               key={value}
               onClick={() => setResolution(resolution === value ? null : value)}
             >
@@ -165,7 +164,7 @@ export default () => {
 
       {loading &&
         [...Array(20).keys()].map(i => (
-          <Item loading="true" key={i}>
+          <Item $loading="true" key={i}>
             <Placeloader
               time={Math.max(1000, Math.floor(Math.random() * 3000))}
               style={{ width: '100%', height: 78 }}
@@ -212,7 +211,7 @@ export default () => {
               </SeedInfo>
 
               <DownloadButton
-                disabled={already}
+                $disabled={already}
                 onClick={e => {
                   e.stopPropagation()
                   if (already) {

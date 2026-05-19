@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
-import gql from 'graphql-tag'
-import { useQuery } from '@apollo/client'
+import { gql, useQuery } from '@apollo/client'
 import get from 'lodash/get'
 import uniq from 'lodash/uniq'
 import { useToasts } from './toasts'
@@ -60,7 +59,7 @@ const CardFallback = styled.div`
 `
 
 const WatchCardStatus = styled.div`
-  ${p => (p.isWatched ? '' : 'display: none;')};
+  ${p => (p.$isWatched ? '' : 'display: none;')};
   width: 50px;
   height: 50px;
   position: absolute;
@@ -101,6 +100,7 @@ export default () => {
   const watched = get(data, 'watched', []).reduce((acc, path) => ((acc[path] = true), acc), {})
 
   const reduced = get(data, 'deluge.torrents', [])
+    .slice()
     .sort((a, b) =>
       sortBy === 'time'
         ? b.time_added - a.time_added
@@ -149,7 +149,7 @@ export default () => {
       <Filters>
         <div>
           {['time', 'alpha'].map(value => (
-            <FilterValue active={sortBy === value} key={value} onClick={() => setSort(value)}>
+            <FilterValue $active={sortBy === value} key={value} onClick={() => setSort(value)}>
               {value}
             </FilterValue>
           ))}
@@ -158,7 +158,7 @@ export default () => {
         <div>
           {['action', 'animation', 'sci-fi', 'drama', 'horror'].map(value => (
             <FilterValue
-              active={category === value}
+              $active={category === value}
               key={value}
               onClick={() => setCategory(category === value ? null : value)}
             >
@@ -182,15 +182,15 @@ export default () => {
         {list.map((item, i) => (
           <MediaCard
             onClick={() => selectItem(item)}
-            bg={get(item, 'mediaInfo.image')}
+            $bg={get(item, 'mediaInfo.image')}
             key={`${item.id}-${i}`}
-            interactive
+            $interactive
           >
             {!get(item, 'mediaInfo.image') && (
               <CardFallback>{get(item, 'mediaInfo.title') || item.name}</CardFallback>
             )}
 
-            <WatchCardStatus isWatched={item.isWatched}>
+            <WatchCardStatus $isWatched={item.isWatched}>
               <MdDoneAll />
             </WatchCardStatus>
           </MediaCard>

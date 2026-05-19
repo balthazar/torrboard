@@ -2,8 +2,7 @@ import React, { useState } from 'react'
 import styled from 'styled-components'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 import Tippy from '@tippyjs/react'
-import { useMutation } from '@apollo/client'
-import gql from 'graphql-tag'
+import { gql, useMutation } from '@apollo/client'
 import ptn from 'parse-torrent-name'
 import get from 'lodash/get'
 import { IoIosPlayCircle, IoMdEyeOff, IoMdEye } from 'react-icons/io'
@@ -246,7 +245,7 @@ export default ({ item, watched }) => {
   return (
     <div>
       <ModalContent>
-        <MediaCard bg={image} />
+        <MediaCard $bg={image} />
         <div>
           <h3>{title}</h3>
           {get(item, 'mediaInfo.year') && <i>{get(item, 'mediaInfo.year')}</i>}
@@ -293,11 +292,13 @@ export default ({ item, watched }) => {
                   </Tippy>
 
                   <Tippy content="Copy URL" theme="light">
-                    <CopyToClipboard text={v.url}>
-                      <a>
-                        <MdContentCopy size={20} />
-                      </a>
-                    </CopyToClipboard>
+                    <span>
+                      <CopyToClipboard text={v.url}>
+                        <a>
+                          <MdContentCopy size={20} />
+                        </a>
+                      </CopyToClipboard>
+                    </span>
                   </Tippy>
 
                   <Tippy content={watched[v.path] ? 'Set unwatched' : 'Set watched'} theme="light">

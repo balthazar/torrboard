@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
-import gql from 'graphql-tag'
 import get from 'lodash/get'
-import { useQuery, useMutation } from '@apollo/client'
+import { gql, useQuery, useMutation } from '@apollo/client'
 import {
   IoIosArrowRoundDown,
   IoIosArrowRoundUp,
@@ -132,14 +131,14 @@ const fields = [
 ]
 
 const Item = styled.div`
-  ${p => (p.loading ? '' : `padding: 10px 20px;`)};
+  ${p => (p.$loading ? '' : `padding: 10px 20px;`)};
 
   margin: 5px;
   display: flex;
   align-items: center;
 
   ${p =>
-    p.heading
+    p.$heading
       ? `
   font-size: 13px;
   text-transform: uppercase;
@@ -175,7 +174,7 @@ const State = styled.span`
   height: 7px;
   border-radius: 50%;
   background-color: ${p =>
-    p.value === 'Seeding' ? p.theme.blue : p.value === 'Paused' ? 'lightgrey' : p.theme.green};
+    p.$value === 'Seeding' ? p.theme.blue : p.$value === 'Paused' ? 'lightgrey' : p.theme.green};
 `
 
 const Actions = styled.span`
@@ -217,7 +216,7 @@ export default () => {
     <div>
       <SearchInput onChange={e => setQuery(e.target.value)} style={{ marginBottom: 10 }} />
 
-      <Item heading>
+      <Item $heading>
         {fields
           .filter(f => !f.hide)
           .map(({ name, label, width }) => (
@@ -229,7 +228,7 @@ export default () => {
 
       {loading &&
         [...Array(20).keys()].map(i => (
-          <Item loading="true" key={i}>
+          <Item $loading="true" key={i}>
             <Placeloader
               time={Math.max(1000, Math.floor(Math.random() * 3000))}
               style={{ width: '100%', height: 40 }}
@@ -246,7 +245,7 @@ export default () => {
               if (name === 'state') {
                 return (
                   <span style={{ width }} key={name}>
-                    <State value={torrent.state} />
+                    <State $value={torrent.state} />
                   </span>
                 )
               }

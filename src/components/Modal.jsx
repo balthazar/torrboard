@@ -37,7 +37,7 @@ const Root = styled.div`
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  pointer-events: ${p => (p.closing ? 'none' : 'auto')};
+  pointer-events: ${p => (p.$closing ? 'none' : 'auto')};
 `
 
 const Overlay = styled.div`
@@ -47,7 +47,7 @@ const Overlay = styled.div`
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
-  animation: ${p => (p.closing ? fadeOut : fadeIn)} ${ANIMATION_MS}ms ease forwards;
+  animation: ${p => (p.$closing ? fadeOut : fadeIn)} ${ANIMATION_MS}ms ease forwards;
 `
 
 const Body = styled.div`
@@ -57,7 +57,7 @@ const Body = styled.div`
   color: ${p => p.theme.body};
   display: flex;
   position: relative;
-  animation: ${p => (p.closing ? slideOut : slideIn)} ${ANIMATION_MS}ms ease forwards;
+  animation: ${p => (p.$closing ? slideOut : slideIn)} ${ANIMATION_MS}ms ease forwards;
 
   ${isMobile
     ? `
@@ -102,9 +102,9 @@ export default ({ isOpened, onClose, children }) => {
   if (!mounted) return null
 
   return createPortal(
-    <Root closing={closing}>
-      <Overlay onClick={onClose} closing={closing} />
-      <Body closing={closing}>
+    <Root $closing={closing}>
+      <Overlay onClick={onClose} $closing={closing} />
+      <Body $closing={closing}>
         {children}
         {isMobile && (
           <CloseButton onClick={onClose}>

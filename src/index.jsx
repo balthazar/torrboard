@@ -25,7 +25,7 @@ const Container = styled.div`
   color: ${p => p.theme.body};
 
   ${p =>
-    p.user
+    p.$user
       ? `
   > div:last-child {
     flex-grow: 1;
@@ -46,7 +46,7 @@ const Content = () => {
   const [state] = useStore()
 
   return (
-    <Container user={state.user}>
+    <Container $user={state.user}>
       {state.user ? (
         <>
           <Toolbar />

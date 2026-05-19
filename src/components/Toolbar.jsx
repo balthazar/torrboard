@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
 import styled from 'styled-components'
-import { useQuery, useMutation } from '@apollo/client'
-import gql from 'graphql-tag'
+import { gql, useQuery, useMutation } from '@apollo/client'
 import { Link } from 'react-router-dom'
 import { GoRss } from 'react-icons/go'
 import { MdHome, MdList, MdSettings, MdPowerSettingsNew } from 'react-icons/md'

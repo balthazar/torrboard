@@ -22,7 +22,7 @@ const Toast = styled.div`
 
     box-shadow: 0 0 10px ${p => p.theme.opacityDark(0.4)};
 
-    background-color: ${p => `rgba(${hexToRgb(p.theme.toasts[p.type]).join(', ')}, 0.4)`};
+    background-color: ${p => `rgba(${hexToRgb(p.theme.toasts[p.$type]).join(', ')}, 0.4)`};
     color: ${p => p.theme.body};
 
     > * + * {
@@ -34,14 +34,14 @@ const Toast = styled.div`
 const Dot = styled.div`
   width: 7px;
   height: 7px;
-  background-color: ${p => p.theme.toasts[p.type]};
+  background-color: ${p => p.theme.toasts[p.$type]};
   border-radius: 50%;
 `
 
 export default ({ appearance: type, children }) => (
-  <Toast type={type}>
+  <Toast $type={type}>
     <div>
-      <Dot type={type} />
+      <Dot $type={type} />
       <span>{children}</span>
     </div>
   </Toast>
