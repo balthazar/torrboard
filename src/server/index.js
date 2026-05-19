@@ -28,6 +28,7 @@ const app = express()
 
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, '../../dist')))
+app.use('/statics', express.static(path.join(__dirname, '../statics')))
 
 server.applyMiddleware({ app })
 
