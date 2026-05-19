@@ -29,7 +29,7 @@ const fields = [
 
 const [DELUGE_PASS, DELUGE_HOST_RAW] = process.env.DELUGE.split('@')
 const DELUGE_HOST =
-  process.env.NODE_ENV === 'production' ? DELUGE_HOST_RAW : 'http://127.0.0.1:8113'
+  process.env.NODE_ENV === 'production' ? DELUGE_HOST_RAW : 'http://127.0.0.1:8112'
 
 const r = (body, headers = {}) => got.post(`${DELUGE_HOST}/json`, { body, json: true, headers })
 const payload = (method, params) => ({ method, params, id: Date.now() })

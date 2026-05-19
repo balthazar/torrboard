@@ -17,7 +17,7 @@ forward() {
 }
 
 forward mongo  infra 27018:27017 &
-forward deluge apps  8113:8112   &
+forward deluge apps  8112:8112   &
 
 # Brief grace so the first connect attempts from the api land on a live tunnel.
 sleep 2
