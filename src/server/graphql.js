@@ -9,6 +9,7 @@ const cache = require('memory-cache')
 const Config = require('./models/Config')
 const User = require('./models/User')
 
+const logErr = require('./fn/logErr')
 const { download, torrentAction, getDeluge } = require('./fn/deluge')
 const rss = require('./fn/getRSS')
 const getMPVprops = require('./fn/getMPVprops')
@@ -224,7 +225,7 @@ const resolvers = {
         const first = (res.body.items || []).find(i => i.id && i.id.videoId)
         return first ? first.id.videoId : ''
       } catch (err) {
-        console.log(err)
+        logErr('getYtID', err)
         return ''
       }
     },

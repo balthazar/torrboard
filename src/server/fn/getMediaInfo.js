@@ -2,6 +2,7 @@ const got = require('got')
 const uniq = require('lodash/uniq')
 
 const MediaInfo = require('../models/MediaInfo')
+const logErr = require('./logErr')
 
 const OMDB = 'http://www.omdbapi.com'
 
@@ -110,7 +111,7 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
 
     return true
   } catch (err) {
-    console.log(err) // eslint-disable-line no-console
+    logErr('getMediaInfo', err)
     return false
   }
 }

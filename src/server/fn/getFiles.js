@@ -5,6 +5,7 @@ const uniq = require('lodash/uniq')
 const cache = require('memory-cache')
 
 const { DOWNLOAD_DIR } = require('../../config')
+const logErr = require('./logErr')
 
 const VIDEO_EXTS = ['.mkv', '.avi', '.mp4', '.rar']
 const isMedia = f =>
@@ -60,7 +61,7 @@ const walkHttp = async (url, basePath) => {
   try {
     entries = await fetchListing(url)
   } catch (err) {
-    console.error(`[getFiles] ${url} failed: ${err.message}`) // eslint-disable-line no-console
+    logErr(`getFiles ${url}`, err)
     return []
   }
 
@@ -94,9 +95,7 @@ const refreshRemote = dir => {
         `[getFiles] indexed ${files.length} files in ${Math.round((Date.now() - started) / 1000)}s`,
       )
     })
-    .catch(err => {
-      console.error('[getFiles] walk failed:', err.message) // eslint-disable-line no-console
-    })
+    .catch(err => logErr('getFiles walk', err))
     .then(() => {
       refreshing = false
     })

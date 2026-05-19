@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser')
 
 const { __APIPORT__ } = require('../config')
 const graphql = require('./graphql')
+const logErr = require('./fn/logErr')
 const refreshMediaInfos = require('./fn/refreshMediaInfos')
 const downloadRSS = require('./fn/downloadRSS')
 
@@ -41,18 +42,14 @@ app.listen(__APIPORT__, () => {
 // Last-resort handlers so a stray throw or rejection doesn't take down the api.
 // Node's default behavior on unhandledRejection switched to "terminate" in v15,
 // and node-schedule jobs are a common source of unobserved rejections.
-process.on('unhandledRejection', err => {
-  console.error('[unhandledRejection]', err) // eslint-disable-line no-console
-})
-process.on('uncaughtException', err => {
-  console.error('[uncaughtException]', err) // eslint-disable-line no-console
-})
+process.on('unhandledRejection', err => logErr('unhandledRejection', err))
+process.on('uncaughtException', err => logErr('uncaughtException', err))
 
 const safely = (name, fn) => async () => {
   try {
     await fn()
   } catch (err) {
-    console.error(`[${name}] failed:`, err) // eslint-disable-line no-console
+    logErr(name, err)
   }
 }
 
