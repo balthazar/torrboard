@@ -4,7 +4,7 @@ const __DEV__ = process.env.NODE_ENV !== 'production'
 
 const __APIPORT__ = process.env.PORT || 3000
 
-const BASE_URL = process.env.BASE_URL
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
 const __APIURL__ = `${BASE_URL}/graphql`
 
 module.exports = {
