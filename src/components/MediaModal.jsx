@@ -60,6 +60,8 @@ const Hero = styled.div`
   flex-wrap: wrap;
   gap: ${p => p.theme.spacing[5]};
   margin-bottom: ${p => p.theme.spacing[5]};
+  container-type: inline-size;
+  container-name: hero;
 `
 
 const HeroInfo = styled.div`
@@ -106,14 +108,20 @@ const HeroPlot = styled.p`
   max-width: 72ch;
 `
 
+// Width at which cover + info + trailer no longer fit on one row. Below this,
+// the trailer collapses to a slim button so it doesn't push the file list down.
+const HERO_BREAKPOINT = 1080
+
 const TrailerArea = styled.div`
   flex: 0 0 ${TRAILER_WIDTH}px;
   width: ${TRAILER_WIDTH}px;
   height: ${TRAILER_HEIGHT}px;
 
-  @media (max-width: 720px) {
+  @container hero (max-width: ${HERO_BREAKPOINT}px) {
     flex: 1 1 100%;
     width: 100%;
+    max-width: 560px;
+    height: auto;
   }
 `
 
@@ -146,6 +154,18 @@ const TrailerPlaceholder = styled.button`
 
   svg {
     color: ${p => p.theme.colors.accent};
+  }
+
+  @container hero (max-width: ${HERO_BREAKPOINT}px) {
+    height: auto;
+    flex-direction: row;
+    gap: ${p => p.theme.spacing[3]};
+    padding: ${p => p.theme.spacing[3]} ${p => p.theme.spacing[4]};
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
   }
 `
 
@@ -341,6 +361,17 @@ const TrailerOverlay = styled.div`
 
   iframe {
     border-radius: ${p => p.theme.radii.md};
+  }
+
+  @container hero (max-width: ${HERO_BREAKPOINT}px) {
+    aspect-ratio: ${TRAILER_WIDTH} / ${TRAILER_HEIGHT};
+    height: auto;
+
+    > div,
+    iframe {
+      width: 100%;
+      height: 100%;
+    }
   }
 `
 
