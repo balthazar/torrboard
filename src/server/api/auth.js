@@ -23,7 +23,7 @@ const createUser = async (parent, { name, email, expires }) => {
 
   const url = `${BASE_URL}/invite/${inviteCode}`
 
-  const { html } = mjml2html(`
+  const { html } = await mjml2html(`
 <mjml>
   <mj-head>
     <mj-attributes>
