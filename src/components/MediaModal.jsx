@@ -495,11 +495,6 @@ export default ({ item, watched, onClose }) => {
   return (
     <div>
       <TopBar>
-        <Tippy content="Trailer" theme="light">
-          <IconButton onClick={() => setShowTrailer(t => !t)}>
-            {showTrailer ? <MdClose size={18} /> : <MdPlayArrow size={20} />}
-          </IconButton>
-        </Tippy>
         {isAdmin && (
           <Tippy
             interactive
