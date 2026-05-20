@@ -113,6 +113,7 @@ const typeDefs = gql`
     inviteCode: String
     ips: [IPItem]
     watched: [String]
+    lastWatchedAt: String
   }
 
   type Playback {
@@ -290,6 +291,9 @@ const resolvers = {
       const watched = uniq(value ? [...u.watched, path] : u.watched.filter(w => w !== path))
 
       u.watched = watched
+      if (value) {
+        u.lastWatchedAt = new Date()
+      }
       await u.save()
 
       return watched

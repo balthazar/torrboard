@@ -4,6 +4,9 @@ import styled from 'styled-components'
 import { MdAdd, MdClose, MdMail, MdPerson, MdEvent } from 'react-icons/md'
 import { useToasts } from './toasts'
 import get from 'lodash/get'
+import differenceInMinutes from 'date-fns/differenceInMinutes'
+import differenceInHours from 'date-fns/differenceInHours'
+import differenceInDays from 'date-fns/differenceInDays'
 
 import Placeloader from './Placeloader'
 import Button from './Button'
@@ -173,6 +176,45 @@ const DateInput = styled(Input).attrs({ type: 'date' })`
   color-scheme: dark;
 `
 
+const Activity = styled.span`
+  font-size: ${p => p.theme.font.size.xs};
+  color: ${p => p.theme.colors.textSubtle};
+  font-family: ${p => p.theme.font.mono};
+  letter-spacing: ${p => p.theme.font.tracking.wide};
+  text-transform: uppercase;
+  margin-left: ${p => p.theme.spacing[2]};
+`
+
+const formatAgo = date => {
+  if (!date) return null
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return null
+  const now = new Date()
+  const mins = differenceInMinutes(now, d)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hours = differenceInHours(now, d)
+  if (hours < 24) return `${hours}h ago`
+  const days = differenceInDays(now, d)
+  return `${days}d ago`
+}
+
+const lastActivityLabel = user => {
+  if (user.lastWatchedAt) {
+    return `Watched ${formatAgo(user.lastWatchedAt)}`
+  }
+  const lastSeenDate = (user.ips || [])
+    .map(ip => ip.lastSeen)
+    .filter(Boolean)
+    .map(v => new Date(v).getTime())
+    .filter(v => !Number.isNaN(v))
+    .sort((a, b) => b - a)[0]
+  if (lastSeenDate) {
+    return `Seen ${formatAgo(new Date(lastSeenDate))}`
+  }
+  return null
+}
+
 const Empty = styled.div`
   color: ${p => p.theme.colors.textSubtle};
   font-size: ${p => p.theme.font.size.sm};
@@ -195,6 +237,7 @@ const GET_USERS = gql`
       expires
       inviteCode
       watched
+      lastWatchedAt
       ips {
         value
         lastSeen
@@ -312,16 +355,20 @@ export default () => {
         ) : (
           <Users>
             {!users.length && <Empty>No users to display.</Empty>}
-            {users.map(user => (
-              <UserCard key={user.name}>
-                <UserName>{user.name}</UserName>
-                <UserEmail>{user.email}</UserEmail>
-                <UserMeta>{user.watched.length} watches</UserMeta>
-                <StatusPill $active={!user.inviteCode}>
-                  {user.inviteCode ? 'Inactive' : 'Active'}
-                </StatusPill>
-              </UserCard>
-            ))}
+            {users.map(user => {
+              const activity = lastActivityLabel(user)
+              return (
+                <UserCard key={user.name}>
+                  <UserName>{user.name}</UserName>
+                  <UserEmail>{user.email}</UserEmail>
+                  <UserMeta>{user.watched.length} watches</UserMeta>
+                  {activity && <Activity>{activity}</Activity>}
+                  <StatusPill $active={!user.inviteCode}>
+                    {user.inviteCode ? 'Inactive' : 'Active'}
+                  </StatusPill>
+                </UserCard>
+              )
+            })}
           </Users>
         )}
       </Section>

@@ -9,6 +9,7 @@ const schema = new mongoose.Schema({
 
   expires: Date,
   watched: [String],
+  lastWatchedAt: Date,
 
   ips: [
     {
