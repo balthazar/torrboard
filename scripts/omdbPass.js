@@ -37,11 +37,7 @@ const cleanTitle = raw =>
     .trim()
 
 ;(async () => {
-  await mongoose.connect(MONGO_URL, {
-    directConnection: true,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  await mongoose.connect(MONGO_URL, { directConnection: true })
 
   const { torrents } = await getDeluge()
   const config = await Config.findOne({})

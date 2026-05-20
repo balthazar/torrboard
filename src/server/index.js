@@ -17,11 +17,8 @@ const MONGO_URL =
     ? process.env.MONGO_URL
     : 'mongodb://127.0.0.1:27018/torrboard'
 
-mongoose.Promise = Promise
 mongoose.connect(MONGO_URL, {
   directConnection: true,
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
 })
 
 const server = new ApolloServer({ ...graphql, playground: true })

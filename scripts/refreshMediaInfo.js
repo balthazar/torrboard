@@ -20,11 +20,7 @@ if (!ids.length) {
 }
 
 ;(async () => {
-  await mongoose.connect(MONGO_URL, {
-    directConnection: true,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  await mongoose.connect(MONGO_URL, { directConnection: true })
 
   for (const newId of ids) {
     const before = await MediaInfo.findOne({ imdbID: newId }, { title: 1, image: 1 }).lean()

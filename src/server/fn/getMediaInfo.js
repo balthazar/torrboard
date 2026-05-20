@@ -185,7 +185,7 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
       const others = await MediaInfo.findOne({ imdbID: newId })
       const torrents = uniq([...(others ? others.torrents : []), ...torrentIds])
 
-      await MediaInfo.remove({ imdbID: newId })
+      await MediaInfo.deleteMany({ imdbID: newId })
 
       if (oldId) {
         await MediaInfo.updateOne(

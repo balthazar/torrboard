@@ -15,11 +15,7 @@ const MONGO_URL = process.env.MONGO_URL || 'mongodb://127.0.0.1:27018/torrboard'
 const apply = process.argv.includes('--apply')
 
 ;(async () => {
-  await mongoose.connect(MONGO_URL, {
-    directConnection: true,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  await mongoose.connect(MONGO_URL, { directConnection: true })
 
   const all = await MediaInfo.find({}, { imdbID: 1, title: 1, torrents: 1 }).lean()
 

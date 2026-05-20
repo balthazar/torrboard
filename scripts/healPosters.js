@@ -15,11 +15,7 @@ const limitArg = process.argv.find(a => a.startsWith('--limit='))
 const limit = limitArg ? parseInt(limitArg.slice('--limit='.length), 10) : 200
 
 ;(async () => {
-  await mongoose.connect(MONGO_URL, {
-    directConnection: true,
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  await mongoose.connect(MONGO_URL, { directConnection: true })
 
   console.log(`Mode: ${apply ? 'APPLY' : 'DRY RUN (pass --apply to commit)'} limit=${limit}`)
   await healPosters({ dryRun: !apply, limit })
