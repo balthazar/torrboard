@@ -468,7 +468,6 @@ export default ({ item, watched, onClose }) => {
             interactive
             trigger="click"
             placement="bottom-end"
-            theme="light"
             content={
               <ImdbPopover>
                 <ImdbLabel>IMDB ID</ImdbLabel>
