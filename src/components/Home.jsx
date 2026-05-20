@@ -17,7 +17,7 @@ import apiHandlers from '../fn/apiHandlers'
 import { useStore } from '../state'
 
 const GET_MEDIAS = gql`
-  {
+  query Medias {
     watched
     deluge {
       torrents {

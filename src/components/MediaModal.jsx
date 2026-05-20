@@ -123,6 +123,22 @@ const TrailerArea = styled.div`
     width: 100%;
     max-width: 560px;
     height: auto;
+    ${p => !p.$expanded && 'display: none;'}
+  }
+`
+
+// On narrow widths the pill lives inside the description column so it
+// sits under the plot rather than under the cover. Hidden on wide widths
+// where TrailerArea handles it.
+const InlineTrailerSlot = styled.div`
+  display: none;
+
+  @container hero (max-width: ${HERO_BREAKPOINT}px) {
+    display: block;
+
+    > button {
+      width: fit-content;
+    }
   }
 `
 
@@ -461,6 +477,8 @@ export default ({ item, watched, onClose }) => {
     try {
       const { data } = await setImdb({
         variables: { torrentIds: item.ids, newId, oldId: get(item, 'mediaInfo.imdbID') },
+        refetchQueries: ['Medias'],
+        awaitRefetchQueries: true,
       })
       if (data && data.setImdb) {
         addToast('IMDB updated', { appearance: 'success' })
@@ -600,9 +618,17 @@ export default ({ item, watched, onClose }) => {
               <span>RAR archive</span>
             </Unrar>
           )}
+          {!showTrailer && (
+            <InlineTrailerSlot>
+              <TrailerPlaceholder onClick={() => setShowTrailer(true)}>
+                <MdPlayArrow size={32} />
+                <span>Watch trailer</span>
+              </TrailerPlaceholder>
+            </InlineTrailerSlot>
+          )}
         </HeroInfo>
 
-        <TrailerArea>
+        <TrailerArea $expanded={showTrailer}>
           {showTrailer ? (
             <TrailerOverlay>
               <VideoDisplay
