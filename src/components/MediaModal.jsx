@@ -618,7 +618,7 @@ export default ({ item, watched, onClose }) => {
                   </Tippy>
                   <Tippy content="VLC" theme="light">
                     <a
-                      href={`vlc://${encodeURIComponent(v.url)}`}
+                      href={`vlc://${v.url}`}
                       onClick={() => setWatched({ variables: { path: v.path, value: true } })}
                     >
                       <FiTriangle size={15} />
