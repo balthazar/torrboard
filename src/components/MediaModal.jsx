@@ -440,7 +440,13 @@ export default ({ item, watched, onClose }) => {
 
   const doCast = url => cast({ variables: { title, url, image } })
 
-  const groups = videos.reduce((acc, v) => {
+  // When there are unwatched episodes, hide the already-watched ones so the
+  // list reads as "what's next." If everything is watched, fall back to the
+  // full list (so re-watching still works).
+  const hasUnwatched = videos.some(v => !watched[v.path])
+  const visibleVideos = hasUnwatched ? videos.filter(v => !watched[v.path]) : videos
+
+  const groups = visibleVideos.reduce((acc, v) => {
     const key = v.season != null ? String(v.season) : '_'
     if (!acc[key]) acc[key] = []
     acc[key].push(v)

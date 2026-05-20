@@ -12,15 +12,16 @@ const APPEARANCE_TO_TYPE = {
 const renderToast = (appearance, message) =>
   toast.custom(
     t => (
-      <div
+      <Toast
+        appearance={appearance}
         onClick={() => toast.dismiss(t.id)}
         style={{
           opacity: t.visible ? 1 : 0,
           transition: 'opacity 150ms ease',
         }}
       >
-        <Toast appearance={appearance}>{message}</Toast>
-      </div>
+        {message}
+      </Toast>
     ),
     { duration: 2500 },
   )
@@ -31,7 +32,16 @@ export const ToastProvider = ({ children }) => (
     <Toaster
       position="bottom-right"
       gutter={8}
-      containerStyle={{ bottom: 24, right: 24 }}
+      // The default Toaster pins toasts ~16px from the viewport edge; with
+      // our card-style toast carrying a box-shadow, the shadow gets clipped
+      // by the viewport. Leave room for the shadow + breathing space.
+      containerStyle={{ inset: 40 }}
+      toastOptions={{
+        // toast.custom still wraps each toast in a div that gets `background`
+        // and `box-shadow` from react-hot-toast's internal defaults; null
+        // them so only our styled Toast paints.
+        style: { background: 'transparent', boxShadow: 'none', padding: 0 },
+      }}
     />
   </>
 )

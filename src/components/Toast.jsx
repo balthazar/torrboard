@@ -1,7 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 
-const Toast = styled.div`
+const ToastBox = styled.div`
   display: flex;
   align-items: center;
   gap: ${p => p.theme.spacing[3]};
@@ -27,9 +27,9 @@ const Dot = styled.span`
   flex-shrink: 0;
 `
 
-export default ({ appearance: type, children }) => (
-  <Toast $type={type}>
+export default ({ appearance: type, children, ...rest }) => (
+  <ToastBox $type={type} {...rest}>
     <Dot $type={type} />
     <span>{children}</span>
-  </Toast>
+  </ToastBox>
 )
