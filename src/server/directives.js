@@ -1,10 +1,9 @@
-const { SchemaDirectiveVisitor } = require('graphql-tools')
-const {
-  DirectiveLocation,
-  GraphQLDirective,
-  defaultFieldResolver,
-  GraphQLString,
-} = require('graphql')
+// Schema-level @auth and @hasRole enforcement. SchemaDirectiveVisitor was
+// removed from graphql-tools in v7+, so directives now apply via mapSchema:
+// each OBJECT_FIELD that carries @auth or @hasRole gets its resolver wrapped
+// with the same authenticate/checkRole gates the old visitor used.
+const { mapSchema, getDirective, MapperKind } = require('@graphql-tools/utils')
+const { defaultFieldResolver } = require('graphql')
 
 class AuthError extends Error {
   constructor(message = 'Get the fuck out.', code = 401) {
@@ -25,58 +24,37 @@ const checkRole = ({ user }, requiredRole) => {
   }
 }
 
-class auth extends SchemaDirectiveVisitor {
-  static getDirectiveDeclaration(directiveName = 'auth') {
-    return new GraphQLDirective({
-      name: directiveName,
-      locations: [DirectiveLocation.FIELD_DEFINITION],
-    })
-  }
+const applyDirectives = schema =>
+  mapSchema(schema, {
+    [MapperKind.OBJECT_FIELD]: fieldConfig => {
+      const authDir = getDirective(schema, fieldConfig, 'auth')
+      const roleDir = getDirective(schema, fieldConfig, 'hasRole')
+      if (!authDir && !roleDir) return undefined
 
-  visitFieldDefinition(field) {
-    const { resolve = defaultFieldResolver } = field
+      const role = roleDir && roleDir[0] && roleDir[0].role
+      const hasOwnResolve = !!fieldConfig.resolve
+      const { resolve = defaultFieldResolver } = fieldConfig
 
-    field.resolve = (root, args, context, info) => {
-      authenticate(context)
-      return resolve.call(this, root, args, context, info)
-    }
-  }
-}
+      fieldConfig.resolve = (root, args, context, info) => {
+        authenticate(context)
 
-class hasRole extends SchemaDirectiveVisitor {
-  static getDirectiveDeclaration(directiveName = 'hasRole') {
-    return new GraphQLDirective({
-      name: directiveName,
-      locations: [DirectiveLocation.FIELD_DEFINITION],
-      args: {
-        role: { type: GraphQLString },
-      },
-    })
-  }
-
-  visitFieldDefinition(field) {
-    const { resolve = defaultFieldResolver } = field
-
-    const hasResolveFn = field.resolve !== undefined
-
-    field.resolve = (root, args, context, info) => {
-      authenticate(context)
-      try {
-        checkRole(context, this.args.role)
-      } catch (error) {
-        if (!hasResolveFn) {
-          return null
+        if (role) {
+          try {
+            checkRole(context, role)
+          } catch (err) {
+            // Preserve legacy behaviour: when a @hasRole field has no
+            // resolver of its own, hide it (null) instead of raising; when
+            // it does, propagate the error.
+            if (!hasOwnResolve) return null
+            throw err
+          }
         }
 
-        throw error
+        return resolve(root, args, context, info)
       }
 
-      return resolve.call(this, root, args, context, info)
-    }
-  }
-}
+      return fieldConfig
+    },
+  })
 
-module.exports = {
-  auth,
-  hasRole,
-}
+module.exports = { applyDirectives }

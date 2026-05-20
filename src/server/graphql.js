@@ -2,7 +2,6 @@ const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const got = require('got')
 const uniq = require('lodash/uniq')
-const { makeExecutableSchema } = require('graphql-tools')
 const gql = require('graphql-tag')
 const cache = require('memory-cache')
 
@@ -16,7 +15,6 @@ const getMPVprops = require('./fn/getMPVprops')
 const timeFromSeconds = require('./fn/timeFromSeconds')
 const getMediaInfo = require('./fn/getMediaInfo')
 const auth = require('./api/auth')
-const schemaDirectives = require('./directives')
 
 const typeDefs = gql`
   directive @auth on FIELD | FIELD_DEFINITION
@@ -318,10 +316,7 @@ const resolvers = {
 }
 
 module.exports = {
-  schema: makeExecutableSchema({
-    typeDefs,
-    resolvers,
-    schemaDirectives,
-  }),
+  typeDefs,
+  resolvers,
   context: auth.context,
 }
