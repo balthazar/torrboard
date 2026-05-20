@@ -230,6 +230,7 @@ export default () => {
   const gridRef = useRef(null)
   const searchRef = useRef(null)
   const closeTimerRef = useRef(null)
+  const expansionRef = useRef(null)
   const [cols, setCols] = useState(1)
 
   const { loading, data } = useQuery(GET_MEDIAS, {
@@ -267,6 +268,18 @@ export default () => {
       setClosing(false)
     }, EXPANSION_ANIM_MS)
   }
+
+  useEffect(() => {
+    if (selectedKey === null || closing) return
+    // Wait for the open animation to finish so the panel has its full height
+    // when we measure the scroll target. Otherwise nearest-block alignment
+    // sees a 0-height row and undershoots.
+    const t = setTimeout(() => {
+      const el = expansionRef.current
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }, EXPANSION_ANIM_MS)
+    return () => clearTimeout(t)
+  }, [selectedKey, closing])
 
   useEffect(() => {
     const onKey = e => {
@@ -461,7 +474,7 @@ export default () => {
               </MediaCard>
 
               {showExpansionHere && selectedItem && (
-                <ExpansionPanel $closing={closing}>
+                <ExpansionPanel ref={expansionRef} $closing={closing}>
                   <ExpansionInner>
                     <ExpansionContent>
                       <MediaModal
