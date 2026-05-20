@@ -10,6 +10,7 @@ const graphql = require('./graphql')
 const logErr = require('./fn/logErr')
 const refreshMediaInfos = require('./fn/refreshMediaInfos')
 const downloadRSS = require('./fn/downloadRSS')
+const healPosters = require('./fn/healPosters')
 
 const MONGO_URL =
   process.env.NODE_ENV === 'production'
@@ -58,3 +59,6 @@ scheduleJob('*/2 * * * *', async () => {
   await safely('refreshMediaInfos', refreshMediaInfos)()
   await safely('downloadRSS', downloadRSS)()
 })
+
+// Daily at 04:15 — swap rotated/dead Amazon poster URLs for TMDB ones.
+scheduleJob('15 4 * * *', safely('healPosters', () => healPosters()))
