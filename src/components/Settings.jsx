@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import styled from 'styled-components'
 import { MdAdd, MdClose, MdMail, MdPerson, MdEvent, MdDelete, MdCheck } from 'react-icons/md'
-import Tippy from '@tippyjs/react'
 import { useToasts } from './toasts'
 import get from 'lodash/get'
 import differenceInMinutes from 'date-fns/differenceInMinutes'
@@ -144,6 +143,9 @@ const UserActions = styled.div`
 const IconButton = styled.button`
   width: 32px;
   height: 32px;
+  padding: 0;
+  border: 0;
+  vertical-align: middle;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -399,29 +401,34 @@ export default () => {
                     </StatusPill>
                     {isConfirming ? (
                       <>
-                        <Tippy content="Cancel">
-                          <IconButton onClick={() => setConfirmDelete(null)}>
-                            <MdClose size={18} />
-                          </IconButton>
-                        </Tippy>
-                        <Tippy content="Confirm delete">
-                          <IconButton
-                            $danger
-                            onClick={() => {
-                              deleteUserMut({ variables: { name: user.name } })
-                              setConfirmDelete(null)
-                            }}
-                          >
-                            <MdCheck size={18} />
-                          </IconButton>
-                        </Tippy>
+                        <IconButton
+                          type="button"
+                          title="Cancel"
+                          onClick={() => setConfirmDelete(null)}
+                        >
+                          <MdClose size={18} />
+                        </IconButton>
+                        <IconButton
+                          type="button"
+                          title="Confirm delete"
+                          $danger
+                          onClick={() => {
+                            deleteUserMut({ variables: { name: user.name } })
+                            setConfirmDelete(null)
+                          }}
+                        >
+                          <MdCheck size={18} />
+                        </IconButton>
                       </>
                     ) : (
-                      <Tippy content="Delete user">
-                        <IconButton $danger onClick={() => setConfirmDelete(user.name)}>
-                          <MdDelete size={18} />
-                        </IconButton>
-                      </Tippy>
+                      <IconButton
+                        type="button"
+                        title="Delete user"
+                        $danger
+                        onClick={() => setConfirmDelete(user.name)}
+                      >
+                        <MdDelete size={18} />
+                      </IconButton>
                     )}
                   </UserActions>
                 </UserCard>
