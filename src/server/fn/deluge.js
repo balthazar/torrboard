@@ -53,6 +53,14 @@ module.exports = {
       [{ options: { download_location: `${DOWNLOAD_DIR}/dl` }, path }],
     ])
   },
+  uploadTorrent: async (parent, { filename, filedump }) => {
+    const safeName = (filename || 'upload.torrent').replace(/[^A-Za-z0-9._-]/g, '_')
+    return query('core.add_torrent_file', [
+      safeName,
+      filedump,
+      { download_location: `${DOWNLOAD_DIR}/dl` },
+    ])
+  },
   torrentAction: (parent, { name, torrentId, removeFiles }) => {
     if (name === 'remove') {
       return query(`core.remove_torrent`, [torrentId, removeFiles])

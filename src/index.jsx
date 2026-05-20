@@ -13,6 +13,7 @@ import Torrents from './components/Torrents'
 import Rss from './components/Rss'
 import Settings from './components/Settings'
 import Login from './components/Login'
+import TorrentDropZone from './components/TorrentDropZone'
 
 import theme from './theme'
 import apolloClient from './apollo'
@@ -50,6 +51,7 @@ const Content = () => {
       {state.user ? (
         <>
           <Toolbar />
+          <TorrentDropZone />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/torrents" element={<Torrents />} />

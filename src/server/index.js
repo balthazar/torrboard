@@ -32,7 +32,9 @@ app.use(cookieParser())
 app.use(express.static(path.join(__dirname, '../../dist')))
 app.use('/statics', express.static(path.join(__dirname, '../statics')))
 
-server.applyMiddleware({ app })
+// .torrent uploads come through as base64 inside a GraphQL variable, so the
+// default 100kb body-parser cap rejects anything but tiny single-file torrents.
+server.applyMiddleware({ app, bodyParserConfig: { limit: '20mb' } })
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../../dist/index.html')))
 

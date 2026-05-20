@@ -10,7 +10,7 @@ const Config = require('./models/Config')
 const User = require('./models/User')
 
 const logErr = require('./fn/logErr')
-const { download, torrentAction, getDeluge } = require('./fn/deluge')
+const { download, uploadTorrent, torrentAction, getDeluge } = require('./fn/deluge')
 const rss = require('./fn/getRSS')
 const getMPVprops = require('./fn/getMPVprops')
 const timeFromSeconds = require('./fn/timeFromSeconds')
@@ -136,6 +136,7 @@ const typeDefs = gql`
     setAutoGrabs(autoGrabs: [String]): [String] @hasRole(role: "master")
     setImdb(oldId: String, torrentIds: [String], newId: String!): Boolean @hasRole(role: "master")
     download(link: String!): Boolean @hasRole(role: "master")
+    uploadTorrent(filename: String!, filedump: String!): Boolean @hasRole(role: "master")
     torrentAction(name: String!, torrentId: String!, removeFiles: Boolean): Boolean
       @hasRole(role: "master")
 
@@ -265,6 +266,7 @@ const resolvers = {
     },
     torrentAction,
     download,
+    uploadTorrent,
 
     setAutoGrabs: async (parent, { autoGrabs = [] }) => {
       await Config.updateOne(
