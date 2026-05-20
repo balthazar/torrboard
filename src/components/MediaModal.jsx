@@ -24,8 +24,10 @@ import MediaCard, { CARD_WIDTH, CARD_HEIGHT } from './MediaCard'
 import VideoDisplay from './VideoDisplay'
 import Button from './Button'
 
-const TRAILER_WIDTH = 360
-const TRAILER_HEIGHT = 200
+// Match the poster's height (CARD_HEIGHT = 300) at a 16:9 aspect so the
+// trailer slot and poster line up at the same row height in the hero.
+const TRAILER_HEIGHT = 300
+const TRAILER_WIDTH = Math.round((TRAILER_HEIGHT * 16) / 9)
 
 const TopBar = styled.div`
   display: flex;
