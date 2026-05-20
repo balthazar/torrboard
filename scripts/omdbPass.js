@@ -7,9 +7,10 @@
 //   node scripts/omdbPass.js --apply  # query OMDB and persist matches
 //
 // Intentionally no --force flag: re-resolving already-linked torrents was
-// destructive (OMDB picks newest year, so "REDACTED" got reassigned to
-// "REDACTED"). If you need to fix a wrong link, use the UI's
-// IMDB-set popover (setImdb mutation) which moves the torrent atomically.
+// destructive (OMDB picks newest year, so a short-prefix title can get
+// reassigned to a newer same-prefix movie). If you need to fix a wrong link,
+// use the UI's IMDB-set popover (setImdb mutation) which moves the torrent
+// atomically.
 require('dotenv').config()
 const mongoose = require('mongoose')
 const ptn = require('parse-torrent-name')

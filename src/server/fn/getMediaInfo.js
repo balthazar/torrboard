@@ -189,9 +189,9 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
     }
 
     // Refuse to silently move a torrent already linked to a different imdbID.
-    // OMDB's search ranks newest first, so re-resolving an old series can
-    // pull it under a newer same-prefix movie (e.g. REDACTED -> REDACTED
-    // in the Boat). Manual moves should go through the setImdb mutation.
+    // OMDB's search ranks newest first, so re-resolving an older series can
+    // pull it under a newer same-prefix title. Manual moves should go through
+    // the setImdb mutation.
     const existing = await MediaInfo.findOne({ torrents: id, imdbID: { $ne: imdbID } })
     if (existing) {
       return true
