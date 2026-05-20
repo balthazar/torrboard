@@ -11,6 +11,7 @@
   "dependencies": {
     "@apollo/client": "^3.8.10",
     "@apollo/server": "^5.5.1",
+    "@as-integrations/express4": "^1.1.2",
     "@graphql-tools/schema": "^10.0.33",
     "@graphql-tools/utils": "^11.1.0",
     "@tippyjs/react": "^4.2.6",

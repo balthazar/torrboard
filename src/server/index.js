@@ -4,7 +4,7 @@ const cors = require('cors')
 const mongoose = require('mongoose')
 const cookieParser = require('cookie-parser')
 const { ApolloServer } = require('@apollo/server')
-const { expressMiddleware } = require('@apollo/server/express4')
+const { expressMiddleware } = require('@as-integrations/express4')
 const { makeExecutableSchema } = require('@graphql-tools/schema')
 const { scheduleJob } = require('node-schedule')
 
