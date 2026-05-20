@@ -5,7 +5,7 @@ import get from 'lodash/get'
 import uniq from 'lodash/uniq'
 import ptn from 'parse-torrent-name'
 import { useToasts } from './toasts'
-import { MdDoneAll, MdStar, MdClose, MdSortByAlpha, MdSchedule } from 'react-icons/md'
+import { MdDoneAll, MdStar, MdSortByAlpha, MdSchedule } from 'react-icons/md'
 
 import Placeloader from './Placeloader'
 import SearchInput from './SearchInput'
@@ -214,29 +214,6 @@ const ExpansionInner = styled.div`
 
 const ExpansionContent = styled.div`
   padding: ${p => p.theme.spacing[5]};
-`
-
-const ExpansionClose = styled.button`
-  position: absolute;
-  top: ${p => p.theme.spacing[3]};
-  right: ${p => p.theme.spacing[3]};
-  z-index: 1;
-  width: 32px;
-  height: 32px;
-  border-radius: ${p => p.theme.radii.full};
-  background-color: ${p => p.theme.colors.surfaceHover};
-  color: ${p => p.theme.colors.textMuted};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color ${p => p.theme.motion.fast},
-    color ${p => p.theme.motion.fast};
-
-  &:hover {
-    background-color: ${p => p.theme.colors.surfaceActive};
-    color: ${p => p.theme.colors.text};
-  }
 `
 
 const EXPANSION_ANIM_MS = 320
@@ -487,10 +464,11 @@ export default () => {
                 <ExpansionPanel $closing={closing}>
                   <ExpansionInner>
                     <ExpansionContent>
-                      <ExpansionClose onClick={closeExpansion} aria-label="Close">
-                        <MdClose size={18} />
-                      </ExpansionClose>
-                      <MediaModal item={selectedItem} watched={watched} />
+                      <MediaModal
+                        item={selectedItem}
+                        watched={watched}
+                        onClose={closeExpansion}
+                      />
                     </ExpansionContent>
                   </ExpansionInner>
                 </ExpansionPanel>
