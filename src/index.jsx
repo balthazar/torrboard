@@ -21,8 +21,9 @@ import { TOOLBAR_WIDTH } from './config.client'
 
 const Container = styled.div`
   display: flex;
-  background-color: ${p => p.theme.bg2};
-  color: ${p => p.theme.body};
+  min-height: 100vh;
+  background-color: ${p => p.theme.colors.bg};
+  color: ${p => p.theme.colors.text};
 
   ${p =>
     p.$user
@@ -30,15 +31,14 @@ const Container = styled.div`
   > div:last-child {
     flex-grow: 1;
     margin-left: ${TOOLBAR_WIDTH};
-    padding: 20px;
+    padding: ${p.theme.spacing[5]};
   }
 `
       : ''}
 
-  *:focus {
-    outline-style: solid;
-    outline-color: #0888ee;
-    outline-width: 2px;
+  *:focus-visible {
+    outline: 2px solid ${p => p.theme.colors.accent};
+    outline-offset: 2px;
   }
 `
 

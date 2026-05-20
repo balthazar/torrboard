@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import styled from 'styled-components'
 import { gql, useQuery, useMutation } from '@apollo/client'
-import { Link } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { GoRss } from 'react-icons/go'
 import { MdHome, MdList, MdSettings, MdPowerSettingsNew } from 'react-icons/md'
 import { IoIosArrowRoundDown, IoIosArrowRoundUp } from 'react-icons/io'
@@ -46,59 +46,104 @@ const Container = styled.div`
   position: fixed;
   height: 100vh;
   width: ${TOOLBAR_WIDTH}px;
-  background-color: ${p => p.theme.bg};
+  background-color: ${p => p.theme.colors.surface};
+  border-right: 1px solid ${p => p.theme.colors.border};
 
   display: flex;
   flex-direction: column;
   align-items: center;
 `
 
-const Menu = styled.div`
-  margin-top: 50px;
-  font-size: 20px;
+const Menu = styled.nav`
+  margin-top: ${p => p.theme.spacing[5]};
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: ${p => p.theme.spacing[1]};
+  width: 100%;
 `
 
-const LinkContainer = styled.div`
+const navStyles = `
+  position: relative;
   width: ${TOOLBAR_WIDTH}px;
-  height: ${TOOLBAR_WIDTH}px;
+  height: ${TOOLBAR_WIDTH - 16}px;
   display: flex;
   align-items: center;
   justify-content: center;
-
   cursor: pointer;
-  transition: background-color 150ms ease-in;
-  &:hover {
-    background-color: ${p => p.theme.opacityDark(0.2)};
+`
+
+const NavItem = styled(NavLink)`
+  ${navStyles}
+  color: ${p => p.theme.colors.textMuted};
+  text-decoration: none;
+  transition: color ${p => p.theme.motion.fast},
+    background-color ${p => p.theme.motion.fast};
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 30%;
+    bottom: 30%;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background-color: transparent;
+    transition: background-color ${p => p.theme.motion.fast};
   }
 
-  > * {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    // Remove outline space
-    width: ${TOOLBAR_WIDTH - 4}px;
-    height: ${TOOLBAR_WIDTH - 4}px;
+  &:hover {
+    color: ${p => p.theme.colors.text};
+    background-color: ${p => p.theme.colors.surfaceHover};
+  }
+
+  &.active {
+    color: ${p => p.theme.colors.accent};
+    background-color: ${p => p.theme.colors.surfaceHover};
+  }
+
+  &.active::before {
+    background-color: ${p => p.theme.colors.accent};
+  }
+`
+
+const Disconnect = styled.button`
+  ${navStyles}
+  color: ${p => p.theme.colors.textMuted};
+  background: none;
+  transition: color ${p => p.theme.motion.fast},
+    background-color ${p => p.theme.motion.fast};
+
+  &:hover {
+    color: ${p => p.theme.colors.error};
+    background-color: ${p => p.theme.colors.surfaceHover};
   }
 `
 
 const Stats = styled.div`
-  width: ${TOOLBAR_WIDTH}px;
-  font-size: 13px;
   display: flex;
   flex-direction: column;
-  padding: 10px;
+  align-items: stretch;
+  gap: ${p => p.theme.spacing[2]};
+  padding: ${p => p.theme.spacing[3]} 0;
+  margin-bottom: ${p => p.theme.spacing[2]};
+  width: ${TOOLBAR_WIDTH}px;
+  border-top: 1px solid ${p => p.theme.colors.border};
+  padding-top: ${p => p.theme.spacing[3]};
+`
 
-  > * {
-    display: flex;
-    align-items: center;
-    > * + * {
-      margin-left: 5px;
-    }
-  }
+const Stat = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-family: ${p => p.theme.font.mono};
+  font-size: ${p => p.theme.font.size.xs};
+  color: ${p => p.theme.colors.textMuted};
 
-  > * + * {
-    margin-top: 10px;
+  > svg {
+    color: ${p => p.theme.colors.textSubtle};
   }
 `
 
@@ -137,7 +182,6 @@ export default () => {
       artwork: [{ src: image, sizes: '512x512', type: 'image/png' }],
     })
 
-    // Register actions
     ;['play', 'pause', 'seekbackward', 'seekforward', 'nexttrack'].forEach(name => {
       navigator.mediaSession.setActionHandler(name, () => {
         castAction({ variables: { name } })
@@ -165,57 +209,47 @@ export default () => {
       <Logo />
 
       <Menu>
-        <LinkContainer>
-          <Link to="/">
-            <MdHome />
-          </Link>
-        </LinkContainer>
+        <NavItem to="/" end>
+          <MdHome size={20} />
+        </NavItem>
 
         {isAdmin && (
-          <LinkContainer>
-            <Link to="/torrents">
-              <MdList />
-            </Link>
-          </LinkContainer>
+          <NavItem to="/torrents">
+            <MdList size={20} />
+          </NavItem>
         )}
 
         {isAdmin && (
-          <LinkContainer>
-            <Link to="/rss">
-              <GoRss />
-            </Link>
-          </LinkContainer>
+          <NavItem to="/rss">
+            <GoRss size={18} />
+          </NavItem>
         )}
 
         {isAdmin && (
-          <LinkContainer>
-            <Link to="/settings">
-              <MdSettings />
-            </Link>
-          </LinkContainer>
+          <NavItem to="/settings">
+            <MdSettings size={20} />
+          </NavItem>
         )}
 
-        <LinkContainer>
-          <a onClick={disconnect}>
-            <MdPowerSettingsNew />
-          </a>
-        </LinkContainer>
+        <Disconnect onClick={disconnect} aria-label="Sign out">
+          <MdPowerSettingsNew size={20} />
+        </Disconnect>
       </Menu>
 
       {data && !isMobile && !loading && (
         <Stats>
-          <span>
-            <IoIosArrowRoundUp />
+          <Stat>
+            <IoIosArrowRoundUp size={16} />
             <span>{convertBytes(data.deluge.stats.upSpeed)}</span>
-          </span>
-          <span>
-            <IoIosArrowRoundDown />
+          </Stat>
+          <Stat>
+            <IoIosArrowRoundDown size={16} />
             <span>{convertBytes(data.deluge.stats.dlSpeed)}</span>
-          </span>
-          <span>
-            <AiFillDatabase />
+          </Stat>
+          <Stat>
+            <AiFillDatabase size={13} />
             <span>{convertBytes(data.deluge.stats.freeSpace)}</span>
-          </span>
+          </Stat>
         </Stats>
       )}
     </Container>

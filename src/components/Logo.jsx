@@ -7,17 +7,18 @@ const Logo = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 30px;
+  margin-top: ${p => p.theme.spacing[4]};
   flex-shrink: 0;
 
   width: ${TOOLBAR_WIDTH / 2}px;
   height: ${TOOLBAR_WIDTH / 2}px;
-  border-radius: 50%;
-  background-color: ${p => p.theme.opacityLight(0.2)};
+  border-radius: ${p => p.theme.radii.md};
+  background-color: ${p => p.theme.colors.bg};
+  border: 1px solid ${p => p.theme.colors.border};
 `
 
 export default () => (
   <Logo>
-    <img src={IMAGE_URL} width={TOOLBAR_WIDTH / 4} />
+    <img src={IMAGE_URL} width={TOOLBAR_WIDTH / 3} />
   </Logo>
 )
