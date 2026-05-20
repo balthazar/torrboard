@@ -161,7 +161,7 @@ const OverlayMeta = styled.div`
 `
 
 const WatchedBadge = styled.div`
-  ${p => (p.$visible ? '' : 'display: none;')};
+  display: ${p => (p.$visible ? 'flex' : 'none')};
   position: absolute;
   top: ${p => p.theme.spacing[2]};
   right: ${p => p.theme.spacing[2]};
@@ -170,7 +170,6 @@ const WatchedBadge = styled.div`
   border-radius: ${p => p.theme.radii.full};
   background-color: ${p => p.theme.colors.success};
   color: #fff;
-  display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
