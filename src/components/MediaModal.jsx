@@ -167,6 +167,31 @@ const FilesSection = styled.div`
   flex-direction: column;
 `
 
+const HiddenNotice = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${p => p.theme.spacing[3]};
+  padding: ${p => p.theme.spacing[2]} ${p => p.theme.spacing[3]};
+  margin-bottom: ${p => p.theme.spacing[2]};
+  font-size: ${p => p.theme.font.size.xs};
+  color: ${p => p.theme.colors.textSubtle};
+  letter-spacing: ${p => p.theme.font.tracking.wide};
+`
+
+const HiddenToggle = styled.button`
+  background: transparent;
+  cursor: pointer;
+  color: ${p => p.theme.colors.accent};
+  font-size: ${p => p.theme.font.size.xs};
+  font-weight: ${p => p.theme.font.weight.medium};
+  letter-spacing: ${p => p.theme.font.tracking.wide};
+
+  &:hover {
+    text-decoration: underline;
+  }
+`
+
 const SeasonHeader = styled.div`
   font-size: ${p => p.theme.font.size.xs};
   font-weight: ${p => p.theme.font.weight.semibold};
@@ -387,6 +412,7 @@ export default ({ item, watched, onClose }) => {
   const [state] = useStore()
   const [newId, setNewId] = useState(item.mediaInfo ? item.mediaInfo.imdbID : '')
   const [showTrailer, setShowTrailer] = useState(false)
+  const [showAll, setShowAll] = useState(false)
 
   const [setWatched] = useMutation(SET_WATCHED, {
     update(cache, { data }) {
@@ -442,9 +468,12 @@ export default ({ item, watched, onClose }) => {
 
   // When there are unwatched episodes, hide the already-watched ones so the
   // list reads as "what's next." If everything is watched, fall back to the
-  // full list (so re-watching still works).
+  // full list (so re-watching still works). The user can toggle showAll to
+  // reveal the hidden ones.
   const hasUnwatched = videos.some(v => !watched[v.path])
-  const visibleVideos = hasUnwatched ? videos.filter(v => !watched[v.path]) : videos
+  const hidingWatched = hasUnwatched && !showAll
+  const hiddenCount = hidingWatched ? videos.filter(v => watched[v.path]).length : 0
+  const visibleVideos = hidingWatched ? videos.filter(v => !watched[v.path]) : videos
 
   const groups = visibleVideos.reduce((acc, v) => {
     const key = v.season != null ? String(v.season) : '_'
@@ -554,6 +583,18 @@ export default ({ item, watched, onClose }) => {
       </Hero>
 
       <FilesSection>
+        {hasUnwatched && (hidingWatched ? hiddenCount > 0 : true) && (
+          <HiddenNotice>
+            <span>
+              {hidingWatched
+                ? `${hiddenCount} watched ${hiddenCount === 1 ? 'item' : 'items'} hidden`
+                : 'Showing all items'}
+            </span>
+            <HiddenToggle onClick={() => setShowAll(s => !s)}>
+              {hidingWatched ? 'Show all' : 'Hide watched'}
+            </HiddenToggle>
+          </HiddenNotice>
+        )}
         {sortedKeys.map(key => (
           <Fragment key={key}>
             {key !== '_' && <SeasonHeader>Season {key}</SeasonHeader>}
