@@ -129,6 +129,8 @@ const resolveByTitle = async (title, year) => {
 // (rate limit, network blip, mongo error), so the caller can retry without
 // counting it against MAX_ATTEMPTS. Returns { ok: false, transient: false }
 // for a clean "no match" outcome that should count.
+// quotaExhausted is set when OMDB returns 401/429, signalling the daily
+// quota is gone and the caller should back off across ticks, not just retry.
 module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
   try {
     let imdbID
@@ -224,6 +226,8 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
     return { ok: true }
   } catch (err) {
     logErr('getMediaInfo', err)
-    return { ok: false, transient: true }
+    const fromOmdb = err.host && err.host.includes('omdbapi.com')
+    const quotaExhausted = fromOmdb && (err.statusCode === 401 || err.statusCode === 429)
+    return { ok: false, transient: true, quotaExhausted }
   }
 }

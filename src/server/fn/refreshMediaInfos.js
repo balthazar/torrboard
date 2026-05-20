@@ -15,6 +15,10 @@ const MAX_ATTEMPTS = 3
 // If this many in a row fail, bail the tick early. Almost always a 401 from
 // OMDB's daily quota; no point continuing to hammer it.
 const CONSECUTIVE_FAILURE_BAIL = 3
+// How long to back off from OMDB after a 401/429. The free tier resets on
+// a rolling 24h window; 6h gives a few retry windows per day without burning
+// the next day's quota the moment it refills.
+const OMDB_COOLDOWN_MS = 6 * 60 * 60 * 1000
 
 const cleanTitle = raw =>
   raw
@@ -48,6 +52,8 @@ module.exports = async () => {
   const { torrents } = await getDeluge()
   const config = (await Config.findOne()) || {}
   const fetchedMedias = config.fetchedMedias || {}
+  const omdbCooledDown =
+    config.omdbCooldownUntil && config.omdbCooldownUntil > Date.now()
 
   const candidates = []
   const toSkip = []
@@ -86,7 +92,7 @@ module.exports = async () => {
     )
   }
 
-  const batch = candidates.slice(0, BATCH_LIMIT)
+  const batch = omdbCooledDown ? [] : candidates.slice(0, BATCH_LIMIT)
   const updates = {}
   let consecutiveFailures = 0
 
@@ -96,6 +102,13 @@ module.exports = async () => {
       updates[`fetchedMedias.${item.id}`] = true
       consecutiveFailures = 0
     } else {
+      // OMDB daily quota gone: persist a cooldown so subsequent ticks skip
+      // calling out entirely. Without this, transient retries would burn
+      // through tomorrow's quota the moment it refills.
+      if (result.quotaExhausted) {
+        updates.omdbCooldownUntil = Date.now() + OMDB_COOLDOWN_MS
+        break
+      }
       // Only count non-transient outcomes toward MAX_ATTEMPTS. An OMDB rate
       // limit, network blip, or mongo hiccup shouldn't permanently blacklist
       // a legit torrent; without this a flaky 6-minute window would.
