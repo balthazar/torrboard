@@ -17,7 +17,14 @@ export default styled.div`
   justify-content: center;
 
   border-radius: ${p => p.theme.radii.md};
-  background: ${p => (p.$bg ? `url(${p.$bg}) center/cover no-repeat` : p.theme.colors.surface)};
+  background-color: ${p => p.theme.colors.surface};
+  background-image: ${p => (p.$bg ? `url(${p.$bg})` : 'none')};
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Clip the cover to padding-box so a translucent border doesn't blend with
+     the poster image; let the surface color fill the border-box behind it. */
+  background-clip: padding-box, border-box;
   border: 1px solid ${p => p.theme.colors.border};
   transition: transform ${p => p.theme.motion.base},
     border-color ${p => p.theme.motion.base},
