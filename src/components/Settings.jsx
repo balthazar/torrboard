@@ -148,6 +148,7 @@ const IconButton = styled.button`
   align-items: center;
   justify-content: center;
   border-radius: ${p => p.theme.radii.full};
+  background-color: transparent;
   color: ${p => p.theme.colors.textMuted};
   cursor: pointer;
   transition: background-color ${p => p.theme.motion.fast},
