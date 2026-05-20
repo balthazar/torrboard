@@ -91,13 +91,17 @@ module.exports = async () => {
   let consecutiveFailures = 0
 
   for (const item of batch) {
-    const ok = await getMediaInfo(item.id, { title: item.title, year: item.year })
-    if (ok) {
+    const result = await getMediaInfo(item.id, { title: item.title, year: item.year })
+    if (result.ok) {
       updates[`fetchedMedias.${item.id}`] = true
       consecutiveFailures = 0
     } else {
-      // Record the attempt count so we eventually stop trying.
-      updates[`fetchedMedias.${item.id}`] = item.attempt
+      // Only count non-transient outcomes toward MAX_ATTEMPTS. An OMDB rate
+      // limit, network blip, or mongo hiccup shouldn't permanently blacklist
+      // a legit torrent; without this a flaky 6-minute window would.
+      if (!result.transient) {
+        updates[`fetchedMedias.${item.id}`] = item.attempt
+      }
       consecutiveFailures++
       if (consecutiveFailures >= CONSECUTIVE_FAILURE_BAIL) break
     }

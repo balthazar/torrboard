@@ -36,9 +36,9 @@ const tokenize = s =>
     .filter(Boolean)
 
 // Fraction of `input` tokens that line up with `target`. A token counts as a
-// match on exact equality or a shared prefix of length >= 3 (handles
+// match on exact equality or a shared prefix of length >= 2 (handles
 // US/USA, journeys/journey, etc).
-const fuzzyScore = (input, target) => {
+const directionalScore = (input, target) => {
   if (!input.length) return 0
   let hits = 0
   for (const it of input) {
@@ -52,6 +52,17 @@ const fuzzyScore = (input, target) => {
     if (matched) hits++
   }
   return hits / input.length
+}
+
+// F1-style symmetric score: precision (input tokens that hit target) and
+// recall (target tokens that hit input), combined. Penalises candidates
+// with extra unmatched tokens so a short title beats a longer one when the
+// query is short, instead of tying on precision alone.
+const fuzzyScore = (input, target) => {
+  const precision = directionalScore(input, target)
+  const recall = directionalScore(target, input)
+  if (precision + recall === 0) return 0
+  return (2 * precision * recall) / (precision + recall)
 }
 
 // Last-resort match: when OMDB returns nothing for a cleaned title, see if
@@ -113,7 +124,11 @@ const resolveByTitle = async (title, year) => {
   return full.body.Response === 'True' ? full.body : null
 }
 
-// Returns true if a MediaInfo record was created/updated, false otherwise.
+// Returns { ok: true } when a MediaInfo record was created/updated.
+// Returns { ok: false, transient: true } when an OMDB/TMDB/db call threw
+// (rate limit, network blip, mongo error), so the caller can retry without
+// counting it against MAX_ATTEMPTS. Returns { ok: false, transient: false }
+// for a clean "no match" outcome that should count.
 module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
   try {
     let imdbID
@@ -156,10 +171,10 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
               { $addToSet: { torrents: id } },
             )
           }
-          return true
+          return { ok: true }
         }
       }
-      return false
+      return { ok: false, transient: false }
     }
 
     if (newId) {
@@ -185,7 +200,7 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
         })
       }
 
-      return true
+      return { ok: true }
     }
 
     // Refuse to silently move a torrent already linked to a different imdbID.
@@ -194,7 +209,7 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
     // the setImdb mutation.
     const existing = await MediaInfo.findOne({ torrents: id, imdbID: { $ne: imdbID } })
     if (existing) {
-      return true
+      return { ok: true }
     }
 
     await MediaInfo.updateOne(
@@ -206,9 +221,9 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
       { upsert: true },
     )
 
-    return true
+    return { ok: true }
   } catch (err) {
     logErr('getMediaInfo', err)
-    return false
+    return { ok: false, transient: true }
   }
 }
