@@ -8,7 +8,6 @@ import get from 'lodash/get'
 import { IoIosPlayCircle, IoMdEyeOff, IoMdEye } from 'react-icons/io'
 import { GoFileZip } from 'react-icons/go'
 import {
-  MdDoneAll,
   MdContentCopy,
   MdClose,
   MdPlayArrow,
@@ -603,13 +602,6 @@ export default ({ item, watched, onClose }) => {
                       {watched[v.path] ? <IoMdEyeOff size={18} /> : <IoMdEye size={18} />}
                     </a>
                   </Tippy>
-                  {watched[v.path] && (
-                    <Tippy content="Watched" theme="light">
-                      <span>
-                        <MdDoneAll size={16} />
-                      </span>
-                    </Tippy>
-                  )}
                 </FileActions>
               </FileRow>
             ))}
