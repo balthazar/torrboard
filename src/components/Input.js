@@ -1,13 +1,28 @@
 import styled from 'styled-components'
 
 export default styled.input`
-  background-color: ${p => p.theme.bg};
-  color: ${p => p.theme.body};
-  border-radius: 3px;
-  height: 48px;
-  font-size: 10pt;
-  padding: 10px 20px 10px 20px;
+  width: 100%;
+  height: 44px;
+  background-color: ${p => p.theme.colors.surface};
+  color: ${p => p.theme.colors.text};
+  border: 1px solid ${p => p.theme.colors.border};
+  border-radius: ${p => p.theme.radii.md};
+  padding: 0 ${p => p.theme.spacing[4]};
+  font-family: ${p => p.theme.font.sans};
+  font-size: ${p => p.theme.font.size.base};
+  transition: border-color ${p => p.theme.motion.fast},
+    box-shadow ${p => p.theme.motion.fast};
 
-  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.2), 0px 1px 1px 0px rgba(0, 0, 0, 0.2),
-    0px 2px 1px -1px rgba(0, 0, 0, 0.2);
+  &::placeholder {
+    color: ${p => p.theme.colors.textSubtle};
+  }
+
+  &:hover {
+    border-color: ${p => p.theme.colors.borderHover};
+  }
+
+  &:focus {
+    border-color: ${p => p.theme.colors.accent};
+    box-shadow: 0 0 0 3px ${p => p.theme.colors.accent}26;
+  }
 `

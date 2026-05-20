@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import styled from 'styled-components'
-import { MdAdd, MdRemove } from 'react-icons/md'
+import { MdAdd, MdClose, MdMail, MdPerson, MdEvent } from 'react-icons/md'
 import { useToasts } from './toasts'
 import get from 'lodash/get'
 
@@ -12,108 +12,171 @@ import Input from './Input'
 import apiHandlers from '../fn/apiHandlers'
 
 const Container = styled.div`
-  h3 {
-    font-size: 13px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-    &:not(:first-child) {
-      margin-top: 30px;
-    }
+  max-width: 900px;
+`
+
+const Section = styled.section`
+  & + & {
+    margin-top: ${p => p.theme.spacing[7]};
   }
 `
 
-const Autos = styled.div`
+const SectionTitle = styled.h3`
+  font-size: ${p => p.theme.font.size.xs};
+  font-weight: ${p => p.theme.font.weight.semibold};
+  letter-spacing: ${p => p.theme.font.tracking.wider};
+  text-transform: uppercase;
+  color: ${p => p.theme.colors.textSubtle};
+  margin-bottom: ${p => p.theme.spacing[3]};
+  padding-bottom: ${p => p.theme.spacing[2]};
+  border-bottom: 1px solid ${p => p.theme.colors.border};
+`
+
+const AddInputWrap = styled.div`
+  position: relative;
+  margin-bottom: ${p => p.theme.spacing[3]};
+  max-width: 480px;
+`
+
+const AddInputIcon = styled.div`
+  position: absolute;
+  left: ${p => p.theme.spacing[4]};
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  color: ${p => p.theme.colors.textMuted};
+  pointer-events: none;
+`
+
+const AddInput = styled(Input)`
+  padding-left: 44px;
+`
+
+const Chips = styled.div`
   display: flex;
   flex-wrap: wrap;
+  gap: ${p => p.theme.spacing[2]};
+`
 
-  > * {
-    padding: 5px;
-    margin: 5px;
-    background-color: ${p => p.theme.bg};
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
+const Chip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${p => p.theme.spacing[2]};
+  padding: 6px ${p => p.theme.spacing[2]} 6px ${p => p.theme.spacing[3]};
+  border-radius: ${p => p.theme.radii.full};
+  background-color: ${p => p.theme.colors.surface};
+  border: 1px solid ${p => p.theme.colors.border};
+  font-size: ${p => p.theme.font.size.sm};
+  color: ${p => p.theme.colors.textMuted};
 
-    span {
-      max-width: 300px;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-  }
-
-  a {
-    cursor: pointer;
-    margin-right: 10px;
-    padding: 5px;
-
-    transition: background-color 250ms ease-in;
-
-    &:hover {
-      background-color: ${p => p.theme.opacityDark(0.2)};
-    }
+  > span {
+    max-width: 320px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 `
 
-const InputContainer = styled.div`
-  position: relative;
-`
+const ChipRemove = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: ${p => p.theme.radii.full};
+  color: ${p => p.theme.colors.textSubtle};
+  cursor: pointer;
+  transition: background-color ${p => p.theme.motion.fast},
+    color ${p => p.theme.motion.fast};
 
-const InputIcon = styled.div`
-  position: absolute;
-  left: 20px;
-  top: 15px;
-`
-
-const AutoGrabInput = styled.input`
-  width: 400px;
-  height: 48px;
-  padding: 10px 20px 10px 60px;
-  font-size: 10pt;
-  background-color: ${p => p.theme.bg};
-  border-radius: 3px;
-  margin-bottom: 10px;
-`
-
-const CreateUserContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 300px;
-
-  > * + * {
-    margin-top: 10px;
+  &:hover {
+    background-color: ${p => p.theme.colors.surfaceActive};
+    color: ${p => p.theme.colors.error};
   }
-`
-
-const DateInput = styled.input`
-  padding: 10px;
-  height: 48px;
-  background-color: ${p => p.theme.bg};
-  border-radius: 3px;
 `
 
 const Users = styled.div`
-  > * + * {
-    margin-top: 10px;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: ${p => p.theme.spacing[2]};
 `
 
-const UserInfos = styled.div`
+const UserCard = styled.div`
   display: flex;
   align-items: center;
-  padding: 10px;
-  background-color: ${p => p.theme.bg};
+  gap: ${p => p.theme.spacing[3]};
+  padding: ${p => p.theme.spacing[3]} ${p => p.theme.spacing[4]};
+  border-radius: ${p => p.theme.radii.md};
+  background-color: ${p => p.theme.colors.surface};
+  border: 1px solid ${p => p.theme.colors.border};
+`
 
-  .status {
-    margin-left: auto;
-    padding: 2px 4px;
-    border-radius: 3px;
-    background-color: ${p => p.theme[p.inviteCode ? 'red' : 'green']};
-  }
+const UserName = styled.span`
+  font-weight: ${p => p.theme.font.weight.medium};
+  color: ${p => p.theme.colors.text};
+`
 
-  > * + * {
-    margin-left: 10px;
-  }
+const UserEmail = styled.span`
+  font-size: ${p => p.theme.font.size.sm};
+  color: ${p => p.theme.colors.textMuted};
+  font-family: ${p => p.theme.font.mono};
+`
+
+const UserMeta = styled.span`
+  font-size: ${p => p.theme.font.size.xs};
+  color: ${p => p.theme.colors.textSubtle};
+  font-family: ${p => p.theme.font.mono};
+  letter-spacing: ${p => p.theme.font.tracking.wide};
+  text-transform: uppercase;
+`
+
+const StatusPill = styled.span`
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: ${p => p.theme.radii.full};
+  font-size: ${p => p.theme.font.size.xs};
+  font-weight: ${p => p.theme.font.weight.semibold};
+  letter-spacing: ${p => p.theme.font.tracking.wider};
+  text-transform: uppercase;
+  background-color: ${p =>
+    p.$active ? `${p.theme.colors.success}20` : `${p.theme.colors.error}20`};
+  color: ${p => (p.$active ? p.theme.colors.success : p.theme.colors.error)};
+`
+
+const CreateForm = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${p => p.theme.spacing[3]};
+  max-width: 360px;
+`
+
+const FormField = styled.div`
+  position: relative;
+`
+
+const FieldIcon = styled.div`
+  position: absolute;
+  left: ${p => p.theme.spacing[4]};
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  color: ${p => p.theme.colors.textMuted};
+  pointer-events: none;
+`
+
+const StyledInput = styled(Input)`
+  padding-left: 44px;
+`
+
+const DateInput = styled(Input).attrs({ type: 'date' })`
+  padding-left: 44px;
+  color-scheme: dark;
+`
+
+const Empty = styled.div`
+  color: ${p => p.theme.colors.textSubtle};
+  font-size: ${p => p.theme.font.size.sm};
+  padding: ${p => p.theme.spacing[3]};
 `
 
 const GET_GRABS = gql`
@@ -189,13 +252,13 @@ export default () => {
   const grabs = get(grabsData, 'config.autoGrabs')
   const users = get(usersData, 'users', []).filter(u => u.name !== 'master')
 
-  const removeGrab = text => {
-    setGrabs({ variables: { autoGrabs: grabs.filter(t => t !== text) } })
+  const removeGrab = t => {
+    setGrabs({ variables: { autoGrabs: grabs.filter(g => g !== t) } })
   }
 
   const onKeyDown = e => {
-    if (e.keyCode === 13) {
-      setGrabs({ variables: { autoGrabs: [...grabs, text] } })
+    if (e.keyCode === 13 && text.trim()) {
+      setGrabs({ variables: { autoGrabs: [...grabs, text.trim()] } })
       setText('')
     }
   }
@@ -204,70 +267,94 @@ export default () => {
     if (!name || !email || !expires) {
       return addToast('Invalid params.', { appearance: 'error' })
     }
-
-    const variables = { name, email, expires }
-    createUserMut({ variables })
+    createUserMut({ variables: { name, email, expires } })
   }
 
   return (
     <Container>
-      <h3>{'rss auto grabs'}</h3>
-      <InputContainer>
-        <InputIcon>
-          <MdAdd />
-        </InputIcon>
-        <AutoGrabInput
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder="Add a torrent name to auto grab."
-        />
-      </InputContainer>
+      <Section>
+        <SectionTitle>RSS Auto Grabs</SectionTitle>
 
-      {loadingGrabs ? (
-        <Placeloader style={{ width: '100%', height: 100 }} />
-      ) : (
-        <Autos>
-          {grabs.map((text, i) => (
-            <span key={i}>
-              <a onClick={() => removeGrab(text)}>
-                <MdRemove />
-              </a>
-              <span title={text}>{text}</span>
-            </span>
-          ))}
-        </Autos>
-      )}
+        <AddInputWrap>
+          <AddInputIcon>
+            <MdAdd size={18} />
+          </AddInputIcon>
+          <AddInput
+            value={text}
+            onChange={e => setText(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder="Add a torrent name to auto-grab"
+          />
+        </AddInputWrap>
 
-      <h3>{'users'}</h3>
+        {loadingGrabs ? (
+          <Placeloader style={{ width: '100%', height: 80 }} />
+        ) : (
+          <Chips>
+            {(grabs || []).length === 0 && <Empty>No auto-grabs configured.</Empty>}
+            {(grabs || []).map((t, i) => (
+              <Chip key={i}>
+                <span title={t}>{t}</span>
+                <ChipRemove onClick={() => removeGrab(t)} aria-label="Remove">
+                  <MdClose size={14} />
+                </ChipRemove>
+              </Chip>
+            ))}
+          </Chips>
+        )}
+      </Section>
 
-      {loadingUsers ? (
-        <Placeloader style={{ width: '100%', height: 100 }} />
-      ) : (
-        <Users>
-          {!users.length && <span>{'No users to display.'}</span>}
-          {users.map(user => (
-            <UserInfos inviteCode={user.inviteCode} key={user.name}>
-              <span>{user.name}</span>
-              <span>({user.email})</span>
-              <span>
-                {user.watched.length}
-                {' watchs'}
-              </span>
-              <span className="status">{user.inviteCode ? 'inactive' : 'active'}</span>
-            </UserInfos>
-          ))}
-        </Users>
-      )}
+      <Section>
+        <SectionTitle>Users</SectionTitle>
 
-      <h3>{'create'}</h3>
+        {loadingUsers ? (
+          <Placeloader style={{ width: '100%', height: 80 }} />
+        ) : (
+          <Users>
+            {!users.length && <Empty>No users to display.</Empty>}
+            {users.map(user => (
+              <UserCard key={user.name}>
+                <UserName>{user.name}</UserName>
+                <UserEmail>{user.email}</UserEmail>
+                <UserMeta>{user.watched.length} watches</UserMeta>
+                <StatusPill $active={!user.inviteCode}>
+                  {user.inviteCode ? 'Inactive' : 'Active'}
+                </StatusPill>
+              </UserCard>
+            ))}
+          </Users>
+        )}
+      </Section>
 
-      <CreateUserContainer>
-        <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="email" />
-        <Input value={name} onChange={e => setName(e.target.value)} placeholder="name" />
-        <DateInput onChange={e => setExpires(e.target.value)} type="date" />
-        <Button onClick={createUser}>create</Button>
-      </CreateUserContainer>
+      <Section>
+        <SectionTitle>Create User</SectionTitle>
+
+        <CreateForm>
+          <FormField>
+            <FieldIcon>
+              <MdMail size={18} />
+            </FieldIcon>
+            <StyledInput
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="Email"
+            />
+          </FormField>
+          <FormField>
+            <FieldIcon>
+              <MdPerson size={18} />
+            </FieldIcon>
+            <StyledInput value={name} onChange={e => setName(e.target.value)} placeholder="Name" />
+          </FormField>
+          <FormField>
+            <FieldIcon>
+              <MdEvent size={18} />
+            </FieldIcon>
+            <DateInput onChange={e => setExpires(e.target.value)} />
+          </FormField>
+          <Button onClick={createUser}>Create user</Button>
+        </CreateForm>
+      </Section>
     </Container>
   )
 }
