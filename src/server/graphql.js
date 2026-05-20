@@ -279,8 +279,8 @@ const resolvers = {
     },
 
     setImdb: async (parent, { oldId, torrentIds, newId }) => {
-      await getMediaInfo(null, { oldId, torrentIds, newId })
-      return true
+      const res = await getMediaInfo(null, { oldId, torrentIds, newId })
+      return !!(res && res.ok)
     },
 
     setWatched: async (parent, { path, value }, { user }) => {

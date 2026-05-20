@@ -150,6 +150,14 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
           payload = t.payload
         }
       }
+      // Manual override: when neither source has indexed this ID yet,
+      // still persist the user's choice with no payload so the torrent
+      // gets regrouped. healPosters/refreshMediaInfo will fill metadata
+      // in once OMDB/TMDB catch up.
+      if (!imdbID) {
+        imdbID = newId
+        payload = {}
+      }
     } else {
       const omdbBody = await resolveByTitle(title, year)
       if (omdbBody) {
@@ -187,8 +195,9 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
 
       await MediaInfo.deleteMany({ imdbID: newId })
 
+      let matched = false
       if (oldId) {
-        await MediaInfo.updateOne(
+        const updated = await MediaInfo.updateOne(
           { imdbID: oldId },
           {
             ...payload,
@@ -196,7 +205,12 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
             imdbID: newId,
           },
         )
-      } else {
+        matched = updated.matchedCount > 0
+      }
+      // Fall through to create when there was no oldId, or when the client
+      // sent a stale oldId that no longer exists. Either way the override
+      // should land instead of silently no-op'ing.
+      if (!matched) {
         await MediaInfo.create({
           ...payload,
           imdbID: newId,
