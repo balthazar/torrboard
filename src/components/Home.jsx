@@ -408,12 +408,14 @@ export default () => {
         </SearchSlot>
       </ControlBar>
 
-      {!loading && (
-        <Meta>
+      <Meta>
+        {loading ? (
+          <Placeloader style={{ width: 60, height: 11 }} />
+        ) : (
           <span>{list.length} items</span>
-          {category && <span>filter: {category}</span>}
-        </Meta>
-      )}
+        )}
+        {category && <span>filter: {category}</span>}
+      </Meta>
 
       <Grid ref={gridRef}>
         {loading &&
