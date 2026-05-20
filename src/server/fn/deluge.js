@@ -31,7 +31,8 @@ const [DELUGE_PASS, DELUGE_HOST_RAW] = process.env.DELUGE.split('@')
 const DELUGE_HOST =
   process.env.NODE_ENV === 'production' ? DELUGE_HOST_RAW : 'http://127.0.0.1:8112'
 
-const r = (body, headers = {}) => got.post(`${DELUGE_HOST}/json`, { body, json: true, headers })
+const r = (body, headers = {}) =>
+  got.post(`${DELUGE_HOST}/json`, { json: body, responseType: 'json', headers })
 const payload = (method, params) => ({ method, params, id: Date.now() })
 
 const query = async (method, args) => {
@@ -40,7 +41,11 @@ const query = async (method, args) => {
     throw new Error('Unauthorized.')
   }
 
-  const cookie = pass.headers['set-cookie']
+  // Deluge's auth response sets a session cookie via Set-Cookie. Extract the
+  // name=value pairs (drop Path/HttpOnly/etc attributes) so we can send them
+  // back as a single Cookie header on the follow-up request.
+  const setCookies = pass.headers['set-cookie'] || []
+  const cookie = setCookies.map(c => c.split(';')[0]).join('; ')
   const res = await r(payload(method, args), { cookie })
 
   return res.body.result

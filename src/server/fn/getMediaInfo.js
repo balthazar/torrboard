@@ -8,7 +8,9 @@ const logErr = require('./logErr')
 const OMDB = 'http://www.omdbapi.com'
 
 const omdb = params =>
-  got(`${OMDB}/?${new URLSearchParams({ ...params, apiKey: process.env.OMDB })}`, { json: true })
+  got(`${OMDB}/?${new URLSearchParams({ ...params, apiKey: process.env.OMDB })}`, {
+    responseType: 'json',
+  })
 
 // Build the payload we want to persist from an OMDB record. Returns only
 // the fields that came back with real values, so callers can safely $set
@@ -226,8 +228,10 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
     return { ok: true }
   } catch (err) {
     logErr('getMediaInfo', err)
-    const fromOmdb = err.host && err.host.includes('omdbapi.com')
-    const quotaExhausted = fromOmdb && (err.statusCode === 401 || err.statusCode === 429)
+    const host = err.options && err.options.url && err.options.url.host
+    const status = err.response && err.response.statusCode
+    const fromOmdb = host && host.includes('omdbapi.com')
+    const quotaExhausted = fromOmdb && (status === 401 || status === 429)
     return { ok: false, transient: true, quotaExhausted }
   }
 }

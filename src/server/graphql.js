@@ -231,7 +231,7 @@ const resolvers = {
           key: process.env.YOUTUBE,
         })
         const res = await got(`https://www.googleapis.com/youtube/v3/search?${params}`, {
-          json: true,
+          responseType: 'json',
         })
 
         const first = (res.body.items || []).find(i => i.id && i.id.videoId)

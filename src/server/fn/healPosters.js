@@ -14,7 +14,7 @@ const probe = async url => {
     const res = await got.head(url, {
       throwHttpErrors: false,
       followRedirect: true,
-      timeout: 10000,
+      timeout: { request: 10000 },
     })
     if (res.statusCode >= 200 && res.statusCode < 400) return true
     if (res.statusCode >= 400 && res.statusCode < 500) return false

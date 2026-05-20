@@ -49,10 +49,12 @@ const REMOTE_TTL_MS = 10 * 60 * 1000
 const HREF_RE = /<a href="([^"?][^"]*)"/gi
 
 const fetchListing = async url => {
+  const [username, password] = (process.env.NGINX_PWD || '').split(':')
   const res = await got(url, {
-    auth: process.env.NGINX_PWD,
-    timeout: 20 * 1000,
-    retry: 0,
+    username,
+    password,
+    timeout: { request: 20 * 1000 },
+    retry: { limit: 0 },
   })
 
   // Defensive: nginx serves index.html when present instead of the autoindex,

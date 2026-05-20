@@ -53,7 +53,10 @@ const call = async (path, params = {}) => {
   if (!key) return null
   try {
     const qs = new URLSearchParams({ ...params, api_key: key })
-    const res = await got(`${TMDB}${path}?${qs}`, { json: true, timeout: 10000 })
+    const res = await got(`${TMDB}${path}?${qs}`, {
+      responseType: 'json',
+      timeout: { request: 10000 },
+    })
     return res.body
   } catch (err) {
     logErr('tmdb', err)

@@ -3,11 +3,17 @@
 const summarize = err => {
   if (!err) return 'unknown error'
 
-  // got HTTP errors
-  if (err.statusCode && err.host) {
-    const apiMsg = err.body && err.body.error && err.body.error.message
-    const tail = apiMsg || err.statusMessage || ''
-    return `HTTP ${err.statusCode} ${err.method} ${err.host}${err.path} ${tail}`.trim()
+  // got 11+ HTTPError. statusCode lives on err.response, request shape
+  // on err.options. Body is parsed when responseType: 'json' was set.
+  if (err.response && err.response.statusCode) {
+    const u = err.options && err.options.url
+    const host = u ? u.host : ''
+    const path = u ? `${u.pathname}${u.search || ''}` : ''
+    const method = (err.options && err.options.method) || 'GET'
+    const body = err.response.body
+    const apiMsg = body && body.error && body.error.message
+    const tail = apiMsg || err.response.statusMessage || ''
+    return `HTTP ${err.response.statusCode} ${method} ${host}${path} ${tail}`.trim()
   }
 
   // Network errors (ECONNREFUSED, ENOTFOUND, etc.)
