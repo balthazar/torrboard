@@ -17,7 +17,6 @@ import { isMobile } from 'react-device-detect'
 import SearchInput from './SearchInput'
 import Placeloader from './Placeloader'
 import convertBytes from '../fn/convertBytes'
-import theme from '../theme'
 
 const GET_TORRENTS = gql`
   {
@@ -62,136 +61,194 @@ const TORRENT_ACTION = gql`
   }
 `
 
-const fields = [
+const stateColor = (state, theme) => {
+  if (state === 'Seeding') return theme.colors.accent
+  if (state === 'Paused') return theme.colors.textSubtle
+  if (state === 'Downloading') return theme.colors.success
+  return theme.colors.warning
+}
+
+
+
+const ratesFmt = v => (v ? `${convertBytes(v)}/s` : '')
+const percentFmt = v => (v === 100 || v == null ? '' : `${Number(v).toFixed(0)}%`)
+const ratioFmt = v => (v == null ? '' : Number(v).toFixed(2))
+const etaFmt = v => (v ? `${(v / 60).toFixed(0)}m` : '')
+const nonneg = v => Math.max(0, Number(v) || 0)
+
+const columns = [
+  { key: 'name', label: 'Name', size: 'minmax(0, 1fr)', mono: false },
+  { key: 'total_size', label: 'Size', size: '80px', fn: convertBytes, hide: isMobile },
+  { key: 'ratio', label: 'Ratio', size: '60px', fn: ratioFmt, hide: isMobile },
   {
-    name: 'state',
-    width: 20,
-    hidden: true,
-  },
-  {
-    name: 'name',
-    width: isMobile ? 100 : 300,
-  },
-  {
-    name: 'total_size',
-    label: 'Size',
-    width: 80,
-    fn: convertBytes,
+    key: 'download_payload_rate',
+    label: <IoIosArrowRoundDown size={16} />,
+    size: '90px',
+    fn: ratesFmt,
     hide: isMobile,
   },
   {
-    name: 'ratio',
-    width: 50,
-    fn: v => v.toLocaleString(undefined, { maximumFractionDigits: 2 }),
+    key: 'upload_payload_rate',
+    label: <IoIosArrowRoundUp size={16} />,
+    size: '90px',
+    fn: ratesFmt,
     hide: isMobile,
   },
-  {
-    name: 'download_payload_rate',
-    label: <IoIosArrowRoundDown />,
-    width: 80,
-    fn: v => (v ? `${convertBytes(v)}/s` : ''),
-    hide: isMobile,
-  },
-  {
-    name: 'upload_payload_rate',
-    label: <IoIosArrowRoundUp />,
-    width: 80,
-    fn: v => (v ? `${convertBytes(v)}/s` : ''),
-    hide: isMobile,
-  },
-  {
-    name: 'progress',
-    label: '%',
-    width: 50,
-    fn: v => (v === 100 ? '' : v.toLocaleString(undefined, { maximumFractionDigits: 1 })),
-    hide: isMobile,
-  },
-  {
-    name: 'eta',
-    width: isMobile ? 50 : 80,
-    fn: v => (v ? `${(v / 60).toFixed(0)}m` : ''),
-  },
-  {
-    name: 'total_peers',
-    label: 'Peers',
-    width: 50,
-    fn: v => Math.max(0, v),
-    hide: isMobile,
-  },
-  {
-    name: 'total_seeds',
-    label: 'Seeds',
-    width: 50,
-    fn: v => Math.max(0, v),
-    hide: isMobile,
-  },
-  {
-    name: 'actions',
-  },
+  { key: 'progress', label: '%', size: '50px', fn: percentFmt, hide: isMobile },
+  { key: 'eta', label: 'ETA', size: '70px', fn: etaFmt },
+  { key: 'total_peers', label: 'Peers', size: '50px', fn: nonneg, hide: isMobile },
+  { key: 'total_seeds', label: 'Seeds', size: '50px', fn: nonneg, hide: isMobile },
+  { key: 'actions', label: '', size: '160px' },
 ]
 
-const Item = styled.div`
-  ${p => (p.$loading ? '' : `padding: 10px 20px;`)};
+const visibleColumns = columns.filter(c => !c.hide)
+const gridTemplate = visibleColumns.map(c => c.size).join(' ')
 
-  margin: 5px;
+const Heading = styled.div`
+  display: grid;
+  grid-template-columns: ${gridTemplate};
+  gap: ${p => p.theme.spacing[4]};
+  padding: ${p => p.theme.spacing[2]} ${p => p.theme.spacing[4]};
+  margin-bottom: ${p => p.theme.spacing[1]};
+  font-size: ${p => p.theme.font.size.xs};
+  font-weight: ${p => p.theme.font.weight.semibold};
+  letter-spacing: ${p => p.theme.font.tracking.wider};
+  text-transform: uppercase;
+  color: ${p => p.theme.colors.textSubtle};
+  border-bottom: 1px solid ${p => p.theme.colors.border};
+`
+
+const HeadingCell = styled.span`
   display: flex;
   align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+`
 
-  ${p =>
-    p.$heading
-      ? `
-  font-size: 13px;
-  text-transform: uppercase;
-  `
-      : `
+const Row = styled.div`
+  position: relative;
+  display: grid;
+  grid-template-columns: ${gridTemplate};
+  gap: ${p => p.theme.spacing[4]};
+  align-items: center;
+  padding: ${p => p.theme.spacing[2]} ${p => p.theme.spacing[4]};
+  margin-bottom: ${p => p.theme.spacing[1]};
+  border-radius: ${p => p.theme.radii.md};
+  background-color: ${p => p.theme.colors.surface};
+  border: 1px solid ${p => p.theme.colors.border};
+  font-size: ${p => p.theme.font.size.sm};
+  transition: background-color ${p => p.theme.motion.fast},
+    border-color ${p => p.theme.motion.fast};
+  overflow: hidden;
 
-  background-color: ${p.theme.bg};
-      `}
-
-  ${() => (isMobile ? 'font-size: 10px' : '')};
-
-  > * + * {
-    margin-left: 20px;
+  &:hover {
+    border-color: ${p => p.theme.colors.borderHover};
   }
 
-  > * {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+  /* state indicator (left bar) */
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: ${p => stateColor(p.$state, p.theme)};
   }
 
-  > *:first-child {
-    display: flex;
-  }
-
-  > *:last-child {
-    margin-left: auto;
+  /* progress fill */
+  &::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0;
+    bottom: 0;
+    width: ${p => (p.$progress >= 100 ? 0 : p.$progress)}%;
+    background-color: ${p => p.theme.colors.accent};
+    opacity: 0.06;
+    pointer-events: none;
+    transition: width ${p => p.theme.motion.slow};
   }
 `
 
-const State = styled.span`
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: ${p =>
-    p.$value === 'Seeding' ? p.theme.blue : p.$value === 'Paused' ? 'lightgrey' : p.theme.green};
+const Cell = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  position: relative;
+  z-index: 1;
+  font-family: ${p => (p.$mono ? p.theme.font.mono : 'inherit')};
+  color: ${p => (p.$primary ? p.theme.colors.text : p.theme.colors.textMuted)};
 `
 
 const Actions = styled.span`
-  > * {
-    cursor: pointer;
-  }
+  display: flex;
+  justify-content: flex-end;
+  gap: ${p => p.theme.spacing[1]};
+  position: relative;
+  z-index: 1;
+`
 
-  > * + * {
-    margin-left: 10px;
+const ActionButton = styled.span`
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: ${p => p.theme.radii.full};
+  color: ${p => p.theme.colors.textMuted};
+  cursor: pointer;
+  transition: background-color ${p => p.theme.motion.fast},
+    color ${p => p.theme.motion.fast};
+
+  &:hover {
+    background-color: ${p => p.theme.colors.surfaceActive};
+    color: ${p => (p.$danger ? p.theme.colors.error : p.theme.colors.text)};
   }
 `
 
-const actions = [
-  { name: 'resume', icon: <IoMdPlay /> },
-  { name: 'pause', icon: <IoMdPause /> },
-  { name: 'remove', icon: <FiDelete /> },
-  { name: 'remove', icon: <FiTrash2 />, extra: { removeFiles: true } },
+const ConfirmActions = styled.span`
+  display: flex;
+  justify-content: flex-end;
+  gap: ${p => p.theme.spacing[1]};
+  position: relative;
+  z-index: 1;
+  font-family: ${p => p.theme.font.mono};
+  font-size: ${p => p.theme.font.size.xs};
+  text-transform: uppercase;
+  color: ${p => p.theme.colors.textMuted};
+`
+
+const ConfirmText = styled.span`
+  align-self: center;
+  margin-right: ${p => p.theme.spacing[2]};
+  letter-spacing: ${p => p.theme.font.tracking.wide};
+`
+
+const SkeletonRow = styled.div`
+  margin-bottom: ${p => p.theme.spacing[1]};
+  border-radius: ${p => p.theme.radii.md};
+  background-color: ${p => p.theme.colors.surface};
+  border: 1px solid ${p => p.theme.colors.border};
+  padding: ${p => p.theme.spacing[2]} ${p => p.theme.spacing[4]};
+`
+
+const actionDefs = [
+  { name: 'resume', icon: <IoMdPlay size={16} />, tip: 'Resume' },
+  { name: 'pause', icon: <IoMdPause size={16} />, tip: 'Pause' },
+  { name: 'remove', icon: <FiDelete size={16} />, tip: 'Remove' },
+  {
+    name: 'remove',
+    icon: <FiTrash2 size={16} />,
+    extra: { removeFiles: true },
+    tip: 'Remove & delete files',
+    danger: true,
+  },
 ]
 
 export default () => {
@@ -204,6 +261,7 @@ export default () => {
   const [torrentAction] = useMutation(TORRENT_ACTION)
 
   const list = get(data, 'deluge.torrents', [])
+    .slice()
     .filter(t =>
       t.name
         .toLowerCase()
@@ -214,154 +272,139 @@ export default () => {
 
   return (
     <div>
-      <SearchInput onChange={e => setQuery(e.target.value)} style={{ marginBottom: 10 }} />
+      <div style={{ marginBottom: 16 }}>
+        <SearchInput onChange={e => setQuery(e.target.value)} />
+      </div>
 
-      <Item $heading>
-        {fields
-          .filter(f => !f.hide)
-          .map(({ name, label, width }) => (
-            <span key={name} style={{ width }}>
-              {name === 'state' ? '' : label || name}
-            </span>
-          ))}
-      </Item>
+      <Heading>
+        {visibleColumns.map(col => (
+          <HeadingCell key={col.key}>{col.label}</HeadingCell>
+        ))}
+      </Heading>
 
       {loading &&
         [...Array(20).keys()].map(i => (
-          <Item $loading="true" key={i}>
+          <SkeletonRow key={i}>
             <Placeloader
               time={Math.max(1000, Math.floor(Math.random() * 3000))}
-              style={{ width: '100%', height: 40 }}
-              key={i}
+              style={{ width: '100%', height: 20 }}
             />
-          </Item>
+          </SkeletonRow>
         ))}
 
-      {list.map(torrent => (
-        <Item key={torrent.id}>
-          {fields
-            .filter(f => !f.hide)
-            .map(({ name, fn = f => f, width }) => {
-              if (name === 'state') {
-                return (
-                  <span style={{ width }} key={name}>
-                    <State $value={torrent.state} />
-                  </span>
+      {list.map(torrent => {
+        const torrentId = torrent.id
+        const isConfirming = !!pendingConfirm[torrentId]
+
+        const onClickAction = (name, extra) => {
+          if (name === 'remove') {
+            askConfirm(prev => ({ ...prev, [torrentId]: { name, extra } }))
+          } else {
+            torrentAction({
+              variables: { name, torrentId, ...extra },
+              update(cache) {
+                const cached = cache.readQuery({ query: GET_TORRENT_STATES, data: {} })
+                const newState =
+                  name === 'resume'
+                    ? torrent.progress === 100
+                      ? 'Seeding'
+                      : 'Downloading'
+                    : 'Paused'
+                const torrents = cached.deluge.torrents.map(t =>
+                  t.id !== torrentId ? t : { ...t, state: newState },
                 )
-              }
-
-              const torrentId = torrent.id
-
-              const onClickAction = (name, extra) => {
-                if (name === 'remove') {
-                  askConfirm(prev => ({
-                    ...prev,
-                    [torrentId]: { name, extra },
-                  }))
-                } else {
-                  torrentAction({
-                    variables: { name, torrentId, ...extra },
-                    update(cache) {
-                      const cached = cache.readQuery({
-                        query: GET_TORRENT_STATES,
-                        data: {},
-                      })
-
-                      const state =
-                        name === 'resume'
-                          ? torrent.progress === 100
-                            ? 'Seeding'
-                            : 'Downloading'
-                          : 'Paused'
-
-                      const torrents = cached.deluge.torrents.map(torrent =>
-                        torrent.id !== torrentId ? torrent : { ...torrent, state },
-                      )
-
-                      cache.writeQuery({
-                        query: GET_TORRENT_STATES,
-                        data: { deluge: { torrents, __typename: 'Deluge' } },
-                      })
-                    },
-                  })
-                }
-              }
-              const deleteAction = () => {
-                const { name, extra } = pendingConfirm[torrentId]
-                torrentAction({
-                  variables: { name, torrentId, ...extra },
-                  update(cache) {
-                    const cached = cache.readQuery({
-                      query: GET_TORRENT_STATES,
-                      data: {},
-                    })
-
-                    cache.writeQuery({
-                      query: GET_TORRENT_STATES,
-                      data: {
-                        deluge: {
-                          torrents: cached.deluge.torrents.filter(t => t.id !== torrentId),
-                          __typename: 'Deluge',
-                        },
-                      },
-                    })
-                  },
+                cache.writeQuery({
+                  query: GET_TORRENT_STATES,
+                  data: { deluge: { torrents, __typename: 'Deluge' } },
                 })
-              }
+              },
+            })
+          }
+        }
 
-              if (name === 'actions') {
-                return pendingConfirm[torrentId] ? (
-                  <Actions key={name}>
-                    <Tippy content="cancel" theme="light">
-                      <span onClick={() => askConfirm(prev => ({ ...prev, [torrentId]: null }))}>
-                        <MdCancel />
-                      </span>
-                    </Tippy>
-                    <Tippy content="confirm" theme="light">
-                      <span onClick={deleteAction}>
-                        <IoMdCheckmark fill={theme.green} />
-                      </span>
-                    </Tippy>
-                  </Actions>
-                ) : (
-                  <Actions key={name}>
-                    {actions
-                      .filter(({ name }) => {
-                        if (name === 'remove') {
-                          return true
+        const deleteAction = () => {
+          const { name, extra } = pendingConfirm[torrentId]
+          torrentAction({
+            variables: { name, torrentId, ...extra },
+            update(cache) {
+              const cached = cache.readQuery({ query: GET_TORRENT_STATES, data: {} })
+              cache.writeQuery({
+                query: GET_TORRENT_STATES,
+                data: {
+                  deluge: {
+                    torrents: cached.deluge.torrents.filter(t => t.id !== torrentId),
+                    __typename: 'Deluge',
+                  },
+                },
+              })
+            },
+          })
+        }
+
+        return (
+          <Row key={torrentId} $state={torrent.state} $progress={torrent.progress || 0}>
+            {visibleColumns.map(col => {
+              if (col.key === 'actions') {
+                return isConfirming ? (
+                  <ConfirmActions key="actions">
+                    <ConfirmText>Delete?</ConfirmText>
+                    <Tippy content="Cancel" theme="light">
+                      <ActionButton
+                        onClick={() =>
+                          askConfirm(prev => ({ ...prev, [torrentId]: null }))
                         }
+                      >
+                        <MdCancel size={18} />
+                      </ActionButton>
+                    </Tippy>
+                    <Tippy content="Confirm delete" theme="light">
+                      <ActionButton $danger onClick={deleteAction}>
+                        <IoMdCheckmark size={18} />
+                      </ActionButton>
+                    </Tippy>
+                  </ConfirmActions>
+                ) : (
+                  <Actions key="actions">
+                    {actionDefs
+                      .filter(({ name }) => {
+                        if (name === 'remove') return true
                         return (
                           (torrent.state !== 'Paused' && name === 'pause') ||
                           (torrent.state === 'Paused' && name === 'resume')
                         )
                       })
-                      .map(({ name, extra, icon }) => (
-                        <Tippy
-                          content={
-                            name === 'remove' && extra && extra.removeFiles
-                              ? `delete & clear`
-                              : name
-                          }
-                          theme="light"
-                          key={`${name}-${!!extra}`}
-                        >
-                          <span onClick={() => onClickAction(name, extra)}>{icon}</span>
+                      .map(({ name, extra, icon, tip, danger }) => (
+                        <Tippy content={tip} theme="light" key={`${name}-${!!extra}`}>
+                          <ActionButton
+                            $danger={danger}
+                            onClick={() => onClickAction(name, extra)}
+                          >
+                            {icon}
+                          </ActionButton>
                         </Tippy>
                       ))}
                   </Actions>
                 )
               }
 
-              const value = fn(get(torrent, name))
+              const value = (col.fn || (x => x))(get(torrent, col.key))
+              const isName = col.key === 'name'
+              const isNumeric = col.key !== 'name'
 
               return (
-                <span style={{ width }} title={value} key={name}>
+                <Cell
+                  key={col.key}
+                  $mono={isNumeric}
+                  $primary={isName}
+                  title={typeof value === 'string' ? value : undefined}
+                >
                   {value}
-                </span>
+                </Cell>
               )
             })}
-        </Item>
-      ))}
+          </Row>
+        )
+      })}
     </div>
   )
 }
