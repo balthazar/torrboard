@@ -34,8 +34,13 @@ export default styled.div`
     p.$interactive
       ? `
     cursor: pointer;
+    /* Promote to its own GPU layer so the background image is rasterized
+       once and the hover translate doesn't re-snap sub-pixel offsets,
+       which made off-aspect posters (the 380x562 OMDB crops) jitter. */
+    will-change: transform;
+    transform: translateZ(0);
     &:hover {
-      transform: translateY(-3px);
+      transform: translate3d(0, -3px, 0);
       border-color: ${p.theme.colors.borderHover};
       box-shadow: ${p.theme.shadows.md};
     }
