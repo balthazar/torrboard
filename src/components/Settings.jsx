@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import styled from 'styled-components'
-import { MdAdd, MdClose, MdMail, MdPerson, MdEvent } from 'react-icons/md'
+import { MdAdd, MdClose, MdMail, MdPerson, MdEvent, MdDelete, MdCheck } from 'react-icons/md'
+import Tippy from '@tippyjs/react'
 import { useToasts } from './toasts'
 import get from 'lodash/get'
 import differenceInMinutes from 'date-fns/differenceInMinutes'
@@ -133,8 +134,32 @@ const UserMeta = styled.span`
   text-transform: uppercase;
 `
 
-const StatusPill = styled.span`
+const UserActions = styled.div`
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: ${p => p.theme.spacing[2]};
+`
+
+const IconButton = styled.button`
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: ${p => p.theme.radii.full};
+  color: ${p => p.theme.colors.textMuted};
+  cursor: pointer;
+  transition: background-color ${p => p.theme.motion.fast},
+    color ${p => p.theme.motion.fast};
+
+  &:hover {
+    background-color: ${p => p.theme.colors.surfaceActive};
+    color: ${p => (p.$danger ? p.theme.colors.error : p.theme.colors.text)};
+  }
+`
+
+const StatusPill = styled.span`
   padding: 3px 10px;
   border-radius: ${p => p.theme.radii.full};
   font-size: ${p => p.theme.font.size.xs};
@@ -203,14 +228,8 @@ const lastActivityLabel = user => {
   if (user.lastWatchedAt) {
     return `Watched ${formatAgo(user.lastWatchedAt)}`
   }
-  const lastSeenDate = (user.ips || [])
-    .map(ip => ip.lastSeen)
-    .filter(Boolean)
-    .map(v => new Date(v).getTime())
-    .filter(v => !Number.isNaN(v))
-    .sort((a, b) => b - a)[0]
-  if (lastSeenDate) {
-    return `Seen ${formatAgo(new Date(lastSeenDate))}`
+  if (user.lastSeenAt) {
+    return `Seen ${formatAgo(user.lastSeenAt)}`
   }
   return null
 }
@@ -238,10 +257,7 @@ const GET_USERS = gql`
       inviteCode
       watched
       lastWatchedAt
-      ips {
-        value
-        lastSeen
-      }
+      lastSeenAt
     }
   }
 `
@@ -258,11 +274,18 @@ const CREATE_USER = gql`
   }
 `
 
+const DELETE_USER = gql`
+  mutation deleteUser($name: String!) {
+    deleteUser(name: $name)
+  }
+`
+
 export default () => {
   const [text, setText] = useState('')
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [expires, setExpires] = useState(null)
+  const [confirmDelete, setConfirmDelete] = useState(null)
   const { addToast } = useToasts()
 
   const { loading: loadingUsers, data: usersData } = useQuery(GET_USERS)
@@ -278,6 +301,11 @@ export default () => {
         data: { config: { autoGrabs: data.setAutoGrabs, __typename: 'Config' } },
       })
     },
+  })
+
+  const [deleteUserMut] = useMutation(DELETE_USER, {
+    refetchQueries: [{ query: GET_USERS }],
+    onCompleted: () => addToast('User deleted.', { appearance: 'success' }),
   })
 
   const [createUserMut] = useMutation(
@@ -357,15 +385,44 @@ export default () => {
             {!users.length && <Empty>No users to display.</Empty>}
             {users.map(user => {
               const activity = lastActivityLabel(user)
+              const isConfirming = confirmDelete === user.name
               return (
                 <UserCard key={user.name}>
                   <UserName>{user.name}</UserName>
                   <UserEmail>{user.email}</UserEmail>
                   <UserMeta>{user.watched.length} watches</UserMeta>
                   {activity && <Activity>{activity}</Activity>}
-                  <StatusPill $active={!user.inviteCode}>
-                    {user.inviteCode ? 'Inactive' : 'Active'}
-                  </StatusPill>
+                  <UserActions>
+                    <StatusPill $active={!user.inviteCode}>
+                      {user.inviteCode ? 'Inactive' : 'Active'}
+                    </StatusPill>
+                    {isConfirming ? (
+                      <>
+                        <Tippy content="Cancel">
+                          <IconButton onClick={() => setConfirmDelete(null)}>
+                            <MdClose size={18} />
+                          </IconButton>
+                        </Tippy>
+                        <Tippy content="Confirm delete">
+                          <IconButton
+                            $danger
+                            onClick={() => {
+                              deleteUserMut({ variables: { name: user.name } })
+                              setConfirmDelete(null)
+                            }}
+                          >
+                            <MdCheck size={18} />
+                          </IconButton>
+                        </Tippy>
+                      </>
+                    ) : (
+                      <Tippy content="Delete user">
+                        <IconButton $danger onClick={() => setConfirmDelete(user.name)}>
+                          <MdDelete size={18} />
+                        </IconButton>
+                      </Tippy>
+                    )}
+                  </UserActions>
                 </UserCard>
               )
             })}

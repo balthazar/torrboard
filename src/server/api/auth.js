@@ -149,6 +149,18 @@ const getUsers = async name => {
   return reduced
 }
 
+const bumpSeen = async name => {
+  if (!name) return
+  const key = `seen:${name}`
+  if (cache.get(key)) return
+  cache.put(key, 1, 60e3)
+  try {
+    await User.updateOne({ name }, { $set: { lastSeenAt: new Date() } })
+  } catch (err) {
+    // best-effort, ignore
+  }
+}
+
 const context = async ({ req }) => {
   try {
     const token = req.headers.authorization || ''
@@ -161,6 +173,8 @@ const context = async ({ req }) => {
     if (!user.name) {
       throw new Error('Unknown or expired user.')
     }
+
+    bumpSeen(name).catch(() => {})
 
     return { user }
   } catch (e) {

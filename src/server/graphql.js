@@ -114,6 +114,7 @@ const typeDefs = gql`
     ips: [IPItem]
     watched: [String]
     lastWatchedAt: String
+    lastSeenAt: String
   }
 
   type Playback {
@@ -131,6 +132,7 @@ const typeDefs = gql`
     setWatched(path: String, value: Boolean): [String] @auth
 
     createUser(name: String!, email: String!, expires: String!): Boolean @hasRole(role: "master")
+    deleteUser(name: String!): Boolean @hasRole(role: "master")
     setAutoGrabs(autoGrabs: [String]): [String] @hasRole(role: "master")
     setImdb(oldId: String, torrentIds: [String], newId: String!): Boolean @hasRole(role: "master")
     download(link: String!): Boolean @hasRole(role: "master")
@@ -297,6 +299,13 @@ const resolvers = {
       await u.save()
 
       return watched
+    },
+
+    deleteUser: async (parent, { name }) => {
+      if (name === 'master') return false
+      await User.deleteOne({ name })
+      cache.del('users')
+      return true
     },
 
     // Auth
