@@ -208,7 +208,7 @@ const resolvers = {
     },
 
     rss,
-    users: () => User.find(),
+    users: () => User.find().lean(),
     getYtID: async (parent, { query }) => {
       // YouTube Data API search costs 100 quota units per call and the
       // default project quota is 10k/day. Same title resolves to the same
