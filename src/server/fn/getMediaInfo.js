@@ -139,21 +139,27 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
     let payload
 
     if (newId) {
-      const res = await omdb({ i: newId })
-      if (res.body.Response === 'True') {
-        imdbID = res.body.imdbID
-        payload = payloadFromOmdb(res.body)
-      } else if (tmdb.hasKey()) {
+      // Manual override path: OMDB/TMDB failures here must not abort the
+      // write. got throws on 401/5xx (bad key, quota, transient outage),
+      // which previously sent us into the outer catch and silently dropped
+      // the user's choice. Localize the OMDB error so we can still try
+      // TMDB and fall back to a bare write.
+      try {
+        const res = await omdb({ i: newId })
+        if (res.body.Response === 'True') {
+          imdbID = res.body.imdbID
+          payload = payloadFromOmdb(res.body)
+        }
+      } catch (err) {
+        logErr('getMediaInfo:omdb-newId', err)
+      }
+      if (!imdbID && tmdb.hasKey()) {
         const t = await tmdb.findByImdb(newId)
         if (t) {
           imdbID = t.imdbID
           payload = t.payload
         }
       }
-      // Manual override: when neither source has indexed this ID yet,
-      // still persist the user's choice with no payload so the torrent
-      // gets regrouped. healPosters/refreshMediaInfo will fill metadata
-      // in once OMDB/TMDB catch up.
       if (!imdbID) {
         imdbID = newId
         payload = {}

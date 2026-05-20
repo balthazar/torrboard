@@ -23,6 +23,7 @@ import { useStore } from '../state'
 import MediaCard, { CARD_WIDTH, CARD_HEIGHT } from './MediaCard'
 import VideoDisplay from './VideoDisplay'
 import Button from './Button'
+import { useToasts } from './toasts'
 
 // Match the poster's height (CARD_HEIGHT = 300) at a 16:9 aspect so the
 // trailer slot and poster line up at the same row height in the hero.
@@ -454,12 +455,22 @@ export default ({ item, watched, onClose }) => {
     },
   })
 
+  const { addToast } = useToasts()
   const [setImdb] = useMutation(SET_IMDB)
-  const doChangeImdb = () => {
-    setImdb({
-      variables: { torrentIds: item.ids, newId, oldId: get(item, 'mediaInfo.imdbID') },
-    })
-    setNewId('')
+  const doChangeImdb = async () => {
+    try {
+      const { data } = await setImdb({
+        variables: { torrentIds: item.ids, newId, oldId: get(item, 'mediaInfo.imdbID') },
+      })
+      if (data && data.setImdb) {
+        addToast('IMDB updated', { appearance: 'success' })
+        setNewId('')
+      } else {
+        addToast('IMDB update failed', { appearance: 'error' })
+      }
+    } catch (err) {
+      addToast(`IMDB update failed: ${err.message}`, { appearance: 'error' })
+    }
   }
 
   const [cast] = useMutation(CAST)
