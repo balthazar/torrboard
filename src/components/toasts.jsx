@@ -28,7 +28,11 @@ const renderToast = (appearance, message) =>
 export const ToastProvider = ({ children }) => (
   <>
     {children}
-    <Toaster position="bottom-right" />
+    <Toaster
+      position="bottom-right"
+      gutter={8}
+      containerStyle={{ bottom: 24, right: 24 }}
+    />
   </>
 )
 
