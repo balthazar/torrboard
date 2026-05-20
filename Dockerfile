@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 COPY src/ ./src/
 
@@ -20,7 +20,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 ENV NODE_ENV=production
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --legacy-peer-deps
 
 COPY --from=builder /app/dist ./dist
 COPY src/ ./src/
