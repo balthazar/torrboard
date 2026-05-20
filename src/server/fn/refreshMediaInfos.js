@@ -4,6 +4,18 @@ const { getDeluge } = require('./deluge')
 const Config = require('../models/Config')
 const getMediaInfo = require('./getMediaInfo')
 
+// Per-tick cap on OMDB requests so a backlog can't blow through the free
+// 1000/day quota in one go. Sized to comfortably fit the 2-minute schedule.
+const BATCH_LIMIT = 8
+// Pause between sequential requests so we never burst-flood OMDB.
+const REQUEST_DELAY_MS = 500
+// After this many failed attempts, give up on a torrent so it stops being
+// retried every 2 minutes forever.
+const MAX_ATTEMPTS = 3
+// If this many in a row fail, bail the tick early. Almost always a 401 from
+// OMDB's daily quota; no point continuing to hammer it.
+const CONSECUTIVE_FAILURE_BAIL = 3
+
 const cleanTitle = raw =>
   raw
     // Drop SxxExx / Sxx / "Season N" / "Part N" and anything after.
@@ -19,43 +31,80 @@ const cleanTitle = raw =>
     .replace(/ \[$/, '')
     .trim()
 
+// Heuristics for torrents that clearly aren't movies or series so we never
+// waste an OMDB call on them. Catches the Adobe installers, .apk/.7z apps,
+// and known game piracy group releases that show up in mixed feeds.
+const NON_MEDIA_PATTERNS = [
+  /\b(apk|exe|msi|dmg|iso|pkg|deb|rpm|7z)\b/i,
+  /\b(Adobe|Autodesk|AutoCAD|JetBrains|Affinity|Photoshop|Illustrator|InDesign|Lightroom|Premiere\s*Pro|After\s*Effects|WinRAR|MS\s*Office|Office\s*365)\b/i,
+  /\b(DODI|FitGirl|CODEX|EMPRESS|SKIDROW|Razor1911|RELOADED|PLAZA|CPY|RUNE|HOODLUM|TENOKE|GOG)\b/i,
+]
+
+const isProbablyMedia = name => !NON_MEDIA_PATTERNS.some(re => re.test(name))
+
+const sleep = ms => new Promise(r => setTimeout(r, ms))
+
 module.exports = async () => {
   const { torrents } = await getDeluge()
-  const { fetchedMedias } = await Config.findOne()
+  const config = (await Config.findOne()) || {}
+  const fetchedMedias = config.fetchedMedias || {}
 
-  const mediasToFetch = torrents.reduce((acc, torrent) => {
-    const meta = ptn(torrent.name)
-    if (!meta.title) {
-      return acc
+  const candidates = []
+  const toSkip = []
+
+  for (const torrent of torrents) {
+    const status = fetchedMedias[torrent.id]
+    // true = previously succeeded, 'skip' = filtered as non-media,
+    // number >= MAX_ATTEMPTS = gave up. All terminal.
+    if (status === true || status === 'skip') continue
+    if (typeof status === 'number' && status >= MAX_ATTEMPTS) continue
+
+    if (!isProbablyMedia(torrent.name)) {
+      toSkip.push(torrent.id)
+      continue
     }
+
+    const meta = ptn(torrent.name)
+    if (!meta.title) continue
 
     const title = cleanTitle(meta.title)
-    if (!title || fetchedMedias[torrent.id]) {
-      return acc
-    }
+    if (!title) continue
 
-    if (!acc[torrent.id]) {
-      acc[torrent.id] = { title, year: meta.year }
-    }
+    const prevAttempts = typeof status === 'number' ? status : 0
+    candidates.push({ id: torrent.id, title, year: meta.year, attempt: prevAttempts + 1 })
+  }
 
-    return acc
-  }, {})
-
-  const ids = Object.keys(mediasToFetch)
-  const results = await Promise.all(ids.map(id => getMediaInfo(id, mediasToFetch[id])))
-
-  // Only mark torrents as fetched when OMDB actually resolved them. Failures
-  // (no match, rate limit, network) stay pending so the next tick retries.
-  const succeeded = ids.filter((_, i) => results[i])
-  if (succeeded.length) {
+  if (toSkip.length) {
     await Config.updateOne(
       {},
       {
-        $set: succeeded.reduce((acc, key) => {
-          acc[`fetchedMedias.${key}`] = true
+        $set: toSkip.reduce((acc, key) => {
+          acc[`fetchedMedias.${key}`] = 'skip'
           return acc
         }, {}),
       },
     )
+  }
+
+  const batch = candidates.slice(0, BATCH_LIMIT)
+  const updates = {}
+  let consecutiveFailures = 0
+
+  for (const item of batch) {
+    const ok = await getMediaInfo(item.id, { title: item.title, year: item.year })
+    if (ok) {
+      updates[`fetchedMedias.${item.id}`] = true
+      consecutiveFailures = 0
+    } else {
+      // Record the attempt count so we eventually stop trying.
+      updates[`fetchedMedias.${item.id}`] = item.attempt
+      consecutiveFailures++
+      if (consecutiveFailures >= CONSECUTIVE_FAILURE_BAIL) break
+    }
+    await sleep(REQUEST_DELAY_MS)
+  }
+
+  if (Object.keys(updates).length) {
+    await Config.updateOne({}, { $set: updates })
   }
 }
