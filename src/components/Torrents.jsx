@@ -78,7 +78,7 @@ const nonneg = v => Math.max(0, Number(v) || 0)
 
 const columns = [
   { key: 'name', label: 'Name', size: 'minmax(0, 1fr)', mono: false },
-  { key: 'total_size', label: 'Size', size: '80px', fn: convertBytes },
+  { key: 'total_size', label: 'Size', size: '80px', mobileSize: '60px', fn: convertBytes },
   { key: 'ratio', label: 'Ratio', size: '60px', fn: ratioFmt, mobileHide: true },
   {
     key: 'download_payload_rate',
@@ -95,16 +95,16 @@ const columns = [
     mobileHide: true,
   },
   { key: 'progress', label: '%', size: '50px', fn: percentFmt, mobileHide: true },
-  { key: 'eta', label: 'ETA', size: '70px', fn: etaFmt },
+  { key: 'eta', label: 'ETA', size: '70px', fn: etaFmt, mobileHide: true },
   { key: 'total_peers', label: 'Peers', size: '50px', fn: nonneg, mobileHide: true },
   { key: 'total_seeds', label: 'Seeds', size: '50px', fn: nonneg, mobileHide: true },
-  { key: 'actions', label: '', size: '160px' },
+  { key: 'actions', label: '', size: '160px', mobileSize: '110px' },
 ]
 
 const gridTemplate = columns.map(c => c.size).join(' ')
 const mobileGridTemplate = columns
   .filter(c => !c.mobileHide)
-  .map(c => c.size)
+  .map(c => c.mobileSize || c.size)
   .join(' ')
 
 const Heading = styled.div`
@@ -122,7 +122,7 @@ const Heading = styled.div`
 
   ${p => p.theme.media.mobile} {
     grid-template-columns: ${mobileGridTemplate};
-    gap: ${p => p.theme.spacing[3]};
+    gap: ${p => p.theme.spacing[2]};
     padding: ${p => p.theme.spacing[2]} ${p => p.theme.spacing[3]};
 
     > [data-mobile-hide] {
@@ -187,7 +187,7 @@ const Row = styled.div`
 
   ${p => p.theme.media.mobile} {
     grid-template-columns: ${mobileGridTemplate};
-    gap: ${p => p.theme.spacing[3]};
+    gap: ${p => p.theme.spacing[2]};
     padding: ${p => p.theme.spacing[2]} ${p => p.theme.spacing[3]};
 
     > [data-mobile-hide] {
@@ -215,6 +215,10 @@ const Actions = styled.span`
   gap: ${p => p.theme.spacing[1]};
   position: relative;
   z-index: 1;
+
+  ${p => p.theme.media.mobile} {
+    gap: 2px;
+  }
 `
 
 const ActionButton = styled.span`
@@ -245,6 +249,10 @@ const ConfirmActions = styled.span`
   font-size: ${p => p.theme.font.size.xs};
   text-transform: uppercase;
   color: ${p => p.theme.colors.textMuted};
+
+  ${p => p.theme.media.mobile} {
+    gap: 2px;
+  }
 `
 
 const ConfirmText = styled.span`
@@ -321,6 +329,10 @@ export default () => {
 
   return (
     <div>
+      <div style={{ marginBottom: 16 }}>
+        <SearchInput onChange={e => setQuery(e.target.value)} />
+      </div>
+
       <SortBar>
         <SortLabel>Sort by</SortLabel>
         <SortPills>
@@ -338,10 +350,6 @@ export default () => {
           </FilterValue>
         </SortPills>
       </SortBar>
-
-      <div style={{ marginBottom: 16 }}>
-        <SearchInput onChange={e => setQuery(e.target.value)} />
-      </div>
 
       <Heading>
         {columns.map(col => (
