@@ -57,7 +57,8 @@ const ControlBar = styled.div`
   margin: ${p => p.theme.spacing[3]} 0;
 
   ${p => p.theme.media.mobile} {
-    gap: ${p => p.theme.spacing[3]};
+    gap: ${p => p.theme.spacing[2]};
+    margin: ${p => p.theme.spacing[2]} 0;
   }
 `
 
@@ -65,6 +66,12 @@ const ControlGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${p => p.theme.spacing[2]};
+
+  ${p => p.theme.media.mobile} {
+    flex-basis: 100%;
+    min-width: 0;
+    gap: 0;
+  }
 `
 
 const ControlLabel = styled.span`
@@ -73,12 +80,32 @@ const ControlLabel = styled.span`
   letter-spacing: ${p => p.theme.font.tracking.wider};
   text-transform: uppercase;
   color: ${p => p.theme.colors.textSubtle};
+
+  ${p => p.theme.media.mobile} {
+    display: none;
+  }
 `
 
 const ControlPills = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: ${p => p.theme.spacing[2]};
+
+  ${p => p.theme.media.mobile} {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 2px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    > * {
+      flex-shrink: 0;
+    }
+  }
 `
 
 const SearchSlot = styled.div`
