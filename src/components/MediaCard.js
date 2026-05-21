@@ -1,8 +1,7 @@
 import styled from 'styled-components'
-import { isMobile } from 'react-device-detect'
 
-export const CARD_HEIGHT = isMobile ? 135 : 300
-export const CARD_WIDTH = isMobile ? 90 : 200
+export const CARD_HEIGHT = 300
+export const CARD_WIDTH = 200
 
 export default styled.div`
   position: relative;
@@ -22,8 +21,6 @@ export default styled.div`
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  /* Clip the cover to padding-box so a translucent border doesn't blend with
-     the poster image; let the surface color fill the border-box behind it. */
   background-clip: padding-box, border-box;
   border: 1px solid ${p => p.theme.colors.border};
   transition: transform ${p => p.theme.motion.base},
@@ -34,9 +31,6 @@ export default styled.div`
     p.$interactive
       ? `
     cursor: pointer;
-    /* Promote to its own GPU layer so the background image is rasterized
-       once and the hover translate doesn't re-snap sub-pixel offsets,
-       which made off-aspect posters (the 380x562 OMDB crops) jitter. */
     will-change: transform;
     transform: translateZ(0);
     &:hover {

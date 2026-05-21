@@ -36,7 +36,6 @@
     "parse-torrent-name": "^0.5.4",
     "randomstring": "^1.1.5",
     "react": "^19.2.6",
-    "react-copy-to-clipboard": "^5.0.2",
     "react-device-detect": "^2.2.3",
     "react-dom": "^19.2.6",
     "react-hot-toast": "^2.6.0",
