@@ -264,12 +264,10 @@ const formatAgo = date => {
 }
 
 const lastActivityLabel = user => {
-  if (user.lastWatchedAt) {
-    return `Watched ${formatAgo(user.lastWatchedAt)}`
-  }
-  if (user.lastSeenAt) {
-    return `Seen ${formatAgo(user.lastSeenAt)}`
-  }
+  const watchedAgo = formatAgo(user.lastWatchedAt)
+  if (watchedAgo) return `Watched ${watchedAgo}`
+  const seenAgo = formatAgo(user.lastSeenAt)
+  if (seenAgo) return `Seen ${seenAgo}`
   return null
 }
 
