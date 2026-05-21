@@ -276,14 +276,6 @@ const SortBar = styled.div`
   margin-bottom: ${p => p.theme.spacing[3]};
 `
 
-const SortLabel = styled.span`
-  font-size: ${p => p.theme.font.size.xs};
-  font-weight: ${p => p.theme.font.weight.semibold};
-  letter-spacing: ${p => p.theme.font.tracking.wider};
-  text-transform: uppercase;
-  color: ${p => p.theme.colors.textSubtle};
-`
-
 const SortPills = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -334,7 +326,6 @@ export default () => {
       </div>
 
       <SortBar>
-        <SortLabel>Sort by</SortLabel>
         <SortPills>
           <FilterValue $active={sortBy === 'time'} onClick={() => setSort('time')}>
             <MdSchedule size={13} />

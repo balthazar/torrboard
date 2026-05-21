@@ -58,7 +58,7 @@ const ControlBar = styled.div`
 
   ${p => p.theme.media.mobile} {
     gap: ${p => p.theme.spacing[4]};
-    margin: ${p => p.theme.spacing[3]} 0;
+    margin: 0 0 ${p => p.theme.spacing[3]} 0;
   }
 `
 
@@ -68,8 +68,6 @@ const ControlGroup = styled.div`
   gap: ${p => p.theme.spacing[2]};
 
   ${p => p.theme.media.mobile} {
-    flex-basis: 100%;
-    min-width: 0;
     gap: 0;
   }
 `
@@ -93,7 +91,21 @@ const ControlPills = styled.div`
 
   ${p => p.theme.media.mobile} {
     flex-wrap: nowrap;
+
+    > * {
+      flex-shrink: 0;
+    }
+  }
+`
+
+const ControlsRow = styled.div`
+  display: contents;
+
+  ${p => p.theme.media.mobile} {
+    display: flex;
+    flex-wrap: nowrap;
     overflow-x: auto;
+    gap: ${p => p.theme.spacing[4]};
     scrollbar-width: none;
     -ms-overflow-style: none;
     padding-bottom: 2px;
@@ -440,36 +452,38 @@ export default () => {
   return (
     <div>
       <ControlBar>
-        <ControlGroup>
-          <ControlLabel>Sort by</ControlLabel>
-          <ControlPills>
-            {SORT_OPTIONS.map(({ value, label, icon }) => (
-              <FilterValue $active={sortBy === value} key={value} onClick={() => setSort(value)}>
-                {icon}
-                {label}
-              </FilterValue>
-            ))}
-          </ControlPills>
-        </ControlGroup>
-
-        <ControlGroup>
-          <ControlLabel>Genre</ControlLabel>
-          <ControlPills>
-            {['action', 'animation', 'sci-fi', 'drama', 'horror'].map(value => (
-              <FilterValue
-                $active={category === value}
-                key={value}
-                onClick={() => setCategory(category === value ? null : value)}
-              >
-                {value}
-              </FilterValue>
-            ))}
-          </ControlPills>
-        </ControlGroup>
-
         <SearchSlot>
           <SearchInput inputRef={searchRef} onChange={e => setQuery(e.target.value)} />
         </SearchSlot>
+
+        <ControlsRow>
+          <ControlGroup>
+            <ControlLabel>Sort by</ControlLabel>
+            <ControlPills>
+              {SORT_OPTIONS.map(({ value, label, icon }) => (
+                <FilterValue $active={sortBy === value} key={value} onClick={() => setSort(value)}>
+                  {icon}
+                  {label}
+                </FilterValue>
+              ))}
+            </ControlPills>
+          </ControlGroup>
+
+          <ControlGroup>
+            <ControlLabel>Genre</ControlLabel>
+            <ControlPills>
+              {['action', 'animation', 'sci-fi', 'drama', 'horror'].map(value => (
+                <FilterValue
+                  $active={category === value}
+                  key={value}
+                  onClick={() => setCategory(category === value ? null : value)}
+                >
+                  {value}
+                </FilterValue>
+              ))}
+            </ControlPills>
+          </ControlGroup>
+        </ControlsRow>
       </ControlBar>
 
       <Meta>
