@@ -12,7 +12,6 @@ import {
 import { MdCancel } from 'react-icons/md'
 import { FiDelete, FiTrash2 } from 'react-icons/fi'
 import Tippy from '@tippyjs/react'
-import { isMobile } from 'react-device-detect'
 
 import SearchInput from './SearchInput'
 import Placeloader from './Placeloader'
@@ -78,31 +77,30 @@ const nonneg = v => Math.max(0, Number(v) || 0)
 
 const columns = [
   { key: 'name', label: 'Name', size: 'minmax(0, 1fr)', mono: false },
-  { key: 'total_size', label: 'Size', size: '80px', fn: convertBytes, hide: isMobile },
-  { key: 'ratio', label: 'Ratio', size: '60px', fn: ratioFmt, hide: isMobile },
+  { key: 'total_size', label: 'Size', size: '80px', fn: convertBytes },
+  { key: 'ratio', label: 'Ratio', size: '60px', fn: ratioFmt },
   {
     key: 'download_payload_rate',
     label: <IoIosArrowRoundDown size={16} />,
+    mobileLabel: 'Down',
     size: '90px',
     fn: ratesFmt,
-    hide: isMobile,
   },
   {
     key: 'upload_payload_rate',
     label: <IoIosArrowRoundUp size={16} />,
+    mobileLabel: 'Up',
     size: '90px',
     fn: ratesFmt,
-    hide: isMobile,
   },
-  { key: 'progress', label: '%', size: '50px', fn: percentFmt, hide: isMobile },
+  { key: 'progress', label: '%', size: '50px', fn: percentFmt },
   { key: 'eta', label: 'ETA', size: '70px', fn: etaFmt },
-  { key: 'total_peers', label: 'Peers', size: '50px', fn: nonneg, hide: isMobile },
-  { key: 'total_seeds', label: 'Seeds', size: '50px', fn: nonneg, hide: isMobile },
+  { key: 'total_peers', label: 'Peers', size: '50px', fn: nonneg },
+  { key: 'total_seeds', label: 'Seeds', size: '50px', fn: nonneg },
   { key: 'actions', label: '', size: '160px' },
 ]
 
-const visibleColumns = columns.filter(c => !c.hide)
-const gridTemplate = visibleColumns.map(c => c.size).join(' ')
+const gridTemplate = columns.map(c => c.size).join(' ')
 
 const Heading = styled.div`
   display: grid;
@@ -116,6 +114,10 @@ const Heading = styled.div`
   text-transform: uppercase;
   color: ${p => p.theme.colors.textSubtle};
   border-bottom: 1px solid ${p => p.theme.colors.border};
+
+  ${p => p.theme.media.mobile} {
+    display: none;
+  }
 `
 
 const HeadingCell = styled.span`
@@ -171,6 +173,14 @@ const Row = styled.div`
     pointer-events: none;
     transition: width ${p => p.theme.motion.slow};
   }
+
+  ${p => p.theme.media.mobile} {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: ${p => p.theme.spacing[1]};
+    padding: ${p => p.theme.spacing[3]} ${p => p.theme.spacing[4]};
+  }
 `
 
 const Cell = styled.span`
@@ -184,6 +194,37 @@ const Cell = styled.span`
   z-index: 1;
   font-family: ${p => (p.$mono ? p.theme.font.mono : 'inherit')};
   color: ${p => (p.$primary ? p.theme.colors.text : p.theme.colors.textMuted)};
+
+  ${p => p.theme.media.mobile} {
+    justify-content: space-between;
+    white-space: normal;
+    overflow: visible;
+
+    &::before {
+      content: attr(data-label);
+      font-size: ${p => p.theme.font.size.xs};
+      letter-spacing: ${p => p.theme.font.tracking.wider};
+      text-transform: uppercase;
+      color: ${p => p.theme.colors.textSubtle};
+      margin-right: ${p => p.theme.spacing[2]};
+    }
+
+    &[data-label=""]::before,
+    &[data-label="Name"]::before {
+      display: none;
+    }
+
+    ${p =>
+      p.$primary
+        ? `
+      font-size: ${p.theme.font.size.md};
+      font-weight: ${p.theme.font.weight.medium};
+      padding-bottom: ${p.theme.spacing[1]};
+      border-bottom: 1px solid ${p.theme.colors.border};
+      margin-bottom: ${p.theme.spacing[1]};
+    `
+        : ''}
+  }
 `
 
 const Actions = styled.span`
@@ -277,7 +318,7 @@ export default () => {
       </div>
 
       <Heading>
-        {visibleColumns.map(col => (
+        {columns.map(col => (
           <HeadingCell key={col.key}>{col.label}</HeadingCell>
         ))}
       </Heading>
@@ -343,7 +384,7 @@ export default () => {
 
         return (
           <Row key={torrentId} $state={torrent.state} $progress={torrent.progress || 0}>
-            {visibleColumns.map(col => {
+            {columns.map(col => {
               if (col.key === 'actions') {
                 return isConfirming ? (
                   <ConfirmActions key="actions">
@@ -396,6 +437,7 @@ export default () => {
                   key={col.key}
                   $mono={isNumeric}
                   $primary={isName}
+                  data-label={typeof col.label === 'string' ? col.label : col.mobileLabel || ''}
                   title={typeof value === 'string' ? value : undefined}
                 >
                   {value}
