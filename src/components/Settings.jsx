@@ -115,9 +115,33 @@ const UserCard = styled.div`
   min-width: 0;
 
   ${p => p.theme.media.mobile} {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
     gap: ${p => p.theme.spacing[2]};
     padding: ${p => p.theme.spacing[3]};
+  }
+`
+
+const TopRow = styled.div`
+  display: contents;
+
+  ${p => p.theme.media.mobile} {
+    display: flex;
+    align-items: center;
+    gap: ${p => p.theme.spacing[3]};
+    min-width: 0;
+    width: 100%;
+  }
+`
+
+const BottomRow = styled.div`
+  display: contents;
+
+  ${p => p.theme.media.mobile} {
+    display: flex;
+    align-items: center;
+    gap: ${p => p.theme.spacing[2]};
+    width: 100%;
   }
 `
 
@@ -150,10 +174,6 @@ const UserActions = styled.div`
   display: flex;
   align-items: center;
   gap: ${p => p.theme.spacing[2]};
-
-  ${p => p.theme.media.mobile} {
-    margin-left: 0;
-  }
 `
 
 const IconButton = styled.button`
@@ -407,46 +427,50 @@ export default () => {
               const isConfirming = confirmDelete === user.name
               return (
                 <UserCard key={user.name}>
-                  <UserName>{user.name}</UserName>
-                  <UserEmail>{user.email}</UserEmail>
-                  <UserMeta>{user.watched.length} watches</UserMeta>
-                  {activity && <Activity>{activity}</Activity>}
-                  <UserActions>
-                    <StatusPill $active={!user.inviteCode}>
-                      {user.inviteCode ? 'Inactive' : 'Active'}
-                    </StatusPill>
-                    {isConfirming ? (
-                      <>
+                  <TopRow>
+                    <UserName>{user.name}</UserName>
+                    <UserEmail>{user.email}</UserEmail>
+                  </TopRow>
+                  <BottomRow>
+                    <UserMeta>{user.watched.length} watches</UserMeta>
+                    {activity && <Activity>{activity}</Activity>}
+                    <UserActions>
+                      <StatusPill $active={!user.inviteCode}>
+                        {user.inviteCode ? 'Inactive' : 'Active'}
+                      </StatusPill>
+                      {isConfirming ? (
+                        <>
+                          <IconButton
+                            type="button"
+                            title="Cancel"
+                            onClick={() => setConfirmDelete(null)}
+                          >
+                            <MdClose size={18} />
+                          </IconButton>
+                          <IconButton
+                            type="button"
+                            title="Confirm delete"
+                            $danger
+                            onClick={() => {
+                              deleteUserMut({ variables: { name: user.name } })
+                              setConfirmDelete(null)
+                            }}
+                          >
+                            <MdCheck size={18} />
+                          </IconButton>
+                        </>
+                      ) : (
                         <IconButton
                           type="button"
-                          title="Cancel"
-                          onClick={() => setConfirmDelete(null)}
-                        >
-                          <MdClose size={18} />
-                        </IconButton>
-                        <IconButton
-                          type="button"
-                          title="Confirm delete"
+                          title="Delete user"
                           $danger
-                          onClick={() => {
-                            deleteUserMut({ variables: { name: user.name } })
-                            setConfirmDelete(null)
-                          }}
+                          onClick={() => setConfirmDelete(user.name)}
                         >
-                          <MdCheck size={18} />
+                          <MdDelete size={18} />
                         </IconButton>
-                      </>
-                    ) : (
-                      <IconButton
-                        type="button"
-                        title="Delete user"
-                        $danger
-                        onClick={() => setConfirmDelete(user.name)}
-                      >
-                        <MdDelete size={18} />
-                      </IconButton>
-                    )}
-                  </UserActions>
+                      )}
+                    </UserActions>
+                  </BottomRow>
                 </UserCard>
               )
             })}
