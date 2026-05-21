@@ -112,6 +112,13 @@ const UserCard = styled.div`
   border-radius: ${p => p.theme.radii.md};
   background-color: ${p => p.theme.colors.surface};
   border: 1px solid ${p => p.theme.colors.border};
+  min-width: 0;
+
+  ${p => p.theme.media.mobile} {
+    flex-wrap: wrap;
+    gap: ${p => p.theme.spacing[2]};
+    padding: ${p => p.theme.spacing[3]};
+  }
 `
 
 const UserName = styled.span`
@@ -123,6 +130,11 @@ const UserEmail = styled.span`
   font-size: ${p => p.theme.font.size.sm};
   color: ${p => p.theme.colors.textMuted};
   font-family: ${p => p.theme.font.mono};
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `
 
 const UserMeta = styled.span`
@@ -138,6 +150,10 @@ const UserActions = styled.div`
   display: flex;
   align-items: center;
   gap: ${p => p.theme.spacing[2]};
+
+  ${p => p.theme.media.mobile} {
+    margin-left: 0;
+  }
 `
 
 const IconButton = styled.button`

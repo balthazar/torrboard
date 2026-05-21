@@ -52,15 +52,17 @@ const Body = styled.div`
   max-width: 900px;
   max-height: calc(100vh - ${p => p.theme.spacing[8]});
   overflow-y: auto;
+  overscroll-behavior: contain;
   animation: ${p => (p.$closing ? slideOut : slideIn)} ${ANIMATION_MS}ms ease forwards;
 
   ${p => p.theme.media.mobile} {
     margin-top: 0;
     padding: ${p => p.theme.spacing[3]};
     border-radius: 0;
-    min-height: 100vh;
-    max-height: none;
+    height: 100vh;
+    max-height: 100vh;
     max-width: none;
+    width: 100vw;
   }
 `
 
@@ -79,6 +81,15 @@ export default ({ isOpened, onClose, children }) => {
     const t = setTimeout(() => setMounted(false), ANIMATION_MS)
     return () => clearTimeout(t)
   }, [isOpened, mounted])
+
+  useEffect(() => {
+    if (!isOpened) return undefined
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [isOpened])
 
   useEffect(() => {
     if (!isOpened) return undefined
