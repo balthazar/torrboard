@@ -9,13 +9,14 @@ import {
   IoMdPlay,
   IoMdPause,
 } from 'react-icons/io'
-import { MdCancel } from 'react-icons/md'
+import { MdCancel, MdSchedule, MdSortByAlpha, MdStorage } from 'react-icons/md'
 import { FiDelete, FiTrash2 } from 'react-icons/fi'
 import Tippy from '@tippyjs/react'
 
 import SearchInput from './SearchInput'
 import Placeloader from './Placeloader'
 import convertBytes from '../fn/convertBytes'
+import { FilterValue } from './Filters'
 
 const GET_TORRENTS = gql`
   {
@@ -78,29 +79,33 @@ const nonneg = v => Math.max(0, Number(v) || 0)
 const columns = [
   { key: 'name', label: 'Name', size: 'minmax(0, 1fr)', mono: false },
   { key: 'total_size', label: 'Size', size: '80px', fn: convertBytes },
-  { key: 'ratio', label: 'Ratio', size: '60px', fn: ratioFmt },
+  { key: 'ratio', label: 'Ratio', size: '60px', fn: ratioFmt, mobileHide: true },
   {
     key: 'download_payload_rate',
     label: <IoIosArrowRoundDown size={16} />,
-    mobileLabel: 'Down',
     size: '90px',
     fn: ratesFmt,
+    mobileHide: true,
   },
   {
     key: 'upload_payload_rate',
     label: <IoIosArrowRoundUp size={16} />,
-    mobileLabel: 'Up',
     size: '90px',
     fn: ratesFmt,
+    mobileHide: true,
   },
-  { key: 'progress', label: '%', mobileLabel: 'Progress', size: '50px', fn: percentFmt },
+  { key: 'progress', label: '%', size: '50px', fn: percentFmt, mobileHide: true },
   { key: 'eta', label: 'ETA', size: '70px', fn: etaFmt },
-  { key: 'total_peers', label: 'Peers', size: '50px', fn: nonneg },
-  { key: 'total_seeds', label: 'Seeds', size: '50px', fn: nonneg },
+  { key: 'total_peers', label: 'Peers', size: '50px', fn: nonneg, mobileHide: true },
+  { key: 'total_seeds', label: 'Seeds', size: '50px', fn: nonneg, mobileHide: true },
   { key: 'actions', label: '', size: '160px' },
 ]
 
 const gridTemplate = columns.map(c => c.size).join(' ')
+const mobileGridTemplate = columns
+  .filter(c => !c.mobileHide)
+  .map(c => c.size)
+  .join(' ')
 
 const Heading = styled.div`
   display: grid;
@@ -116,7 +121,13 @@ const Heading = styled.div`
   border-bottom: 1px solid ${p => p.theme.colors.border};
 
   ${p => p.theme.media.mobile} {
-    display: none;
+    grid-template-columns: ${mobileGridTemplate};
+    gap: ${p => p.theme.spacing[3]};
+    padding: ${p => p.theme.spacing[2]} ${p => p.theme.spacing[3]};
+
+    > [data-mobile-hide] {
+      display: none;
+    }
   }
 `
 
@@ -175,11 +186,13 @@ const Row = styled.div`
   }
 
   ${p => p.theme.media.mobile} {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: ${p => p.theme.spacing[1]};
-    padding: ${p => p.theme.spacing[3]} ${p => p.theme.spacing[4]};
+    grid-template-columns: ${mobileGridTemplate};
+    gap: ${p => p.theme.spacing[3]};
+    padding: ${p => p.theme.spacing[2]} ${p => p.theme.spacing[3]};
+
+    > [data-mobile-hide] {
+      display: none;
+    }
   }
 `
 
@@ -194,37 +207,6 @@ const Cell = styled.span`
   z-index: 1;
   font-family: ${p => (p.$mono ? p.theme.font.mono : 'inherit')};
   color: ${p => (p.$primary ? p.theme.colors.text : p.theme.colors.textMuted)};
-
-  ${p => p.theme.media.mobile} {
-    justify-content: space-between;
-    white-space: normal;
-    overflow: visible;
-
-    &::before {
-      content: attr(data-label);
-      font-size: ${p => p.theme.font.size.xs};
-      letter-spacing: ${p => p.theme.font.tracking.wider};
-      text-transform: uppercase;
-      color: ${p => p.theme.colors.textSubtle};
-      margin-right: ${p => p.theme.spacing[2]};
-    }
-
-    &[data-label=""]::before,
-    &[data-label="Name"]::before {
-      display: none;
-    }
-
-    ${p =>
-      p.$primary
-        ? `
-      font-size: ${p.theme.font.size.md};
-      font-weight: ${p.theme.font.weight.medium};
-      padding-bottom: ${p.theme.spacing[1]};
-      border-bottom: 1px solid ${p.theme.colors.border};
-      margin-bottom: ${p.theme.spacing[1]};
-    `
-        : ''}
-  }
 `
 
 const Actions = styled.span`
@@ -279,6 +261,27 @@ const SkeletonRow = styled.div`
   padding: ${p => p.theme.spacing[2]} ${p => p.theme.spacing[4]};
 `
 
+const SortBar = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${p => p.theme.spacing[2]};
+  margin-bottom: ${p => p.theme.spacing[3]};
+`
+
+const SortLabel = styled.span`
+  font-size: ${p => p.theme.font.size.xs};
+  font-weight: ${p => p.theme.font.weight.semibold};
+  letter-spacing: ${p => p.theme.font.tracking.wider};
+  text-transform: uppercase;
+  color: ${p => p.theme.colors.textSubtle};
+`
+
+const SortPills = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${p => p.theme.spacing[2]};
+`
+
 const actionDefs = [
   { name: 'resume', icon: <IoMdPlay size={16} />, tip: 'Resume' },
   { name: 'pause', icon: <IoMdPause size={16} />, tip: 'Pause' },
@@ -294,6 +297,7 @@ const actionDefs = [
 
 export default () => {
   const [query, setQuery] = useState('')
+  const [sortBy, setSort] = useState('time')
   const [pendingConfirm, askConfirm] = useState({})
   const { loading, data } = useQuery(GET_TORRENTS, {
     pollInterval: 1e3,
@@ -309,17 +313,41 @@ export default () => {
         .replace(/\./g, ' ')
         .includes(query.toLowerCase()),
     )
-    .sort((a, b) => b.time_added - a.time_added)
+    .sort((a, b) => {
+      if (sortBy === 'size') return (b.total_size || 0) - (a.total_size || 0)
+      if (sortBy === 'alpha') return a.name.localeCompare(b.name)
+      return b.time_added - a.time_added
+    })
 
   return (
     <div>
+      <SortBar>
+        <SortLabel>Sort by</SortLabel>
+        <SortPills>
+          <FilterValue $active={sortBy === 'time'} onClick={() => setSort('time')}>
+            <MdSchedule size={13} />
+            recent
+          </FilterValue>
+          <FilterValue $active={sortBy === 'size'} onClick={() => setSort('size')}>
+            <MdStorage size={13} />
+            size
+          </FilterValue>
+          <FilterValue $active={sortBy === 'alpha'} onClick={() => setSort('alpha')}>
+            <MdSortByAlpha size={13} />
+            A-Z
+          </FilterValue>
+        </SortPills>
+      </SortBar>
+
       <div style={{ marginBottom: 16 }}>
         <SearchInput onChange={e => setQuery(e.target.value)} />
       </div>
 
       <Heading>
         {columns.map(col => (
-          <HeadingCell key={col.key}>{col.label}</HeadingCell>
+          <HeadingCell key={col.key} data-mobile-hide={col.mobileHide ? '' : undefined}>
+            {col.label}
+          </HeadingCell>
         ))}
       </Heading>
 
@@ -387,7 +415,7 @@ export default () => {
             {columns.map(col => {
               if (col.key === 'actions') {
                 return isConfirming ? (
-                  <ConfirmActions key="actions">
+                  <ConfirmActions key="actions" data-mobile-hide={col.mobileHide ? '' : undefined}>
                     <ConfirmText>Delete?</ConfirmText>
                     <Tippy content="Cancel" theme="light">
                       <ActionButton
@@ -405,7 +433,7 @@ export default () => {
                     </Tippy>
                   </ConfirmActions>
                 ) : (
-                  <Actions key="actions">
+                  <Actions key="actions" data-mobile-hide={col.mobileHide ? '' : undefined}>
                     {actionDefs
                       .filter(({ name }) => {
                         if (name === 'remove') return true
@@ -437,7 +465,7 @@ export default () => {
                   key={col.key}
                   $mono={isNumeric}
                   $primary={isName}
-                  data-label={col.mobileLabel || (typeof col.label === 'string' ? col.label : '')}
+                  data-mobile-hide={col.mobileHide ? '' : undefined}
                   title={typeof value === 'string' ? value : undefined}
                 >
                   {value}
