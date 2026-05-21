@@ -18,21 +18,37 @@ import TorrentDropZone from './components/TorrentDropZone'
 import theme from './theme'
 import apolloClient from './apollo'
 import { StoreProvider, useStore } from './state'
-import { TOOLBAR_WIDTH } from './config.client'
-
 const Container = styled.div`
   display: flex;
   min-height: 100vh;
   background-color: ${p => p.theme.colors.bg};
   color: ${p => p.theme.colors.text};
 
+  --toolbar-w: 100px;
+  --bottombar-h: 0px;
+
+  ${p => p.theme.media.mobile} {
+    --toolbar-w: 0px;
+    --bottombar-h: 56px;
+  }
+
   ${p =>
     p.$user
       ? `
   > div:last-child {
     flex-grow: 1;
-    margin-left: ${TOOLBAR_WIDTH};
-    padding: ${p.theme.spacing[5]};
+    min-width: 0;
+    padding-left: calc(var(--toolbar-w) + ${p.theme.spacing[5]});
+    padding-right: ${p.theme.spacing[5]};
+    padding-top: ${p.theme.spacing[5]};
+    padding-bottom: calc(var(--bottombar-h) + ${p.theme.spacing[5]});
+
+    ${p.theme.media.mobile} {
+      padding-left: ${p.theme.spacing[3]};
+      padding-right: ${p.theme.spacing[3]};
+      padding-top: ${p.theme.spacing[3]};
+      padding-bottom: calc(var(--bottombar-h) + ${p.theme.spacing[3]});
+    }
   }
 `
       : ''}

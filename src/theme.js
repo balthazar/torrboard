@@ -105,6 +105,16 @@ const z = {
   modal: 100,
 }
 
+const breakpoints = {
+  mobile: '600px',
+  tablet: '900px',
+}
+
+const media = {
+  mobile: `@media (max-width: ${breakpoints.mobile})`,
+  tablet: `@media (max-width: ${breakpoints.tablet})`,
+}
+
 export default {
   red,
   blue,
@@ -131,4 +141,6 @@ export default {
   shadows,
   motion,
   z,
+  breakpoints,
+  media,
 }
