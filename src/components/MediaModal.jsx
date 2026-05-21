@@ -245,6 +245,7 @@ const SeasonHeader = styled.div`
 
 const FileRow = styled.div`
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: ${p => p.theme.spacing[3]};
   padding: ${p => p.theme.spacing[2]} ${p => p.theme.spacing[3]};
@@ -261,6 +262,10 @@ const FileRow = styled.div`
   &:hover {
     background-color: ${p => p.theme.colors.surfaceHover};
   }
+
+  ${p => p.theme.media.mobile} {
+    gap: ${p => p.theme.spacing[2]};
+  }
 `
 
 const EpisodeLabel = styled.span`
@@ -274,11 +279,18 @@ const EpisodeLabel = styled.span`
 
 const FileTitle = styled.span`
   flex: 1;
+  min-width: 0;
   font-size: ${p => p.theme.font.size.sm};
   color: ${p => p.theme.colors.textMuted};
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  ${p => p.theme.media.mobile} {
+    flex-basis: 100%;
+    white-space: normal;
+    word-break: break-word;
+  }
 `
 
 const ResolutionBadge = styled.span`
@@ -314,6 +326,18 @@ const FileActions = styled.div`
   > span:hover {
     background-color: ${p => p.theme.colors.surfaceActive};
     color: ${p => p.theme.colors.text};
+  }
+
+  ${p => p.theme.media.mobile} {
+    flex-basis: 100%;
+    justify-content: flex-start;
+    gap: ${p => p.theme.spacing[2]};
+
+    > a,
+    > span {
+      width: 36px;
+      height: 36px;
+    }
   }
 `
 
