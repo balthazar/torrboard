@@ -452,10 +452,6 @@ export default () => {
   return (
     <div>
       <ControlBar>
-        <SearchSlot>
-          <SearchInput inputRef={searchRef} onChange={e => setQuery(e.target.value)} />
-        </SearchSlot>
-
         <ControlsRow>
           <ControlGroup>
             <ControlLabel>Sort by</ControlLabel>
@@ -484,6 +480,10 @@ export default () => {
             </ControlPills>
           </ControlGroup>
         </ControlsRow>
+
+        <SearchSlot>
+          <SearchInput inputRef={searchRef} onChange={e => setQuery(e.target.value)} />
+        </SearchSlot>
       </ControlBar>
 
       <Meta>
