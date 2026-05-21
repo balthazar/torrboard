@@ -54,8 +54,13 @@ const Container = styled.div`
       : ''}
 
   *:focus-visible {
-    outline: 2px solid ${p => p.theme.colors.accent};
+    outline: 1px solid ${p => p.theme.colors.accent};
     outline-offset: 2px;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none;
   }
 `
 
