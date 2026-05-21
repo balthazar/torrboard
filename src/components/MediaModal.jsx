@@ -1,6 +1,5 @@
 import React, { Fragment, useState } from 'react'
 import styled from 'styled-components'
-import { CopyToClipboard } from 'react-copy-to-clipboard'
 import Tippy from '@tippyjs/react'
 import { gql, useMutation } from '@apollo/client'
 import ptn from 'parse-torrent-name'
@@ -491,6 +490,15 @@ export default ({ item, watched, onClose }) => {
     }
   }
 
+  const copyUrl = async url => {
+    try {
+      await navigator.clipboard.writeText(url)
+      addToast('URL copied', { appearance: 'success' })
+    } catch (err) {
+      addToast(`Copy failed: ${err.message}`, { appearance: 'error' })
+    }
+  }
+
   const [cast] = useMutation(CAST)
 
   const isAdmin = get(state, 'user.name') === 'master'
@@ -693,13 +701,9 @@ export default ({ item, watched, onClose }) => {
                     </a>
                   </Tippy>
                   <Tippy content="Copy URL" theme="light">
-                    <span>
-                      <CopyToClipboard text={v.url}>
-                        <a>
-                          <MdContentCopy size={16} />
-                        </a>
-                      </CopyToClipboard>
-                    </span>
+                    <a onClick={() => copyUrl(v.url)}>
+                      <MdContentCopy size={16} />
+                    </a>
                   </Tippy>
                   <Tippy
                     content={watched[v.path] ? 'Mark unwatched' : 'Mark watched'}
