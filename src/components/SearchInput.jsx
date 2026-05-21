@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useRef, useImperativeHandle } from 'react'
 import { IoMdSearch } from 'react-icons/io'
 import styled from 'styled-components'
 import { isMobile } from 'react-device-detect'
@@ -25,7 +25,7 @@ const StyledInput = styled.input`
   color: ${p => p.theme.colors.text};
   border: 1px solid ${p => p.theme.colors.border};
   border-radius: ${p => p.theme.radii.lg};
-  padding: 0 ${p => p.theme.spacing[4]} 0 44px;
+  padding: 0 ${p => p.theme.spacing[7]} 0 44px;
   font-family: ${p => p.theme.font.sans};
   font-size: ${p => p.theme.font.size.base};
   transition: border-color ${p => p.theme.motion.base},
@@ -45,18 +45,60 @@ const StyledInput = styled.input`
   }
 `
 
-export default ({ inputRef, style, ...rest }) => (
-  <SearchContainer style={style}>
-    <SearchIcon>
-      <IoMdSearch size={18} />
-    </SearchIcon>
+const Kbd = styled.kbd`
+  position: absolute;
+  right: ${p => p.theme.spacing[3]};
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  font-family: ${p => p.theme.font.mono};
+  font-size: ${p => p.theme.font.size.xs};
+  color: ${p => p.theme.colors.textSubtle};
+  background-color: ${p => p.theme.colors.bg};
+  border: 1px solid ${p => p.theme.colors.border};
+  border-bottom-width: 2px;
+  border-radius: ${p => p.theme.radii.sm};
+  pointer-events: none;
+  transition: opacity ${p => p.theme.motion.fast};
+`
 
-    <StyledInput
-      ref={inputRef}
-      type="text"
-      placeholder="Search...  /  to focus"
-      autoFocus={!isMobile}
-      {...rest}
-    />
-  </SearchContainer>
-)
+export default ({ inputRef, style, onChange, ...rest }) => {
+  const [value, setValue] = useState('')
+  const [focused, setFocused] = useState(false)
+  const localRef = useRef(null)
+
+  useImperativeHandle(inputRef, () => localRef.current, [])
+
+  const handleChange = e => {
+    setValue(e.target.value)
+    if (onChange) onChange(e)
+  }
+
+  const showHint = !focused && !value
+
+  return (
+    <SearchContainer style={style}>
+      <SearchIcon>
+        <IoMdSearch size={18} />
+      </SearchIcon>
+
+      <StyledInput
+        ref={localRef}
+        type="text"
+        placeholder="Search..."
+        autoFocus={!isMobile}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onChange={handleChange}
+        {...rest}
+      />
+
+      {showHint && <Kbd>/</Kbd>}
+    </SearchContainer>
+  )
+}
