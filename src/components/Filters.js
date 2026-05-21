@@ -37,4 +37,10 @@ export const FilterValue = styled.span`
     color: ${p => (p.$active ? '#fff' : p.theme.colors.text)};
     border-color: ${p => (p.$active ? p.theme.colors.accent : p.theme.colors.borderHover)};
   }
+
+  ${p => p.theme.media.mobile} {
+    padding: 3px ${p => p.theme.spacing[2]};
+    gap: 4px;
+    letter-spacing: ${p => p.theme.font.tracking.normal};
+  }
 `

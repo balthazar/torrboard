@@ -57,8 +57,8 @@ const ControlBar = styled.div`
   margin: ${p => p.theme.spacing[3]} 0;
 
   ${p => p.theme.media.mobile} {
-    gap: ${p => p.theme.spacing[2]};
-    margin: ${p => p.theme.spacing[2]} 0;
+    gap: ${p => p.theme.spacing[4]};
+    margin: ${p => p.theme.spacing[3]} 0;
   }
 `
 
@@ -97,6 +97,11 @@ const ControlPills = styled.div`
     scrollbar-width: none;
     -ms-overflow-style: none;
     padding-bottom: 2px;
+    mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 24px),
+      transparent 100%
+    );
 
     &::-webkit-scrollbar {
       display: none;
