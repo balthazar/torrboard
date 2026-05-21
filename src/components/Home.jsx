@@ -54,6 +54,10 @@ const ControlBar = styled.div`
   align-items: flex-end;
   gap: ${p => p.theme.spacing[5]};
   margin: ${p => p.theme.spacing[3]} 0;
+
+  ${p => p.theme.media.mobile} {
+    gap: ${p => p.theme.spacing[3]};
+  }
 `
 
 const ControlGroup = styled.div`
@@ -81,6 +85,12 @@ const SearchSlot = styled.div`
   min-width: 200px;
   max-width: 420px;
   margin-left: auto;
+
+  ${p => p.theme.media.mobile} {
+    flex-basis: 100%;
+    max-width: none;
+    margin-left: 0;
+  }
 `
 
 const Grid = styled.div`
@@ -88,6 +98,12 @@ const Grid = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(${CARD_WIDTH}px, 1fr));
   gap: ${p => p.theme.spacing[3]};
   padding: ${p => p.theme.spacing[3]} 0;
+
+  ${p => p.theme.media.mobile} {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: ${p => p.theme.spacing[2]};
+    padding: ${p => p.theme.spacing[2]} 0;
+  }
 `
 
 const CardFallback = styled.div`
@@ -213,6 +229,10 @@ const ExpansionInner = styled.div`
 
 const ExpansionContent = styled.div`
   padding: ${p => p.theme.spacing[5]};
+
+  ${p => p.theme.media.mobile} {
+    padding: ${p => p.theme.spacing[3]};
+  }
 `
 
 const EXPANSION_ANIM_MS = 320
