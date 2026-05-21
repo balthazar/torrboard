@@ -93,7 +93,7 @@ const columns = [
     size: '90px',
     fn: ratesFmt,
   },
-  { key: 'progress', label: '%', size: '50px', fn: percentFmt },
+  { key: 'progress', label: '%', mobileLabel: 'Progress', size: '50px', fn: percentFmt },
   { key: 'eta', label: 'ETA', size: '70px', fn: etaFmt },
   { key: 'total_peers', label: 'Peers', size: '50px', fn: nonneg },
   { key: 'total_seeds', label: 'Seeds', size: '50px', fn: nonneg },
@@ -437,7 +437,7 @@ export default () => {
                   key={col.key}
                   $mono={isNumeric}
                   $primary={isName}
-                  data-label={typeof col.label === 'string' ? col.label : col.mobileLabel || ''}
+                  data-label={col.mobileLabel || (typeof col.label === 'string' ? col.label : '')}
                   title={typeof value === 'string' ? value : undefined}
                 >
                   {value}
