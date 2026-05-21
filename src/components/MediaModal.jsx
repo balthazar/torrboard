@@ -612,7 +612,7 @@ export default ({ item, watched, onClose }) => {
             </IconButton>
           </Tippy>
         )}
-        <Tippy content="Close (Esc)" theme="light">
+        <Tippy content="Close (Esc)" theme="light" touch={['hold', 400]}>
           <IconButton onClick={onClose}>
             <MdClose size={18} />
           </IconButton>
@@ -702,13 +702,13 @@ export default ({ item, watched, onClose }) => {
                 {v.resolution && <ResolutionBadge>{v.resolution}</ResolutionBadge>}
                 <FileActions>
                   {isCaster && (
-                    <Tippy content="Cast" theme="light">
+                    <Tippy content="Cast" theme="light" touch={['hold', 400]}>
                       <a onClick={() => doCast(v.url)}>
                         <FaChromecast size={16} />
                       </a>
                     </Tippy>
                   )}
-                  <Tippy content="MPV" theme="light">
+                  <Tippy content="MPV" theme="light" touch={['hold', 400]}>
                     <a
                       href={`mpv://${encodeURIComponent(v.url)}`}
                       onClick={() => setWatched({ variables: { path: v.path, value: true } })}
@@ -716,7 +716,7 @@ export default ({ item, watched, onClose }) => {
                       <IoIosPlayCircle size={18} />
                     </a>
                   </Tippy>
-                  <Tippy content="VLC" theme="light">
+                  <Tippy content="VLC" theme="light" touch={['hold', 400]}>
                     <a
                       href={`vlc://${v.url}`}
                       onClick={() => setWatched({ variables: { path: v.path, value: true } })}
@@ -724,7 +724,7 @@ export default ({ item, watched, onClose }) => {
                       <FiTriangle size={15} />
                     </a>
                   </Tippy>
-                  <Tippy content="Copy URL" theme="light">
+                  <Tippy content="Copy URL" theme="light" touch={['hold', 400]}>
                     <a onClick={() => copyUrl(v.url)}>
                       <MdContentCopy size={16} />
                     </a>
@@ -732,6 +732,7 @@ export default ({ item, watched, onClose }) => {
                   <Tippy
                     content={watched[v.path] ? 'Mark unwatched' : 'Mark watched'}
                     theme="light"
+                    touch={['hold', 400]}
                   >
                     <a
                       onClick={() =>
