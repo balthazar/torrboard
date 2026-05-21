@@ -14,7 +14,6 @@ import { isMobile } from 'react-device-detect'
 import convertBytes from '../fn/convertBytes'
 import fakeAudio from '../fn/fakeAudio'
 import { useStore } from '../state'
-import { TOOLBAR_WIDTH } from '../config.client'
 import Logo from './Logo'
 
 const GET_STATS = gql`
@@ -44,14 +43,28 @@ const CAST_ACTION = gql`
 
 const Container = styled.div`
   position: fixed;
-  height: 100vh;
-  width: ${TOOLBAR_WIDTH}px;
+  z-index: ${p => p.theme.z.toolbar};
   background-color: ${p => p.theme.colors.surface};
   border-right: 1px solid ${p => p.theme.colors.border};
 
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  ${p => p.theme.media.mobile} {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    width: auto;
+    height: 56px;
+    flex-direction: row;
+    border-right: none;
+    border-top: 1px solid ${p => p.theme.colors.border};
+  }
 `
 
 const Menu = styled.nav`
@@ -62,12 +75,19 @@ const Menu = styled.nav`
   align-items: center;
   gap: ${p => p.theme.spacing[1]};
   width: 100%;
+
+  ${p => p.theme.media.mobile} {
+    margin-top: 0;
+    flex-direction: row;
+    gap: 0;
+    height: 100%;
+  }
 `
 
 const navStyles = `
   position: relative;
-  width: ${TOOLBAR_WIDTH}px;
-  height: ${TOOLBAR_WIDTH - 16}px;
+  width: 100px;
+  height: 84px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,6 +126,22 @@ const NavItem = styled(NavLink)`
   &.active::before {
     background-color: ${p => p.theme.colors.accent};
   }
+
+  ${p => p.theme.media.mobile} {
+    flex: 1;
+    width: auto;
+    height: 100%;
+
+    &::before {
+      left: 50%;
+      top: auto;
+      bottom: 0;
+      width: 24px;
+      height: 3px;
+      border-radius: 2px 2px 0 0;
+      transform: translateX(-50%);
+    }
+  }
 `
 
 const Disconnect = styled.button`
@@ -119,6 +155,12 @@ const Disconnect = styled.button`
     color: ${p => p.theme.colors.error};
     background-color: ${p => p.theme.colors.surfaceHover};
   }
+
+  ${p => p.theme.media.mobile} {
+    flex: 1;
+    width: auto;
+    height: 100%;
+  }
 `
 
 const Stats = styled.div`
@@ -128,9 +170,13 @@ const Stats = styled.div`
   gap: ${p => p.theme.spacing[2]};
   padding: ${p => p.theme.spacing[3]} 0;
   margin-bottom: ${p => p.theme.spacing[2]};
-  width: ${TOOLBAR_WIDTH}px;
+  width: 100px;
   border-top: 1px solid ${p => p.theme.colors.border};
   padding-top: ${p => p.theme.spacing[3]};
+
+  ${p => p.theme.media.mobile} {
+    display: none;
+  }
 `
 
 const Stat = styled.div`
