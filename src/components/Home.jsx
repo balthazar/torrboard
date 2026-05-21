@@ -11,6 +11,7 @@ import Placeloader from './Placeloader'
 import SearchInput from './SearchInput'
 import MediaCard, { CARD_HEIGHT, CARD_WIDTH } from './MediaCard'
 import MediaModal from './MediaModal'
+import Modal from './Modal'
 import { FilterValue } from './Filters'
 
 import apiHandlers from '../fn/apiHandlers'
@@ -90,6 +91,7 @@ const SearchSlot = styled.div`
     flex-basis: 100%;
     max-width: none;
     margin-left: 0;
+    order: -1;
   }
 `
 
@@ -246,6 +248,17 @@ export default () => {
   const { addToast } = useToasts()
   const [, dispatch] = useStore()
 
+  const [isNarrow, setIsNarrow] = useState(
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 600px)').matches,
+  )
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    const mql = window.matchMedia('(max-width: 600px)')
+    const handler = e => setIsNarrow(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+
   const gridRef = useRef(null)
   const searchRef = useRef(null)
   const closeTimerRef = useRef(null)
@@ -289,7 +302,7 @@ export default () => {
   }
 
   useEffect(() => {
-    if (selectedKey === null || closing) return
+    if (selectedKey === null || closing || isNarrow) return
     // Wait for the open animation to finish so the panel has its full height
     // when we measure the scroll target. Otherwise nearest-block alignment
     // sees a 0-height row and undershoots.
@@ -298,7 +311,7 @@ export default () => {
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }, EXPANSION_ANIM_MS)
     return () => clearTimeout(t)
-  }, [selectedKey, closing])
+  }, [selectedKey, closing, isNarrow])
 
   useEffect(() => {
     const onKey = e => {
@@ -494,7 +507,7 @@ export default () => {
                 </WatchedBadge>
               </MediaCard>
 
-              {showExpansionHere && selectedItem && (
+              {!isNarrow && showExpansionHere && selectedItem && (
                 <ExpansionPanel ref={expansionRef} $closing={closing}>
                   <ExpansionInner>
                     <ExpansionContent>
@@ -511,6 +524,14 @@ export default () => {
           )
         })}
       </Grid>
+
+      {isNarrow && (
+        <Modal isOpened={selectedItem !== null && !closing} onClose={closeExpansion}>
+          {selectedItem && (
+            <MediaModal item={selectedItem} watched={watched} onClose={closeExpansion} />
+          )}
+        </Modal>
+      )}
     </div>
   )
 }

@@ -108,6 +108,19 @@ const HeroPlot = styled.p`
   max-width: 72ch;
 `
 
+const HeroCover = styled(MediaCard)`
+  width: ${CARD_WIDTH}px;
+  height: ${CARD_HEIGHT}px;
+  flex-shrink: 0;
+
+  ${p => p.theme.media.mobile} {
+    width: 100%;
+    height: 140px;
+    aspect-ratio: auto;
+    flex-basis: 100%;
+  }
+`
+
 // Width at which cover + info + trailer no longer fit on one row. Below this,
 // the trailer collapses to a slim button so it doesn't push the file list down.
 const HERO_BREAKPOINT = 1080
@@ -620,7 +633,7 @@ export default ({ item, watched, onClose }) => {
       </TopBar>
 
       <Hero>
-        <MediaCard $bg={image} style={{ width: CARD_WIDTH, height: CARD_HEIGHT, flexShrink: 0 }} />
+        <HeroCover $bg={image} />
 
         <HeroInfo>
           <HeroTitle>{title}</HeroTitle>
