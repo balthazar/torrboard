@@ -208,7 +208,20 @@ const resolvers = {
     },
 
     rss,
-    users: () => User.find().lean().exec(),
+    users: async () => {
+      // Mongoose returns Date instances on .lean(); graphql-js's String scalar
+      // serializes those via valueOf() which yields the bare epoch number as a
+      // string ("1779367921995"), and `new Date(thatString)` on the client
+      // returns Invalid Date. Coerce to ISO strings here so the wire format is
+      // actually parseable.
+      const users = await User.find().lean().exec()
+      return users.map(u => ({
+        ...u,
+        expires: u.expires ? u.expires.toISOString() : null,
+        lastWatchedAt: u.lastWatchedAt ? u.lastWatchedAt.toISOString() : null,
+        lastSeenAt: u.lastSeenAt ? u.lastSeenAt.toISOString() : null,
+      }))
+    },
     getYtID: async (parent, { query }) => {
       // YouTube Data API search costs 100 quota units per call and the
       // default project quota is 10k/day. Same title resolves to the same

@@ -251,7 +251,10 @@ const Activity = styled.span`
 
 const formatAgo = date => {
   if (!date) return null
-  const d = new Date(date)
+  // Bare numeric strings (e.g. "1779367921995") aren't parseable by new Date(string)
+  // but were a previous wire format from graphql-js's String scalar of a Date.
+  const input = typeof date === 'string' && /^\d+$/.test(date) ? Number(date) : date
+  const d = new Date(input)
   if (Number.isNaN(d.getTime())) return null
   const now = new Date()
   const mins = differenceInMinutes(now, d)
