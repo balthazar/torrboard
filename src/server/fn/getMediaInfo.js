@@ -133,10 +133,15 @@ const resolveByTitle = async (title, year) => {
 // for a clean "no match" outcome that should count.
 // quotaExhausted is set when OMDB returns 401/429, signalling the daily
 // quota is gone and the caller should back off across ticks, not just retry.
-module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
+module.exports = async (id, { torrentIds, oldId, newId, title, titles, year }) => {
   try {
     let imdbID
     let payload
+
+    // A torrent name can yield more than one title to try (foreign releases
+    // tagged "<original> a.k.a. <english>"). Accept an explicit candidate
+    // list, or fall back to the single `title` for older callers.
+    const candidateTitles = (titles && titles.length ? titles : [title]).filter(Boolean)
 
     if (newId) {
       // Manual override path: OMDB/TMDB failures here must not abort the
@@ -165,22 +170,34 @@ module.exports = async (id, { torrentIds, oldId, newId, title, year }) => {
         payload = {}
       }
     } else {
-      const omdbBody = await resolveByTitle(title, year)
-      if (omdbBody) {
-        imdbID = omdbBody.imdbID
-        payload = payloadFromOmdb(omdbBody)
-      } else if (tmdb.hasKey()) {
-        const t = await tmdb.searchByTitle(title, year)
-        if (t) {
-          imdbID = t.imdbID
-          payload = t.payload
+      // Try each candidate title in turn; first OMDB hit wins.
+      for (const candidate of candidateTitles) {
+        const omdbBody = await resolveByTitle(candidate, year)
+        if (omdbBody) {
+          imdbID = omdbBody.imdbID
+          payload = payloadFromOmdb(omdbBody)
+          break
+        }
+      }
+      if (!imdbID && tmdb.hasKey()) {
+        for (const candidate of candidateTitles) {
+          const t = await tmdb.searchByTitle(candidate, year)
+          if (t) {
+            imdbID = t.imdbID
+            payload = t.payload
+            break
+          }
         }
       }
     }
 
     if (!imdbID || !payload) {
       if (!newId) {
-        const local = await resolveByLocalTitle(title)
+        let local = null
+        for (const candidate of candidateTitles) {
+          local = await resolveByLocalTitle(candidate)
+          if (local) break
+        }
         if (local) {
           const dupe = await MediaInfo.findOne({ torrents: id, imdbID: { $ne: local.imdbID } })
           if (!dupe) {

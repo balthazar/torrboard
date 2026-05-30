@@ -6,6 +6,7 @@
     "api": "./scripts/dev.sh",
     "db": "kubectl --context dadonew -n infra port-forward svc/mongo 27018:27017",
     "build": "vite build",
+    "test": "node --test \"src/**/*.test.js\"",
     "deploy": "pm2 deploy ecosystem.json5 production"
   },
   "dependencies": {

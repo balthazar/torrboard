@@ -3,6 +3,7 @@ const ptn = require('parse-torrent-name')
 const { getDeluge } = require('./deluge')
 const Config = require('../models/Config')
 const getMediaInfo = require('./getMediaInfo')
+const { titleCandidates } = require('./titleCandidates')
 
 // Per-tick cap on OMDB requests so a backlog can't blow through the free
 // 1000/day quota in one go. Sized to comfortably fit the 2-minute schedule.
@@ -19,21 +20,6 @@ const CONSECUTIVE_FAILURE_BAIL = 3
 // a rolling 24h window; 6h gives a few retry windows per day without burning
 // the next day's quota the moment it refills.
 const OMDB_COOLDOWN_MS = 6 * 60 * 60 * 1000
-
-const cleanTitle = raw =>
-  raw
-    // Drop SxxExx / Sxx / "Season N" / "Part N" and anything after.
-    .replace(/\b(S\d{1,2}(E\d+)?|Season\s*\d+|Part\s*\d+)\b.*$/i, '')
-    // Drop a release-year tail (1900-2099) and anything after.
-    .replace(/\b(19|20)\d{2}\b.*$/, '')
-    // Drop boilerplate tokens.
-    .replace(/\b(COMPLETE|REPACK|PROPER|EXTENDED|REMUX|UNCUT)\b/gi, '')
-    .replace(/\bseason\b/gi, '')
-    // Normalize separators.
-    .replace(/[._]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/ \[$/, '')
-    .trim()
 
 // Heuristics for torrents that clearly aren't movies or series so we never
 // waste an OMDB call on them. Catches the Adobe installers, .apk/.7z apps,
@@ -73,11 +59,11 @@ module.exports = async () => {
     const meta = ptn(torrent.name)
     if (!meta.title) continue
 
-    const title = cleanTitle(meta.title)
-    if (!title) continue
+    const titles = titleCandidates(meta.title)
+    if (!titles.length) continue
 
     const prevAttempts = typeof status === 'number' ? status : 0
-    candidates.push({ id: torrent.id, title, year: meta.year, attempt: prevAttempts + 1 })
+    candidates.push({ id: torrent.id, titles, year: meta.year, attempt: prevAttempts + 1 })
   }
 
   if (toSkip.length) {
@@ -97,7 +83,7 @@ module.exports = async () => {
   let consecutiveFailures = 0
 
   for (const item of batch) {
-    const result = await getMediaInfo(item.id, { title: item.title, year: item.year })
+    const result = await getMediaInfo(item.id, { titles: item.titles, year: item.year })
     if (result.ok) {
       updates[`fetchedMedias.${item.id}`] = true
       consecutiveFailures = 0

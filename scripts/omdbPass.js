@@ -19,22 +19,10 @@ const MediaInfo = require('../src/server/models/MediaInfo')
 const Config = require('../src/server/models/Config')
 const { getDeluge } = require('../src/server/fn/deluge')
 const getMediaInfo = require('../src/server/fn/getMediaInfo')
+const { titleCandidates } = require('../src/server/fn/titleCandidates')
 
 const MONGO_URL = process.env.MONGO_URL || 'mongodb://127.0.0.1:27018/torrboard'
 const apply = process.argv.includes('--apply')
-
-// Same regex as refreshMediaInfos.cleanTitle. Kept inline so the script
-// doesn't depend on exporting an internal helper.
-const cleanTitle = raw =>
-  raw
-    .replace(/\b(S\d{1,2}(E\d+)?|Season\s*\d+|Part\s*\d+)\b.*$/i, '')
-    .replace(/\b(19|20)\d{2}\b.*$/, '')
-    .replace(/\b(COMPLETE|REPACK|PROPER|EXTENDED|REMUX|UNCUT)\b/gi, '')
-    .replace(/\bseason\b/gi, '')
-    .replace(/[._]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/ \[$/, '')
-    .trim()
 
 ;(async () => {
   await mongoose.connect(MONGO_URL, { directConnection: true })
@@ -47,10 +35,10 @@ const cleanTitle = raw =>
   for (const t of torrents) {
     const meta = ptn(t.name)
     if (!meta.title) continue
-    const title = cleanTitle(meta.title)
-    if (!title) continue
+    const titles = titleCandidates(meta.title)
+    if (!titles.length) continue
     if (fetched[t.id]) continue
-    candidates.push({ id: t.id, name: t.name, title, year: meta.year })
+    candidates.push({ id: t.id, name: t.name, titles, year: meta.year })
   }
 
   console.log(`Mode: ${apply ? 'APPLY' : 'DRY RUN (pass --apply to commit)'}`)
@@ -58,7 +46,9 @@ const cleanTitle = raw =>
   console.log(`Candidates this pass: ${candidates.length}\n`)
 
   candidates.forEach(c =>
-    console.log(`  - ${c.name}\n      query: title="${c.title}" year=${c.year || ''}`),
+    console.log(
+      `  - ${c.name}\n      query: titles=${JSON.stringify(c.titles)} year=${c.year || ''}`,
+    ),
   )
 
   if (!apply) {
@@ -70,7 +60,7 @@ const cleanTitle = raw =>
   console.log(`\nQuerying OMDB...`)
   const results = await Promise.all(
     candidates.map(async c => {
-      const ok = await getMediaInfo(c.id, { title: c.title, year: c.year })
+      const ok = await getMediaInfo(c.id, { titles: c.titles, year: c.year })
       return { ...c, ok }
     }),
   )
