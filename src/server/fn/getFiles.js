@@ -16,13 +16,32 @@ const isIgnored = name => IGNORE.includes(name)
 const isMedia = f =>
   !f.toLowerCase().includes('sample') && VIDEO_EXTS.some(ext => f.endsWith(ext))
 
+// getDeluge polls every ~10s, so a persistent misconfiguration would log on
+// every tick. Throttle identical (code+path) errors to one line per window.
+const FS_ERR_THROTTLE_MS = 5 * 60 * 1000
+const warnFsError = err => {
+  const key = `getfiles-fs-err:${err.code}:${err.path || ''}`
+  if (cache.get(key)) return
+  cache.put(key, 1, FS_ERR_THROTTLE_MS)
+  logErr('getFiles', err)
+}
+
 // Prod: recursively scan the local media volume.
-const walkLocal = async dir => {
+const walkLocal = async (dir, isRoot = false) => {
   let dirents
   try {
     dirents = await readdir(dir, { withFileTypes: true })
   } catch (err) {
-    if (err.code === 'ENOENT' || err.code === 'EACCES') {
+    // A permission error (EACCES), or a missing/unreadable *root* directory,
+    // is an operator-fixable misconfiguration: the media volume isn't mounted,
+    // or its ownership/mode is wrong. Silently returning [] here is what made
+    // the homepage go blank with no signal, so surface these loudly. A nested
+    // ENOENT is almost always a file removed mid-walk; stay quiet for those.
+    if (err.code === 'EACCES' || (isRoot && err.code === 'ENOENT')) {
+      warnFsError(err)
+      return []
+    }
+    if (err.code === 'ENOENT') {
       return []
     }
     throw err
@@ -138,7 +157,7 @@ const walkRemote = async dir => {
 module.exports = async () => {
   const dir = `${DOWNLOAD_DIR}/dl`
   const raw =
-    process.env.NODE_ENV === 'production' ? await walkLocal(dir) : await walkRemote(dir)
+    process.env.NODE_ENV === 'production' ? await walkLocal(dir, true) : await walkRemote(dir)
 
   return uniq(raw.filter(isMedia))
 }
