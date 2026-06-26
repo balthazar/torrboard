@@ -77,6 +77,7 @@ const typeDefs = gql`
   type Deluge {
     stats: DelugeStats
     torrents: [DelugeTorrent]
+    filesUnavailable: Boolean
   }
 
   type TorrentMeta {

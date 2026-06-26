@@ -95,10 +95,10 @@ module.exports = {
       // torrents:null. Degrade to an empty list rather than crashing the whole
       // query (and the refreshMediaInfos/downloadRSS jobs that share this fn).
       if (!data || !data.torrents) {
-        return { stats: {}, torrents: [] }
+        return { stats: {}, torrents: [], filesUnavailable: false }
       }
 
-      const files = await getFiles()
+      const { files, unavailable: filesUnavailable } = await getFiles()
       const medias = await MediaInfo.find({})
 
       const byTorrentId = medias.reduce((acc, media) => {
@@ -142,6 +142,7 @@ module.exports = {
           freeSpace: data.stats.free_space,
         },
         torrents,
+        filesUnavailable,
       }
     }),
 }

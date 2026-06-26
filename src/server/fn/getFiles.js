@@ -26,7 +26,9 @@ const warnFsError = err => {
   logErr('getFiles', err)
 }
 
-// Prod: recursively scan the local media volume.
+// Prod: recursively scan the local media volume. Returns null when the *root*
+// can't be read so the caller can tell an operator-fixable failure (volume
+// unmounted or wrong permissions) apart from a legitimately empty directory.
 const walkLocal = async (dir, isRoot = false) => {
   let dirents
   try {
@@ -39,7 +41,7 @@ const walkLocal = async (dir, isRoot = false) => {
     // ENOENT is almost always a file removed mid-walk; stay quiet for those.
     if (err.code === 'EACCES' || (isRoot && err.code === 'ENOENT')) {
       warnFsError(err)
-      return []
+      return isRoot ? null : []
     }
     if (err.code === 'ENOENT') {
       return []
@@ -159,5 +161,12 @@ module.exports = async () => {
   const raw =
     process.env.NODE_ENV === 'production' ? await walkLocal(dir, true) : await walkRemote(dir)
 
-  return uniq(raw.filter(isMedia))
+  // null root => the media volume couldn't be read at all (unmounted/perms),
+  // which is operator-fixable and worth surfacing in the UI. An empty array is
+  // just a legitimately empty library and not an error.
+  if (raw === null) {
+    return { files: [], unavailable: true }
+  }
+
+  return { files: uniq(raw.filter(isMedia)), unavailable: false }
 }

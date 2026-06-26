@@ -5,7 +5,7 @@ import get from 'lodash/get'
 import uniq from 'lodash/uniq'
 import ptn from 'parse-torrent-name'
 import { useToasts } from './toasts'
-import { MdDoneAll, MdStar, MdSortByAlpha, MdSchedule } from 'react-icons/md'
+import { MdDoneAll, MdStar, MdSortByAlpha, MdSchedule, MdWarning } from 'react-icons/md'
 
 import Placeloader from './Placeloader'
 import SearchInput from './SearchInput'
@@ -21,6 +21,7 @@ const GET_MEDIAS = gql`
   query Medias {
     watched
     deluge {
+      filesUnavailable
       torrents {
         id
         name
@@ -249,6 +250,19 @@ const Meta = styled.div`
   font-family: ${p => p.theme.font.mono};
   letter-spacing: ${p => p.theme.font.tracking.wide};
   text-transform: uppercase;
+`
+
+const Banner = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${p => p.theme.spacing[2]};
+  margin: ${p => p.theme.spacing[3]} 0 0;
+  padding: ${p => p.theme.spacing[3]} ${p => p.theme.spacing[4]};
+  border: 1px solid ${p => p.theme.colors.warning}55;
+  border-radius: ${p => p.theme.radii.md};
+  background: ${p => p.theme.colors.warning}14;
+  color: ${p => p.theme.colors.warning};
+  font-size: ${p => p.theme.font.size.sm};
 `
 
 const ExpansionPanel = styled.div`
@@ -485,6 +499,16 @@ export default () => {
           <SearchInput inputRef={searchRef} onChange={e => setQuery(e.target.value)} />
         </SearchSlot>
       </ControlBar>
+
+      {get(data, 'deluge.filesUnavailable') && (
+        <Banner>
+          <MdWarning size={18} />
+          <span>
+            The media library can&apos;t be read (volume not mounted or wrong permissions).
+            Downloads won&apos;t appear here until an operator fixes the mount on the server.
+          </span>
+        </Banner>
+      )}
 
       <Meta>
         {loading ? (
