@@ -46,6 +46,22 @@ const query = async (method, args) => {
   // back as a single Cookie header on the follow-up request.
   const setCookies = pass.headers['set-cookie'] || []
   const cookie = setCookies.map(c => c.split(';')[0]).join('; ')
+
+  // The web server can be authenticated yet not connected to the deluged
+  // daemon (after a daemon/pod restart, the web UI doesn't auto-reconnect).
+  // In that state every method returns result:null and web.update_ui yields
+  // torrents:null, which blows up Object.keys() downstream. Reconnect to the
+  // first known host the way the real web UI does on load, so the route and
+  // the scheduled jobs self-heal instead of throwing.
+  const connected = await r(payload('web.connected', []), { cookie })
+  if (!connected.body.result) {
+    const hosts = await r(payload('web.get_hosts', []), { cookie })
+    const [firstHost] = hosts.body.result || []
+    if (firstHost) {
+      await r(payload('web.connect', [firstHost[0]]), { cookie })
+    }
+  }
+
   const res = await r(payload(method, args), { cookie })
 
   return res.body.result
@@ -75,6 +91,13 @@ module.exports = {
   },
   getDeluge: () =>
     query('web.update_ui', fields).then(async data => {
+      // If the web UI still couldn't reach the daemon, update_ui returns
+      // torrents:null. Degrade to an empty list rather than crashing the whole
+      // query (and the refreshMediaInfos/downloadRSS jobs that share this fn).
+      if (!data || !data.torrents) {
+        return { stats: {}, torrents: [] }
+      }
+
       const files = await getFiles()
       const medias = await MediaInfo.find({})
 
