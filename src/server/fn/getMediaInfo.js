@@ -132,29 +132,40 @@ const pickSearchMatch = (results, title, year) => {
     })[0].r
 }
 
+// Run an OMDB `s=` search with the given params, pick the best hit for
+// `title`/`year` via pickSearchMatch, and fetch its full record by imdbID.
+// Returns null when the search is empty or nothing survives ranking.
+const searchAndFetch = async (params, title, year) => {
+  const search = await omdb(params)
+  if (search.body.Response !== 'True' || !search.body.Search) return null
+  const pick = pickSearchMatch(search.body.Search, title, year)
+  if (!pick) return null
+  const full = await omdb({ i: pick.imdbID })
+  return full.body.Response === 'True' ? full.body : null
+}
+
 // Resolve a title (+ optional year) to a single OMDB record.
-// When year is known, hit the title endpoint directly first. Otherwise (or if
-// that missed) use the search endpoint, pick the best match via pickSearchMatch
-// — exact title beats a newer namesake — and fetch its full record by imdbID.
+// Strategy: exhaust the year-qualified lookups first (most precise), then fall
+// back to title-only. When a year is known:
+//   1. exact title + year        (t=title&y=year)
+//   2. year-scoped search        (s=title&y=year) — catches title variants
+//      (subtitles, punctuation) that t= misses but the year makes unambiguous,
+//      and reaches records buried past page 1 of the unscoped search.
+// Then title-only, so a release with a wrong/unindexed year still resolves:
+//   3. title-only search         (s=title, ranked by pickSearchMatch)
+//   4. exact title, no year      (t=title)
 const resolveByTitle = async (title, year) => {
   if (year) {
-    const res = await omdb({ t: title, y: year })
-    if (res.body.Response === 'True') return res.body
-    // Fall through: the parsed year can be off-by-one or missing from OMDB,
-    // so try the search endpoint below with the year as a ranking hint rather
-    // than giving up outright.
+    const exact = await omdb({ t: title, y: year })
+    if (exact.body.Response === 'True') return exact.body
+
+    const scoped = await searchAndFetch({ s: title, y: year }, title, year)
+    if (scoped) return scoped
   }
 
-  const search = await omdb({ s: title })
-  if (search.body.Response === 'True' && search.body.Search) {
-    const pick = pickSearchMatch(search.body.Search, title, year)
-    if (pick) {
-      const full = await omdb({ i: pick.imdbID })
-      if (full.body.Response === 'True') return full.body
-    }
-  }
+  const searched = await searchAndFetch({ s: title }, title, year)
+  if (searched) return searched
 
-  // Last resort: the exact title endpoint with no year filter.
   const res = await omdb({ t: title })
   return res.body.Response === 'True' ? res.body : null
 }
