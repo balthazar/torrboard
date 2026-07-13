@@ -96,34 +96,67 @@ const resolveByLocalTitle = async title => {
   return bestScore >= 0.75 && !tieAtBest ? best : null
 }
 
+// Normalize a title for equality: lowercase, punctuation/spacing collapsed.
+// So "Rick and Morty" == "rick.and.morty" but != "Rick and Morty: The Anime".
+const normTitle = s =>
+  String(s)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+
+// Pick the best OMDB search result for `title`. Ranking, in order:
+//   1. An exact (normalized) title match beats everything. OMDB's search is a
+//      prefix/substring match, so "Black Box" also returns "Black Box Diaries"
+//      and "Rick and Morty" also returns "Rick and Morty: The Anime" — a mere
+//      namesake must never win over the title we actually asked for.
+//   2. Among ties, if we know the release year prefer the closest to it,
+//      otherwise the newest (avoids the "namesake from 1958" problem when
+//      several exact-title works share a name).
+// Drops "episode"/"game" types the way the old code did.
+const pickSearchMatch = (results, title, year) => {
+  const typed = results.filter(r => r.Type === 'movie' || r.Type === 'series')
+  const pool = typed.length ? typed : results
+  if (!pool.length) return null
+
+  const q = normTitle(title)
+  return pool
+    .map(r => ({
+      r,
+      exact: normTitle(r.Title) === q ? 1 : 0,
+      _y: parseInt(String(r.Year).match(/\d{4}/), 10) || 0,
+    }))
+    .sort((a, b) => {
+      if (a.exact !== b.exact) return b.exact - a.exact
+      if (year) return Math.abs(a._y - year) - Math.abs(b._y - year)
+      return b._y - a._y
+    })[0].r
+}
+
 // Resolve a title (+ optional year) to a single OMDB record.
-// When year is known, hit the title endpoint directly. Otherwise use the
-// search endpoint, pick the newest plausible match by year, and fetch
-// its full record by imdbID. Avoids the "namesake from 1958" problem.
+// When year is known, hit the title endpoint directly first. Otherwise (or if
+// that missed) use the search endpoint, pick the best match via pickSearchMatch
+// — exact title beats a newer namesake — and fetch its full record by imdbID.
 const resolveByTitle = async (title, year) => {
   if (year) {
     const res = await omdb({ t: title, y: year })
-    return res.body.Response === 'True' ? res.body : null
+    if (res.body.Response === 'True') return res.body
+    // Fall through: the parsed year can be off-by-one or missing from OMDB,
+    // so try the search endpoint below with the year as a ranking hint rather
+    // than giving up outright.
   }
 
   const search = await omdb({ s: title })
-  if (search.body.Response !== 'True' || !search.body.Search) {
-    // Fallback to the title endpoint with no year filter as a last resort.
-    const res = await omdb({ t: title })
-    return res.body.Response === 'True' ? res.body : null
+  if (search.body.Response === 'True' && search.body.Search) {
+    const pick = pickSearchMatch(search.body.Search, title, year)
+    if (pick) {
+      const full = await omdb({ i: pick.imdbID })
+      if (full.body.Response === 'True') return full.body
+    }
   }
 
-  const candidates = search.body.Search.filter(r => r.Type === 'movie' || r.Type === 'series')
-  const pick = (candidates.length ? candidates : search.body.Search)
-    .map(r => ({ ...r, _y: parseInt(String(r.Year).match(/\d{4}/), 10) || 0 }))
-    .sort((a, b) => b._y - a._y)[0]
-
-  if (!pick) {
-    return null
-  }
-
-  const full = await omdb({ i: pick.imdbID })
-  return full.body.Response === 'True' ? full.body : null
+  // Last resort: the exact title endpoint with no year filter.
+  const res = await omdb({ t: title })
+  return res.body.Response === 'True' ? res.body : null
 }
 
 // Returns { ok: true } when a MediaInfo record was created/updated.
@@ -272,3 +305,6 @@ module.exports = async (id, { torrentIds, oldId, newId, title, titles, year }) =
     return { ok: false, transient: true, quotaExhausted }
   }
 }
+
+// Exported for unit testing the search-result ranking in isolation.
+module.exports.pickSearchMatch = pickSearchMatch
