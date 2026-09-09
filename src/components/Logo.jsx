@@ -178,9 +178,9 @@ const Wordmark = styled.span`
 
 // Login has room for the full lockup, and it is the one screen where the
 // animation reliably gets seen.
-export const LogoLockup = () => (
+export const LogoLockup = ({ size = 72 }) => (
   <Lockup>
-    <BMark size={72} />
+    <BMark size={size} />
     <Wordmark>
       <b>b</b>Flix
     </Wordmark>

@@ -103,6 +103,7 @@ const z = {
   toolbar: 10,
   toast: 50,
   modal: 100,
+  splash: 200,
 }
 
 const breakpoints = {

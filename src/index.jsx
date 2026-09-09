@@ -14,6 +14,7 @@ import Rss from './components/Rss'
 import Settings from './components/Settings'
 import Login from './components/Login'
 import TorrentDropZone from './components/TorrentDropZone'
+import Splash from './components/Splash'
 
 import theme from './theme'
 import apolloClient from './apollo'
@@ -95,13 +96,21 @@ const App = () => {
   return (
     <StoreProvider>
       <ThemeProvider theme={theme}>
-        <ToastProvider>
-          <ApolloProvider client={apolloClient}>
-            <BrowserRouter>
-              <Content />
-            </BrowserRouter>
-          </ApolloProvider>
-        </ToastProvider>
+        <>
+          <ToastProvider>
+            <ApolloProvider client={apolloClient}>
+              <BrowserRouter>
+                <Content />
+              </BrowserRouter>
+            </ApolloProvider>
+          </ToastProvider>
+
+          {/* Last on purpose. index.html styles `#root > div:first-child` to
+              fill the viewport, and that has to keep meaning the app container:
+              the overlay is fixed with its own z-index, so DOM order costs it
+              nothing. */}
+          <Splash />
+        </>
       </ThemeProvider>
     </StoreProvider>
   )
