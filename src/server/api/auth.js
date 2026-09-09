@@ -32,7 +32,7 @@ const createUser = async (parent, { name, email, expires }) => {
 
      <mj-style>
       .logo td {
-         background-color: #585858;
+         background-color: #1a1a1a;
          padding: 20px;
          border-radius: 50%;
       }
@@ -48,7 +48,7 @@ const createUser = async (parent, { name, email, expires }) => {
                     height="50" src="${IMAGE_URL}" width="50" />
         </mj-hero>
         <mj-text font-size="15px">Hello ${name}!</mj-text>
-        <mj-text font-size="15px">An amazing benefactor invited you to the ultra-select club of TorrBoard, a futuristic new way of consuming movies and series!</mj-text>
+        <mj-text font-size="15px">An amazing benefactor invited you to the ultra-select club of bFlix, a futuristic new way of consuming movies and series!</mj-text>
         <mj-divider border-width="1px" border-color="#f5f5f5" />
         <mj-text font-size="20px" padding-bottom="0px">Total Due</mj-text>
         <mj-text font-size="20px" font-weight="bold">$0</mj-text>
@@ -67,14 +67,14 @@ const createUser = async (parent, { name, email, expires }) => {
       {
         From: {
           Email: SYSTEM_EMAIL,
-          Name: 'TorrBoard',
+          Name: 'bFlix',
         },
         To: [
           {
             Email: email,
           },
         ],
-        Subject: '[TorrBoard] Welcome!',
+        Subject: '[bFlix] Welcome!',
         HTMLPart: html,
       },
     ],

@@ -1,4 +1,4 @@
-# TorrBoard
+# bFlix
 
 > A complete experience for your (legal) torrents
 

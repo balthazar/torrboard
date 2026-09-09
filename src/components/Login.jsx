@@ -10,7 +10,7 @@ import decodeToken from '../fn/decodeToken'
 
 import Input from './Input'
 import GuestContainer from './GuestContainer'
-import Logo from './Logo'
+import { LogoLockup } from './Logo'
 
 const SET_PASSWORD = gql`
   mutation setPassword($inviteCode: String!, $password: String!) {
@@ -83,7 +83,7 @@ export default () => {
 
   return (
     <GuestContainer>
-      <Logo />
+      <LogoLockup />
       {inviteCode ? (
         <>
           <span style={{ marginBottom: 20 }}>{'Welcome to the future.'}</span>

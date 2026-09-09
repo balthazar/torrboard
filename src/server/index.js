@@ -46,7 +46,7 @@ const start = async () => {
   app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../../dist/index.html')))
 
   app.listen(__APIPORT__, () => {
-    console.log(`[TorrBoard API] Listening on ::${__APIPORT__} 🚀`) // eslint-disable-line no-console
+    console.log(`[bFlix API] Listening on ::${__APIPORT__} 🚀`) // eslint-disable-line no-console
   })
 }
 

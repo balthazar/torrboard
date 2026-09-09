@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Static twin of the animated mark in src/components/Logo.jsx: the same B
+       outline in the same accent, frozen in the settled position. The ribbon
+       tints only exist while the mark assembles itself, so they are absent
+       here on purpose; at favicon size they read as a barcode. Rendered to
+       PNG by scripts/makeLogo.js for the invite email, which cannot use SVG. -->
+  <path fill="#0697ff" fill-rule="evenodd" d="M22,10 H56 A18,19 0 0 1 56,48 H60 A20,21 0 0 1 60,90 H22 Z M36,22 H54 A7,7 0 0 1 54,36 H36 Z M36,60 H58 A8,8 0 0 1 58,76 H36 Z"/>
+</svg>
