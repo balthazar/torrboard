@@ -83,6 +83,8 @@ const Overlay = styled.div`
 const Greeting = styled.span`
   font-size: ${p => p.theme.font.size.md};
   color: ${p => p.theme.colors.textMuted};
+  padding: 0 ${p => p.theme.spacing[5]};
+  text-align: center;
   opacity: 0;
   animation: ${fadeUp} ${GREETING_MS}ms ease ${GREETING_DELAY}ms forwards;
 

@@ -30,12 +30,19 @@ const LINES = [
 // Lines written for one person. Keyed lowercase because that is how names are
 // stored; add an entry here to give anyone else their own.
 const PERSONAL = {
-  sherman: [name => `Out of the trenches ${name}?`],
+  sherman: [
+    name => `Out of the trenches ${name}?`,
+    name => `This month's subscription is 3 shinies, ${name}.`,
+    name => `Still cheaper than a booster box, ${name}.`,
+    name => `Balance due, ${name}: two shinies and a holo.`,
+    name => `Payment accepted: one chase card. Welcome in, ${name}.`,
+    name => `The kids' pull rate is better than yours, ${name}.`,
+  ],
 }
 
-// A personal line is the whole point of having one, so it gets a real share of
-// the draws instead of being a single entry diluted among the generic pool.
-const PERSONAL_SHARE = 0.35
+// A personal line is the whole point of having one, so the draw is close to a
+// coin flip rather than leaving them as rare entries in the shared pool.
+const PERSONAL_SHARE = 0.5
 
 export default (name, { date = new Date(), random = Math.random } = {}) => {
   if (!name) {
