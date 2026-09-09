@@ -12,15 +12,18 @@ import greeting from '../fn/greeting'
 const SESSION_KEY = 'bflix:splashed'
 
 const FADE_MS = 320
-const FADE_AT = 1150
+const FADE_AT = 1900
 // Lands at 620 + 320 = 940ms, alongside the wordmark (900ms) and the last
-// ribbon (950ms), so everything is settled for a beat before FADE_AT rather
-// than the greeting still animating in as the layer starts leaving.
+// ribbon (950ms). Everything is then settled and still for the ~950ms before
+// FADE_AT, which is what makes the greeting readable rather than something
+// that flashes past while it is still animating in.
 const GREETING_DELAY = 620
 const GREETING_MS = 320
 
-// Reduced motion still gets the handoff, just without sitting through it.
-const REDUCED = { fadeAt: 500, fade: 200 }
+// Reduced motion skips the assembly, but the greeting still has to be readable:
+// with nothing animating it is legible from the first frame, so a shorter hold
+// buys the same reading time the animated path gets after it settles.
+const REDUCED = { fadeAt: 1100, fade: 200 }
 
 const prefersReducedMotion = () => {
   try {

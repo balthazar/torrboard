@@ -27,11 +27,24 @@ const LINES = [
   (name, part) => (part === 'night' ? `Up late, ${name}?` : `Good ${part}, ${name}.`),
 ]
 
+// Lines written for one person. Keyed lowercase because that is how names are
+// stored; add an entry here to give anyone else their own.
+const PERSONAL = {
+  sherman: [name => `Out of the trenches ${name}?`],
+}
+
+// A personal line is the whole point of having one, so it gets a real share of
+// the draws instead of being a single entry diluted among the generic pool.
+const PERSONAL_SHARE = 0.35
+
 export default (name, { date = new Date(), random = Math.random } = {}) => {
   if (!name) {
     return null
   }
 
-  const line = LINES[Math.floor(random() * LINES.length)] || LINES[0]
+  const personal = PERSONAL[name.toLowerCase()]
+  const pool = personal && random() < PERSONAL_SHARE ? personal : LINES
+
+  const line = pool[Math.floor(random() * pool.length)] || pool[0]
   return line(capitalize(name), partOfDay(date))
 }
