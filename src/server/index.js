@@ -34,7 +34,13 @@ const start = async () => {
   const app = express()
   app.use(cookieParser())
   app.use(express.static(path.join(__dirname, '../../dist')))
-  app.use('/statics', express.static(path.join(__dirname, '../statics')))
+  // Mounted twice on purpose. In production an nginx in front of this app owns
+  // /statics and serves it from its own filesystem, so anything put there by a
+  // deploy is invisible; /brand is forwarded through to us. The /statics mount
+  // stays for local dev, where there is no proxy.
+  const statics = express.static(path.join(__dirname, '../statics'))
+  app.use('/statics', statics)
+  app.use('/brand', statics)
 
   // Profile pictures live in mongo rather than on disk, so they need a route of
   // their own. It reads the same JWT the app already stores in a cookie, which
