@@ -15,6 +15,7 @@ import convertBytes from '../fn/convertBytes'
 import fakeAudio from '../fn/fakeAudio'
 import { useStore } from '../state'
 import Logo from './Logo'
+import Avatar from './Avatar'
 
 const GET_STATS = gql`
   {
@@ -31,6 +32,17 @@ const GET_STATS = gql`
       pos
       duration
       playing
+    }
+  }
+`
+
+// Separate from GET_STATS, which is skipped for everyone but master; every
+// signed-in user should still see their own face.
+const GET_ME = gql`
+  {
+    me {
+      name
+      avatarUpdatedAt
     }
   }
 `
@@ -163,6 +175,28 @@ const Disconnect = styled.button`
   }
 `
 
+const Me = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: ${p => p.theme.spacing[2]};
+  padding-bottom: ${p => p.theme.spacing[3]};
+
+  > span {
+    max-width: 84px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: ${p => p.theme.font.size.xs};
+    color: ${p => p.theme.colors.textSubtle};
+    letter-spacing: ${p => p.theme.font.tracking.wide};
+  }
+
+  ${p => p.theme.media.mobile} {
+    display: none;
+  }
+`
+
 const Stats = styled.div`
   display: flex;
   flex-direction: column;
@@ -200,6 +234,8 @@ export default () => {
     pollInterval: 1e3,
     skip: get(state, 'user.name') !== 'master',
   })
+
+  const { data: meData } = useQuery(GET_ME)
 
   const [castAction] = useMutation(CAST_ACTION)
 
@@ -281,6 +317,17 @@ export default () => {
           <MdPowerSettingsNew size={20} />
         </Disconnect>
       </Menu>
+
+      {get(meData, 'me.name') && (
+        <Me>
+          <Avatar
+            name={meData.me.name}
+            updatedAt={meData.me.avatarUpdatedAt}
+            size={36}
+          />
+          <span>{meData.me.name}</span>
+        </Me>
+      )}
 
       {data && !isMobile && !loading && (
         <Stats>

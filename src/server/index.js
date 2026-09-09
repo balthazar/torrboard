@@ -1,5 +1,6 @@
 const path = require('path')
 const express = require('express')
+const jwt = require('jsonwebtoken')
 const cors = require('cors')
 const mongoose = require('mongoose')
 const cookieParser = require('cookie-parser')
@@ -10,6 +11,7 @@ const { scheduleJob } = require('node-schedule')
 
 const { __APIPORT__ } = require('../config')
 const { typeDefs, resolvers, context } = require('./graphql')
+const Avatar = require('./models/Avatar')
 const { applyDirectives } = require('./directives')
 const logErr = require('./fn/logErr')
 const refreshMediaInfos = require('./fn/refreshMediaInfos')
@@ -33,6 +35,43 @@ const start = async () => {
   app.use(cookieParser())
   app.use(express.static(path.join(__dirname, '../../dist')))
   app.use('/statics', express.static(path.join(__dirname, '../statics')))
+
+  // Profile pictures live in mongo rather than on disk, so they need a route of
+  // their own. It reads the same JWT the app already stores in a cookie, which
+  // an <img> sends along same-origin for free: the pictures are the users' own
+  // faces and this is a public URL, so they should not be world-readable.
+  // Deliberately registered before the catch-all that serves index.html.
+  app.get('/avatar/:name', async (req, res) => {
+    try {
+      jwt.verify(req.cookies.token, process.env.JWT_SECRET)
+    } catch {
+      return res.sendStatus(401)
+    }
+
+    try {
+      // Not .lean(): the driver hands back a BSON Binary for a raw buffer
+      // field, while a hydrated document casts it to an actual Buffer.
+      const avatar = await Avatar.findOne({ user: req.params.name })
+      if (!avatar || !avatar.data) {
+        return res.sendStatus(404)
+      }
+
+      const etag = `"${avatar.updatedAt ? avatar.updatedAt.getTime() : 0}"`
+      if (req.headers['if-none-match'] === etag) {
+        return res.sendStatus(304)
+      }
+
+      res.set('Content-Type', avatar.mime)
+      res.set('ETag', etag)
+      // Revalidate every time: the URL is stable across replacements, so a
+      // stale cached face would outlive the upload that replaced it.
+      res.set('Cache-Control', 'private, max-age=0, must-revalidate')
+      return res.send(avatar.data)
+    } catch (err) {
+      logErr('avatar', err)
+      return res.sendStatus(500)
+    }
+  })
 
   // .torrent uploads come through as base64 inside a GraphQL variable, so the
   // default 100kb body-parser cap rejects anything but tiny single-file torrents.

@@ -7,6 +7,7 @@ const cache = require('memory-cache')
 
 const Config = require('./models/Config')
 const User = require('./models/User')
+const Avatar = require('./models/Avatar')
 
 const logErr = require('./fn/logErr')
 const { download, uploadTorrent, torrentAction, getDeluge } = require('./fn/deluge')
@@ -14,6 +15,7 @@ const rss = require('./fn/getRSS')
 const getMPVprops = require('./fn/getMPVprops')
 const timeFromSeconds = require('./fn/timeFromSeconds')
 const getMediaInfo = require('./fn/getMediaInfo')
+const { decodeAvatar } = require('./fn/decodeAvatar')
 const auth = require('./api/auth')
 
 const typeDefs = gql`
@@ -114,6 +116,10 @@ const typeDefs = gql`
     watched: [String]
     lastWatchedAt: String
     lastSeenAt: String
+
+    # Null when the user has no picture. Doubles as the cache-buster on the
+    # /avatar/:name URL, so a replaced image shows up immediately.
+    avatarUpdatedAt: String
   }
 
   type Playback {
@@ -132,6 +138,11 @@ const typeDefs = gql`
 
     createUser(name: String!, email: String!, expires: String!): Boolean @hasRole(role: "master")
     deleteUser(name: String!): Boolean @hasRole(role: "master")
+
+    # A null filedump clears the picture. The image is resized client-side, so
+    # what lands here is already a small square.
+    setAvatar(name: String!, filedump: String, mime: String): String
+      @hasRole(role: "master")
     setAutoGrabs(autoGrabs: [String]): [String] @hasRole(role: "master")
     setImdb(oldId: String, torrentIds: [String], newId: String!): Boolean @hasRole(role: "master")
     download(link: String!): Boolean @hasRole(role: "master")
@@ -149,6 +160,7 @@ const typeDefs = gql`
     getYtID(query: String!): String @auth
     playback: Playback @auth
 
+    me: User @auth
     users: [User] @hasRole(role: "master")
     config: Config @hasRole(role: "master")
     rss: [RssItem] @hasRole(role: "master")
@@ -164,6 +176,18 @@ const castActions = {
 }
 
 const currentPlayback = {}
+
+// Avatar bytes never travel over graphql; only the timestamp does, and the
+// <img> fetches the image itself from /avatar/:name. The projection keeps the
+// buffers out of this query entirely.
+const avatarStamps = async names => {
+  const filter = names ? { user: { $in: names } } : {}
+  const rows = await Avatar.find(filter, { user: 1, updatedAt: 1 }).lean().exec()
+  return rows.reduce((acc, row) => {
+    acc[row.user] = row.updatedAt ? row.updatedAt.toISOString() : null
+    return acc
+  }, {})
+}
 
 const resolvers = {
   Query: {
@@ -208,6 +232,16 @@ const resolvers = {
       return u.watched
     },
 
+    me: async (parent, params, { user }) => {
+      const u = await User.findOne({ name: user.name }).lean().exec()
+      if (!u) {
+        return null
+      }
+
+      const stamps = await avatarStamps([u.name])
+      return { ...u, avatarUpdatedAt: stamps[u.name] || null }
+    },
+
     rss,
     users: async () => {
       // Mongoose returns Date instances on .lean(); graphql-js's String scalar
@@ -216,11 +250,14 @@ const resolvers = {
       // returns Invalid Date. Coerce to ISO strings here so the wire format is
       // actually parseable.
       const users = await User.find().lean().exec()
+      const stamps = await avatarStamps(users.map(u => u.name))
+
       return users.map(u => ({
         ...u,
         expires: u.expires ? u.expires.toISOString() : null,
         lastWatchedAt: u.lastWatchedAt ? u.lastWatchedAt.toISOString() : null,
         lastSeenAt: u.lastSeenAt ? u.lastSeenAt.toISOString() : null,
+        avatarUpdatedAt: stamps[u.name] || null,
       }))
     },
     getYtID: async (parent, { query }) => {
@@ -318,8 +355,32 @@ const resolvers = {
     deleteUser: async (parent, { name }) => {
       if (name === 'master') return false
       await User.deleteOne({ name })
+      await Avatar.deleteOne({ user: name })
       cache.del('users')
       return true
+    },
+
+    setAvatar: async (parent, { name, filedump, mime }) => {
+      const target = await User.findOne({ name }).lean().exec()
+      if (!target) {
+        throw new Error('Unknown user.')
+      }
+
+      if (!filedump) {
+        await Avatar.deleteOne({ user: name })
+        return null
+      }
+
+      const { data, mime: verified } = decodeAvatar(filedump, mime)
+      const updatedAt = new Date()
+
+      await Avatar.updateOne(
+        { user: name },
+        { $set: { data, mime: verified, updatedAt } },
+        { upsert: true },
+      )
+
+      return updatedAt.toISOString()
     },
 
     // Auth

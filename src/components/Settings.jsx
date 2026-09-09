@@ -1,7 +1,16 @@
 import React, { useState } from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import styled from 'styled-components'
-import { MdAdd, MdClose, MdMail, MdPerson, MdEvent, MdDelete, MdCheck } from 'react-icons/md'
+import {
+  MdAdd,
+  MdClose,
+  MdMail,
+  MdPerson,
+  MdEvent,
+  MdDelete,
+  MdCheck,
+  MdRemoveCircleOutline,
+} from 'react-icons/md'
 import { useToasts } from './toasts'
 import get from 'lodash/get'
 import differenceInMinutes from 'date-fns/differenceInMinutes'
@@ -11,8 +20,10 @@ import differenceInDays from 'date-fns/differenceInDays'
 import Placeloader from './Placeloader'
 import Button from './Button'
 import Input from './Input'
+import Avatar from './Avatar'
 
 import apiHandlers from '../fn/apiHandlers'
+import resizeImage, { AVATAR_MIME } from '../fn/resizeImage'
 
 const Container = styled.div`
   max-width: 900px;
@@ -298,6 +309,7 @@ const GET_USERS = gql`
       watched
       lastWatchedAt
       lastSeenAt
+      avatarUpdatedAt
     }
   }
 `
@@ -317,6 +329,12 @@ const CREATE_USER = gql`
 const DELETE_USER = gql`
   mutation deleteUser($name: String!) {
     deleteUser(name: $name)
+  }
+`
+
+const SET_AVATAR = gql`
+  mutation setAvatar($name: String!, $filedump: String, $mime: String) {
+    setAvatar(name: $name, filedump: $filedump, mime: $mime)
   }
 `
 
@@ -342,6 +360,31 @@ export default () => {
       })
     },
   })
+
+  const [setAvatarMut] = useMutation(
+    SET_AVATAR,
+    apiHandlers({
+      onCompleted: () => addToast('Picture updated.', { appearance: 'success' }),
+      addToast,
+    }),
+  )
+
+  const setAvatar = async (name, file) => {
+    let filedump = null
+
+    if (file) {
+      try {
+        filedump = await resizeImage(file)
+      } catch (err) {
+        return addToast(err.message, { appearance: 'error' })
+      }
+    }
+
+    setAvatarMut({
+      variables: { name, filedump, mime: file ? AVATAR_MIME : null },
+      refetchQueries: [{ query: GET_USERS }],
+    })
+  }
 
   const [deleteUserMut] = useMutation(DELETE_USER, {
     refetchQueries: [{ query: GET_USERS }],
@@ -429,6 +472,11 @@ export default () => {
               return (
                 <UserCard key={user.name}>
                   <TopRow>
+                    <Avatar
+                      name={user.name}
+                      updatedAt={user.avatarUpdatedAt}
+                      onPick={file => setAvatar(user.name, file)}
+                    />
                     <UserName>{user.name}</UserName>
                     <UserEmail>{user.email}</UserEmail>
                   </TopRow>
@@ -439,6 +487,15 @@ export default () => {
                       <StatusPill $active={!user.inviteCode}>
                         {user.inviteCode ? 'Inactive' : 'Active'}
                       </StatusPill>
+                      {user.avatarUpdatedAt && (
+                        <IconButton
+                          type="button"
+                          title="Remove picture"
+                          onClick={() => setAvatar(user.name, null)}
+                        >
+                          <MdRemoveCircleOutline size={18} />
+                        </IconButton>
+                      )}
                       {isConfirming ? (
                         <>
                           <IconButton
