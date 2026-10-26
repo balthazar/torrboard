@@ -4,6 +4,7 @@ const uniq = require('lodash/uniq')
 const MediaInfo = require('../models/MediaInfo')
 const tmdb = require('./tmdb')
 const logErr = require('./logErr')
+const { tokenize, fuzzyScore, titleScore, parseYear, isConfident } = require('./titleMatch')
 
 const OMDB = 'http://www.omdbapi.com'
 
@@ -27,44 +28,6 @@ const payloadFromOmdb = body => {
   if (imdbRating && !isNaN(imdbRating)) out.rating = Number(imdbRating)
 
   return out
-}
-
-const tokenize = s =>
-  s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-
-// Fraction of `input` tokens that line up with `target`. A token counts as a
-// match on exact equality or a shared prefix of length >= 2 (handles
-// US/USA, journeys/journey, etc).
-const directionalScore = (input, target) => {
-  if (!input.length) return 0
-  let hits = 0
-  for (const it of input) {
-    const matched = target.some(tt => {
-      if (it === tt) return true
-      if (it.length >= 2 && tt.length >= 2 && (tt.startsWith(it) || it.startsWith(tt))) {
-        return true
-      }
-      return false
-    })
-    if (matched) hits++
-  }
-  return hits / input.length
-}
-
-// F1-style symmetric score: precision (input tokens that hit target) and
-// recall (target tokens that hit input), combined. Penalises candidates
-// with extra unmatched tokens so a short title beats a longer one when the
-// query is short, instead of tying on precision alone.
-const fuzzyScore = (input, target) => {
-  const precision = directionalScore(input, target)
-  const recall = directionalScore(target, input)
-  if (precision + recall === 0) return 0
-  return (2 * precision * recall) / (precision + recall)
 }
 
 // Last-resort match: when OMDB returns nothing for a cleaned title, see if
@@ -96,19 +59,13 @@ const resolveByLocalTitle = async title => {
   return bestScore >= 0.75 && !tieAtBest ? best : null
 }
 
-// Normalize a title for equality: lowercase, punctuation/spacing collapsed.
-// So "Rick and Morty" == "rick.and.morty" but != "Rick and Morty: The Anime".
-const normTitle = s =>
-  String(s)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-
 // Pick the best OMDB search result for `title`. Ranking, in order:
-//   1. An exact (normalized) title match beats everything. OMDB's search is a
-//      prefix/substring match, so "Black Box" also returns "Black Box Diaries"
-//      and "Rick and Morty" also returns "Rick and Morty: The Anime" — a mere
-//      namesake must never win over the title we actually asked for.
+//   1. Title relevance (titleScore). An exact normalized match scores 1 and
+//      beats everything. OMDB's search is a substring match, so "Black Box"
+//      also returns "Black Box Diaries" and a short title returns every
+//      "The <title> of <something>" — a mere namesake must never win over
+//      the title we actually asked for, and a closer near-miss beats a
+//      looser one.
 //   2. Among ties, if we know the release year prefer the closest to it,
 //      otherwise the newest (avoids the "namesake from 1958" problem when
 //      several exact-title works share a name).
@@ -118,15 +75,10 @@ const pickSearchMatch = (results, title, year) => {
   const pool = typed.length ? typed : results
   if (!pool.length) return null
 
-  const q = normTitle(title)
   return pool
-    .map(r => ({
-      r,
-      exact: normTitle(r.Title) === q ? 1 : 0,
-      _y: parseInt(String(r.Year).match(/\d{4}/), 10) || 0,
-    }))
+    .map(r => ({ r, score: titleScore(title, r.Title), _y: parseYear(r.Year) }))
     .sort((a, b) => {
-      if (a.exact !== b.exact) return b.exact - a.exact
+      if (a.score !== b.score) return b.score - a.score
       if (year) return Math.abs(a._y - year) - Math.abs(b._y - year)
       return b._y - a._y
     })[0].r
@@ -154,20 +106,55 @@ const searchAndFetch = async (params, title, year) => {
 // Then title-only, so a release with a wrong/unindexed year still resolves:
 //   3. title-only search         (s=title, ranked by pickSearchMatch)
 //   4. exact title, no year      (t=title)
+// OMDB's t= is itself fuzzy and will happily return a different work that
+// shares a word and the year, so each answer is checked with isConfident. The
+// first confident one wins; otherwise the first answer is handed back flagged
+// as unconfident so the caller can weigh it against TMDB's best guess.
+// Returns { body, confident } or null.
 const resolveByTitle = async (title, year) => {
-  if (year) {
-    const exact = await omdb({ t: title, y: year })
-    if (exact.body.Response === 'True') return exact.body
-
-    const scoped = await searchAndFetch({ s: title, y: year }, title, year)
-    if (scoped) return scoped
+  let fallback = null
+  const consider = body => {
+    if (!body) return false
+    if (isConfident(title, year, body.Title, body.Year)) return true
+    if (!fallback) fallback = body
+    return false
+  }
+  const fetchExact = async params => {
+    const res = await omdb(params)
+    return res.body.Response === 'True' ? res.body : null
   }
 
-  const searched = await searchAndFetch({ s: title }, title, year)
-  if (searched) return searched
+  const steps = [
+    ...(year
+      ? [
+          () => fetchExact({ t: title, y: year }),
+          () => searchAndFetch({ s: title, y: year }, title, year),
+        ]
+      : []),
+    () => searchAndFetch({ s: title }, title, year),
+    () => fetchExact({ t: title }),
+  ]
 
-  const res = await omdb({ t: title })
-  return res.body.Response === 'True' ? res.body : null
+  for (const step of steps) {
+    const body = await step()
+    if (consider(body)) return { body, confident: true }
+  }
+
+  return fallback ? { body: fallback, confident: false } : null
+}
+
+// Layer the OMDB record for a TMDB match on top of TMDB's payload, so the
+// stored rating and genres stay IMDb's like every other MediaInfo. TMDB's
+// year is kept when OMDB's disagrees by more than one: OMDB lags on recent
+// releases, and TMDB's year is the one that just matched the torrent.
+// Without an OMDB record, TMDB's payload stands on its own.
+const withOmdbDetails = async t => {
+  const res = await omdb({ i: t.imdbID })
+  if (res.body.Response !== 'True') return t.payload
+  const merged = { ...t.payload, ...payloadFromOmdb(res.body) }
+  const tmdbYear = parseYear(t.payload.year)
+  if (tmdbYear && Math.abs(parseYear(merged.year) - tmdbYear) > 1) merged.year = t.payload.year
+  return merged
 }
 
 // Returns { ok: true } when a MediaInfo record was created/updated.
@@ -214,24 +201,50 @@ module.exports = async (id, { torrentIds, oldId, newId, title, titles, year }) =
         payload = {}
       }
     } else {
-      // Try each candidate title in turn; first OMDB hit wins.
-      for (const candidate of candidateTitles) {
-        const omdbBody = await resolveByTitle(candidate, year)
-        if (omdbBody) {
-          imdbID = omdbBody.imdbID
-          payload = payloadFromOmdb(omdbBody)
-          break
-        }
-      }
-      if (!imdbID && tmdb.hasKey()) {
+      // TMDB searches first: it ranks by popularity and its data is fresher,
+      // where OMDB's fuzzy t= and popularity-blind s= are prone to namesakes.
+      // A confident TMDB hit is then enriched from OMDB by imdbID.
+      let tmdbFallback = null
+      if (tmdb.hasKey()) {
         for (const candidate of candidateTitles) {
           const t = await tmdb.searchByTitle(candidate, year)
-          if (t) {
+          if (!t) continue
+          if (isConfident(candidate, year, t.payload.title, t.payload.year)) {
             imdbID = t.imdbID
-            payload = t.payload
+            payload = await withOmdbDetails(t)
             break
           }
+          if (!tmdbFallback) tmdbFallback = t
         }
+      }
+      // No key, or TMDB had nothing confident: resolve through OMDB's own
+      // search, holding back an unconfident hit the same way.
+      let omdbFallback = null
+      if (!imdbID) {
+        for (const candidate of candidateTitles) {
+          const found = await resolveByTitle(candidate, year)
+          if (!found) continue
+          if (found.confident) {
+            imdbID = found.body.imdbID
+            payload = payloadFromOmdb(found.body)
+            break
+          }
+          if (!omdbFallback) omdbFallback = found.body
+        }
+      }
+      // Neither source was confident: settle for whichever title is closer,
+      // OMDB on a tie since that is what this path always used to return.
+      const fallbackScore = t => Math.max(...candidateTitles.map(c => titleScore(c, t)))
+      const preferTmdb =
+        tmdbFallback &&
+        (!omdbFallback ||
+          fallbackScore(tmdbFallback.payload.title) > fallbackScore(omdbFallback.Title))
+      if (!imdbID && omdbFallback && !preferTmdb) {
+        imdbID = omdbFallback.imdbID
+        payload = payloadFromOmdb(omdbFallback)
+      } else if (!imdbID && tmdbFallback) {
+        imdbID = tmdbFallback.imdbID
+        payload = await withOmdbDetails(tmdbFallback)
       }
     }
 

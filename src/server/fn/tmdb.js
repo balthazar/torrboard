@@ -1,6 +1,7 @@
-// TMDB (themoviedb.org) helpers. Used as a fallback when OMDB has no entry
-// for a title (anime, foreign films, recent releases) or when OMDB's poster
-// URL has been rotated off Amazon's CDN.
+// TMDB (themoviedb.org) helpers. Its search is tried before OMDB's when
+// resolving a torrent title (popularity-ranked, fresher on recent releases,
+// anime and foreign films), and it backs up OMDB when a poster URL has been
+// rotated off Amazon's CDN.
 //
 // Returns a payload shaped like payloadFromOmdb so callers can swap sources
 // without caring which API answered. No-op (returns null) if process.env.TMDB
@@ -9,6 +10,7 @@
 const got = require('got')
 
 const logErr = require('./logErr')
+const { titleScore } = require('./titleMatch')
 
 const TMDB = 'https://api.themoviedb.org/3'
 const IMG = 'https://image.tmdb.org/t/p/w500'
@@ -113,9 +115,13 @@ const searchByTitle = async (title, year) => {
   const candidates = body.results.filter(r => r.media_type === 'movie' || r.media_type === 'tv')
   if (!candidates.length) return null
 
-  // Score: lower is better. Distance from target year, then prefer higher popularity.
+  // Title relevance first (search/multi also returns "The <title> of ..."
+  // namesakes), then distance from target year, then higher popularity.
   const target = year ? parseInt(year, 10) : null
   candidates.sort((a, b) => {
+    const as = titleScore(title, a.title || a.name)
+    const bs = titleScore(title, b.title || b.name)
+    if (as !== bs) return bs - as
     const ay = parseInt(((a.release_date || a.first_air_date || '')).slice(0, 4), 10) || 0
     const by = parseInt(((b.release_date || b.first_air_date || '')).slice(0, 4), 10) || 0
     if (target) {
