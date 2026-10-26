@@ -143,19 +143,27 @@ const resolveByTitle = async (title, year) => {
   return fallback ? { body: fallback, confident: false } : null
 }
 
-// Layer the OMDB record for a TMDB match on top of TMDB's payload, so the
-// stored rating and genres stay IMDb's like every other MediaInfo. TMDB's
-// year is kept when OMDB's disagrees by more than one: OMDB lags on recent
-// releases, and TMDB's year is the one that just matched the torrent.
-// Without an OMDB record, TMDB's payload stands on its own.
-const withOmdbDetails = async t => {
-  const res = await omdb({ i: t.imdbID })
-  if (res.body.Response !== 'True') return t.payload
-  const merged = { ...t.payload, ...payloadFromOmdb(res.body) }
-  const tmdbYear = parseYear(t.payload.year)
-  if (tmdbYear && Math.abs(parseYear(merged.year) - tmdbYear) > 1) merged.year = t.payload.year
+// Layer an OMDB record on top of TMDB's payload for the same imdbID, so the
+// stored rating and genres stay IMDb's like every other MediaInfo while TMDB
+// fills whatever OMDB reports as N/A (recent releases often have no poster
+// or rating there yet). TMDB's year is kept when OMDB's disagrees by more
+// than one, since OMDB lags on recent releases. Either side may be missing.
+const mergeDetails = (tmdbPayload, omdbBody) => {
+  const merged = { ...tmdbPayload, ...(omdbBody ? payloadFromOmdb(omdbBody) : {}) }
+  const tmdbYear = tmdbPayload && parseYear(tmdbPayload.year)
+  if (tmdbYear && Math.abs(parseYear(merged.year) - tmdbYear) > 1) merged.year = tmdbPayload.year
   return merged
 }
+
+const withOmdbDetails = async t => {
+  const res = await omdb({ i: t.imdbID })
+  return mergeDetails(t.payload, res.body.Response === 'True' ? res.body : null)
+}
+
+// Fields a MediaInfo takes from OMDB/TMDB. When an override moves a record to
+// a different work, any of these the new lookups did not supply are unset
+// rather than left describing the old one.
+const DETAIL_FIELDS = ['title', 'tags', 'plot', 'image', 'type', 'rating', 'year']
 
 // Returns { ok: true } when a MediaInfo record was created/updated.
 // Returns { ok: false, transient: true } when an OMDB/TMDB/db call threw
@@ -178,28 +186,19 @@ module.exports = async (id, { torrentIds, oldId, newId, title, titles, year }) =
       // Manual override path: OMDB/TMDB failures here must not abort the
       // write. got throws on 401/5xx (bad key, quota, transient outage),
       // which previously sent us into the outer catch and silently dropped
-      // the user's choice. Localize the OMDB error so we can still try
-      // TMDB and fall back to a bare write.
+      // the user's choice. Localize the OMDB error so we can still use
+      // TMDB and fall back to a bare write. Both are consulted so TMDB can
+      // fill fields OMDB has no value for.
+      let omdbBody = null
       try {
         const res = await omdb({ i: newId })
-        if (res.body.Response === 'True') {
-          imdbID = res.body.imdbID
-          payload = payloadFromOmdb(res.body)
-        }
+        if (res.body.Response === 'True') omdbBody = res.body
       } catch (err) {
         logErr('getMediaInfo:omdb-newId', err)
       }
-      if (!imdbID && tmdb.hasKey()) {
-        const t = await tmdb.findByImdb(newId)
-        if (t) {
-          imdbID = t.imdbID
-          payload = t.payload
-        }
-      }
-      if (!imdbID) {
-        imdbID = newId
-        payload = {}
-      }
+      const t = tmdb.hasKey() ? await tmdb.findByImdb(newId) : null
+      imdbID = (omdbBody && omdbBody.imdbID) || newId
+      payload = mergeDetails(t && t.payload, omdbBody)
     } else {
       // TMDB searches first: it ranks by popularity and its data is fresher,
       // where OMDB's fuzzy t= and popularity-blind s= are prone to namesakes.
@@ -277,12 +276,12 @@ module.exports = async (id, { torrentIds, oldId, newId, title, titles, year }) =
 
       let matched = false
       if (oldId) {
+        const stale = oldId === newId ? [] : DETAIL_FIELDS.filter(f => payload[f] == null)
         const updated = await MediaInfo.updateOne(
           { imdbID: oldId },
           {
-            ...payload,
-            torrents,
-            imdbID: newId,
+            $set: { ...payload, torrents, imdbID: newId },
+            ...(stale.length ? { $unset: Object.fromEntries(stale.map(f => [f, 1])) } : {}),
           },
         )
         matched = updated.matchedCount > 0
