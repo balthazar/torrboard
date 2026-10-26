@@ -76,11 +76,14 @@ module.exports = {
   },
   uploadTorrent: async (parent, { filename, filedump }) => {
     const safeName = (filename || 'upload.torrent').replace(/[^A-Za-z0-9._-]/g, '_')
-    return query('core.add_torrent_file', [
+    // add_torrent_file returns the new torrent id (a hash string), which the
+    // Boolean return type refuses to serialize even though the add succeeded.
+    const torrentId = await query('core.add_torrent_file', [
       safeName,
       filedump,
       { download_location: `${DOWNLOAD_DIR}/dl` },
     ])
+    return Boolean(torrentId)
   },
   torrentAction: (parent, { name, torrentId, removeFiles }) => {
     if (name === 'remove') {
